@@ -3,47 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>瓶盖试炼场</title>
+  <meta name="description" content="瓶盖派系战争 — 试炼场：一对一战斗详细分析">
+  <title>试炼场 · 瓶盖派系战争</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="page-shell trial-shell">
-    <header class="hero">
-      <div>
+    <header class="hero" role="banner">
+      <div class="hero-main">
         <p class="eyebrow">Bottle Cap Trial Arena</p>
         <h1>试炼场</h1>
-        <p class="hero-copy">在这里选择两名角色进行一对一战斗，实时查看属性、状态与详细伤害来源，方便分析数值与技能效果。</p>
+        <p class="hero-copy">选择两名角色进行一对一战斗，实时查看属性、状态与详细伤害来源，便于分析数值与技能效果。</p>
       </div>
       <div class="hero-actions">
-        <button id="trialExportRoleSaveBtn" class="ghost-btn">导出角色存档</button>
-        <button id="trialImportRoleSaveBtn" class="ghost-btn">从角色存档导入</button>
-        <div id="trialStorageStatus" class="storage-status">角色存档：手动导入 / 导出</div>
-        <a class="ghost-btn back-link" href="./index.html">返回主页面</a>
+        <button id="trialExportRoleSaveBtn" class="ghost-btn" title="导出角色存档">导出角色存档</button>
+        <button id="trialImportRoleSaveBtn" class="ghost-btn" title="从本地文件导入存档">从存档导入</button>
+        <div id="trialStorageStatus" class="storage-status" role="status" aria-live="polite">角色存档：手动导入 / 导出</div>
+        <a class="ghost-btn back-link" href="./index.html" title="返回主战场页面">← 返回主页</a>
       </div>
     </header>
 
-    <main class="layout">
-      <section class="panel">
+    <main class="layout" id="main-content">
+
+      <section class="panel" aria-labelledby="trial-select-heading">
         <div class="panel-title-row">
           <div class="panel-heading">
-            <h2>角色选择</h2>
+            <h2 id="trial-select-heading">角色选择</h2>
             <p class="panel-note">选择两名角色进行一对一测试，便于观察技能、状态和数值细节。</p>
           </div>
-          <div class="battle-toolbar">
+          <div class="battle-toolbar" role="toolbar" aria-label="试炼控制">
             <div class="battle-controls battle-controls-primary">
               <button id="trialStartBtn" class="primary-btn">开始试炼</button>
             </div>
             <div class="battle-controls battle-controls-secondary">
-              <button id="trialPauseBtn" class="ghost-btn" disabled>暂停</button>
-              <button id="trialResetBtn" class="ghost-btn" disabled>重置</button>
-              <label>
+              <button id="trialPauseBtn" class="ghost-btn" disabled aria-label="暂停或继续">暂停</button>
+              <button id="trialResetBtn" class="ghost-btn" disabled aria-label="重置试炼">重置</button>
+              <label title="调整战斗速度">
                 速度
-                <select id="trialSpeedSelect">
-                  <option value="0.5">0.5x</option>
-                  <option value="1" selected>1x</option>
-                  <option value="2">2x</option>
-                  <option value="4">4x</option>
-                  <option value="8">8x</option>
+                <select id="trialSpeedSelect" aria-label="战斗速度">
+                  <option value="0.5">0.5×</option>
+                  <option value="1" selected>1×</option>
+                  <option value="2">2×</option>
+                  <option value="4">4×</option>
+                  <option value="8">8×</option>
                 </select>
               </label>
             </div>
@@ -52,38 +54,41 @@
         <div class="trial-select-grid">
           <label>
             左侧角色
-            <select id="trialLeftSelect"></select>
+            <select id="trialLeftSelect" aria-label="选择左侧角色"></select>
           </label>
           <label>
             右侧角色
-            <select id="trialRightSelect"></select>
+            <select id="trialRightSelect" aria-label="选择右侧角色"></select>
           </label>
         </div>
       </section>
 
-      <section class="panel trial-layout">
+      <section class="panel trial-layout" aria-labelledby="trial-arena-heading">
+        <h2 id="trial-arena-heading" class="sr-only">试炼战场</h2>
         <div class="arena-wrap">
-          <canvas id="trialCanvas" width="1400" height="980"></canvas>
+          <canvas id="trialCanvas" width="1400" height="980"
+                  aria-label="试炼战场画面" role="img"></canvas>
         </div>
-        <div class="trial-side">
+        <aside class="trial-side" aria-label="试炼信息面板">
           <div class="stat-card">
             <h3>左侧状态</h3>
-            <div id="trialLeftPanel" class="trial-entity-panel"></div>
+            <div id="trialLeftPanel" class="trial-entity-panel" role="status" aria-live="polite"></div>
           </div>
           <div class="stat-card">
             <h3>右侧状态</h3>
-            <div id="trialRightPanel" class="trial-entity-panel"></div>
+            <div id="trialRightPanel" class="trial-entity-panel" role="status" aria-live="polite"></div>
           </div>
           <div class="stat-card">
             <h3>试炼摘要</h3>
-            <div id="trialSummary" class="stacked-list"></div>
+            <div id="trialSummary" class="stacked-list" role="status"></div>
           </div>
           <div class="stat-card">
             <h3>伤害明细</h3>
-            <div id="trialCombatLog" class="battle-log trial-log"></div>
+            <div id="trialCombatLog" class="battle-log trial-log" role="log" aria-live="polite"></div>
           </div>
-        </div>
+        </aside>
       </section>
+
     </main>
   </div>
 
