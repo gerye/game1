@@ -1116,7 +1116,7 @@ button:disabled {
   align-content: stretch;
   align-items: stretch;
   gap: 18px;
-  overflow: hidden;
+  overflow-y: auto;
   animation: fadeInUp var(--t-slow) var(--ease-out);
 }
 
