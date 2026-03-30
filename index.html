@@ -1,0 +1,270 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>瓶盖派系战争</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-main">
+        <p class="eyebrow">Bottle Cap Battle Lab</p>
+        <h1>瓶盖派系战争</h1>
+        <p class="hero-copy">上传现实中的瓶盖照片，系统会先抽取稳定的基础头像与识别编码，再在当前版本中生成唯一的角色属性、技能与成长曲线。</p>
+        <div class="hero-quick-actions">
+          <a class="ghost-btn back-link" href="./trial.html">进入试炼场</a>
+          <button id="exportRoleSaveBtn" class="ghost-btn">导出角色存档</button>
+          <button id="importRoleSaveBtn" class="ghost-btn">从角色存档导入</button>
+          <button id="openDatabaseBtn" class="ghost-btn">打开数据库</button>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <div id="storageStatus" class="storage-status">角色存档：手动导入 / 导出</div>
+        <div class="hero-stats" id="heroStats"></div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel upload-panel">
+        <div class="panel-title-row">
+          <div class="panel-heading">
+            <h2>1. 识别与建档</h2>
+            <p class="panel-note">上传并识别瓶盖，生成稳定头像、唯一编码和当前版本构筑。</p>
+          </div>
+          <div class="battle-controls">
+            <button id="seedCapsBtn" class="ghost-btn">生成测试瓶盖</button>
+            <button id="toggleUploadPanelBtn" class="drawer-section-toggle compact-toggle" type="button">展开识别与建档</button>
+          </div>
+        </div>
+        <div id="uploadPanelBody" class="upload-panel-body" hidden>
+          <form class="cap-form">
+            <label class="upload-box" for="photoInput">
+              <input id="photoInput" type="file" accept="image/*">
+              <span>点击上传瓶盖照片</span>
+              <small>当前建议上传已预处理好的单瓶盖图片，最好保留黑底或纯净背景，便于生成稳定头像与唯一编码。</small>
+            </label>
+            <div class="form-grid">
+              <label>
+                名称
+                <input id="capNameInput" type="text" placeholder="例如：可乐蓝盖">
+              </label>
+              <label>
+                备注
+                <input id="capNoteInput" type="text" placeholder="例如：便利店回收箱拾取">
+              </label>
+              <label>
+                颜色数
+                <select id="colorCountInput">
+                  <option value="1">1</option>
+                  <option value="1.5">1.5</option>
+                  <option value="2" selected>2</option>
+                  <option value="2.5">2.5</option>
+                  <option value="3">3</option>
+                  <option value="3.5">3+</option>
+                </select>
+              </label>
+              <label>
+                复杂度
+                <select id="complexityInput">
+                  <option value="0">简易</option>
+                  <option value="1" selected>基础</option>
+                  <option value="2">复杂</option>
+                  <option value="3">繁复</option>
+                </select>
+              </label>
+              <label>
+                对称度
+                <select id="symmetryInput">
+                  <option value="0">无对称</option>
+                  <option value="1" selected>规整</option>
+                  <option value="2">基础对称</option>
+                  <option value="3">华丽对称</option>
+                </select>
+              </label>
+            </div>
+          </form>
+          <div class="analysis-area">
+            <div class="preview-card">
+              <canvas id="previewCanvas" width="240" height="240"></canvas>
+              <button id="analyzeBtn" class="primary-btn" disabled>保存基础资料并生成属性</button>
+            </div>
+            <div class="analysis-card" id="analysisCard">
+              <h3>识别结果</h3>
+              <p class="muted">上传瓶盖照片后会展示基础编码、头像、派系、潜力和可生成属性。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel codex-panel">
+        <div class="panel-title-row">
+          <div class="panel-heading">
+            <h2>2. 角色操作区</h2>
+            <p class="panel-note">按势力浏览角色卡，点击后查看当前属性、装备、技能和人物小传。</p>
+          </div>
+          <div class="battle-controls">
+            <button id="resetAllLevelsBtn" class="ghost-btn">初始化全部角色</button>
+          </div>
+        </div>
+        <div class="codex-layout">
+          <div id="capGrid" class="cap-grid"></div>
+          <div id="capDetail" class="detail-card">
+            <h3>角色详情</h3>
+            <p class="muted">点击左侧卡片查看基础信息、生成属性和当前状态。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel battlefield-panel">
+        <div class="panel-title-row">
+          <div class="panel-heading">
+            <h2>3. 自动战场</h2>
+            <p class="panel-note">江湖争霸、天下第一武道会和江湖大事记共用同一块主战场区域。</p>
+          </div>
+          <div class="battle-toolbar">
+            <div class="battle-controls battle-controls-primary">
+              <div class="battle-select-group">
+                <select id="battleModeSelect" class="ghost-btn battle-mode-select">
+                  <option value="chaos">江湖争霸</option>
+                  <option value="tournament">武道会</option>
+                  <option value="ranking">江湖排位</option>
+                  <option value="exploration">秘境探索</option>
+                </select>
+                <button id="startSelectedBattleBtn" class="primary-btn">开始</button>
+              </div>
+              <div class="battle-select-group">
+                <select id="simModeSelect" class="ghost-btn battle-mode-select">
+                  <option value="fast">快速推演</option>
+                  <option value="endless">无尽推演</option>
+                </select>
+                <button id="toggleSelectedSimBtn" class="ghost-btn">开启</button>
+              </div>
+              <button id="toggleChronicleBtn" class="ghost-btn">江湖大事记</button>
+              <button id="startChaosBtn" class="primary-btn" hidden>开始江湖争霸</button>
+              <button id="startTournamentBtn" class="primary-btn" hidden>开始武道会</button>
+              <button id="startRankingBtn" class="primary-btn" hidden>开始江湖排位</button>
+              <button id="startExplorationBtn" class="primary-btn" hidden>开始秘境探索</button>
+              <button id="toggleFastSimBtn" class="ghost-btn" hidden>开启快速推演</button>
+              <button id="toggleEndlessSimBtn" class="ghost-btn" hidden>开启无尽推演</button>
+            </div>
+            <div class="battle-controls battle-controls-secondary">
+              <button id="pauseBattleBtn" class="ghost-btn" disabled>暂停</button>
+              <button id="resetBattleBtn" class="ghost-btn" disabled>重置</button>
+              <label>
+                速度
+                  <select id="speedSelect">
+                    <option value="0.5">0.5x</option>
+                    <option value="1" selected>1x</option>
+                    <option value="2">2x</option>
+                    <option value="4">4x</option>
+                    <option value="8">8x</option>
+                  </select>
+                </label>
+              <label>
+                视角
+                <select id="cameraSelect">
+                  <option value="top" selected>俯视</option>
+                  <option value="angled">斜视</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="battlefield-grid">
+          <div class="arena-wrap">
+            <div id="battlePrelude" class="battle-prelude" hidden></div>
+            <canvas id="battleCanvas" width="1600" height="1120"></canvas>
+          </div>
+          <div class="battle-side">
+            <div class="stat-card">
+              <h3>战局统计</h3>
+              <div id="battleSummary" class="stacked-list"></div>
+            </div>
+            <div class="stat-card">
+              <h3 id="battleModeInfoTitle">地形规则</h3>
+              <div id="battleModeInfo" class="terrain-legend"></div>
+            </div>
+            <div class="stat-card">
+              <h3>实时战报</h3>
+              <div id="battleLog" class="battle-log"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div id="tournamentTreeOverlay" class="tournament-tree-overlay" hidden>
+    <div class="tournament-tree-panel">
+      <div class="drawer-head">
+        <h2>完整对阵树</h2>
+        <button id="closeTournamentTreeBtn" class="ghost-btn">关闭</button>
+      </div>
+      <div id="tournamentTreeContent" class="tournament-tree-scroll"></div>
+    </div>
+  </div>
+
+  <div id="rankingBoardOverlay" class="tournament-tree-overlay" hidden>
+    <div class="tournament-tree-panel ranking-board-panel">
+      <div class="drawer-head">
+        <h2>江湖排位对阵页</h2>
+        <button id="closeRankingBoardBtn" class="ghost-btn">关闭</button>
+      </div>
+      <div id="rankingBoardContent" class="tournament-tree-scroll"></div>
+    </div>
+  </div>
+
+  <aside id="databaseDrawer" class="database-drawer" hidden>
+    <div class="drawer-head">
+      <h2>数据库</h2>
+      <button id="closeDatabaseBtn" class="ghost-btn">关闭</button>
+    </div>
+    <section class="panel drawer-panel">
+      <button class="drawer-section-toggle" type="button" data-section-toggle="characterDatabaseWrap">角色基础数据库</button>
+      <div id="characterDatabaseWrap" class="drawer-section-body" hidden>
+        <div id="characterDatabase" class="table-wrap"></div>
+      </div>
+    </section>
+    <section class="panel drawer-panel">
+      <button class="drawer-section-toggle" type="button" data-section-toggle="skillDatabaseWrap">技能数据库</button>
+      <div id="skillDatabaseWrap" class="drawer-section-body" hidden>
+        <p class="muted">这里显示当前版本的技能系列模板值。</p>
+        <div id="skillDatabase" class="table-wrap"></div>
+      </div>
+    </section>
+    <section class="panel drawer-panel">
+      <button class="drawer-section-toggle" type="button" data-section-toggle="equipmentDatabaseWrap">装备数据库</button>
+      <div id="equipmentDatabaseWrap" class="drawer-section-body" hidden>
+        <p class="muted">装备数据库保存本地可掉落装备模板，包括插图、可装备职业、部位和属性效果。</p>
+        <div id="equipmentDatabase" class="table-wrap"></div>
+      </div>
+    </section>
+    <section class="panel drawer-panel">
+      <button class="drawer-section-toggle" type="button" data-section-toggle="eventDatabaseWrap">事件数据库</button>
+      <div id="eventDatabaseWrap" class="drawer-section-body" hidden>
+        <p class="muted">战斗开始前每个角色都会经历一次事件。这里用于查看当前版本的基础事件库，权重请直接修改模板文件。</p>
+        <div id="eventDatabase" class="table-wrap"></div>
+      </div>
+    </section>
+    <section class="panel drawer-panel">
+      <button class="drawer-section-toggle" type="button" data-section-toggle="bloodlineDatabaseWrap">血脉数据库</button>
+      <div id="bloodlineDatabaseWrap" class="drawer-section-body" hidden>
+        <p class="muted">每种血脉全局唯一，每个角色也只能获得一次。可在角色基础数据库中手动分配。</p>
+        <div id="bloodlineDatabase" class="table-wrap"></div>
+      </div>
+    </section>
+    <section class="panel drawer-panel">
+      <button class="drawer-section-toggle" type="button" data-section-toggle="statusDatabaseWrap">战斗状态数据库</button>
+      <div id="statusDatabaseWrap" class="drawer-section-body" hidden>
+        <p class="muted">这里管理战斗中的正负面状态，例如吃坏肚子、死里逃生和束缚。</p>
+        <div id="statusDatabase" class="table-wrap"></div>
+      </div>
+    </section>
+  </aside>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>瓶盖试炼场</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell trial-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Bottle Cap Trial Arena</p>
+        <h1>试炼场</h1>
+        <p class="hero-copy">在这里选择两名角色进行一对一战斗，实时查看属性、状态与详细伤害来源，方便分析数值与技能效果。</p>
+      </div>
+      <div class="hero-actions">
+        <button id="trialExportRoleSaveBtn" class="ghost-btn">导出角色存档</button>
+        <button id="trialImportRoleSaveBtn" class="ghost-btn">从角色存档导入</button>
+        <div id="trialStorageStatus" class="storage-status">角色存档：手动导入 / 导出</div>
+        <a class="ghost-btn back-link" href="./index.html">返回主页面</a>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-title-row">
+          <div class="panel-heading">
+            <h2>角色选择</h2>
+            <p class="panel-note">选择两名角色进行一对一测试，便于观察技能、状态和数值细节。</p>
+          </div>
+          <div class="battle-toolbar">
+            <div class="battle-controls battle-controls-primary">
+              <button id="trialStartBtn" class="primary-btn">开始试炼</button>
+            </div>
+            <div class="battle-controls battle-controls-secondary">
+              <button id="trialPauseBtn" class="ghost-btn" disabled>暂停</button>
+              <button id="trialResetBtn" class="ghost-btn" disabled>重置</button>
+              <label>
+                速度
+                <select id="trialSpeedSelect">
+                  <option value="0.5">0.5x</option>
+                  <option value="1" selected>1x</option>
+                  <option value="2">2x</option>
+                  <option value="4">4x</option>
+                  <option value="8">8x</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="trial-select-grid">
+          <label>
+            左侧角色
+            <select id="trialLeftSelect"></select>
+          </label>
+          <label>
+            右侧角色
+            <select id="trialRightSelect"></select>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel trial-layout">
+        <div class="arena-wrap">
+          <canvas id="trialCanvas" width="1400" height="980"></canvas>
+        </div>
+        <div class="trial-side">
+          <div class="stat-card">
+            <h3>左侧状态</h3>
+            <div id="trialLeftPanel" class="trial-entity-panel"></div>
+          </div>
+          <div class="stat-card">
+            <h3>右侧状态</h3>
+            <div id="trialRightPanel" class="trial-entity-panel"></div>
+          </div>
+          <div class="stat-card">
+            <h3>试炼摘要</h3>
+            <div id="trialSummary" class="stacked-list"></div>
+          </div>
+          <div class="stat-card">
+            <h3>伤害明细</h3>
+            <div id="trialCombatLog" class="battle-log trial-log"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./src/trial-app.js"></script>
+</body>
+</html>
