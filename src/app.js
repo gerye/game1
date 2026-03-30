@@ -1,5 +1,5 @@
 ﻿
-import { BATTLE_LOG_LIMIT, FACTIONS, GAME_VERSION, GRADE_SCALE, ROLE_LABELS, TERRAIN_TYPES } from "./config.js";
+import { BATTLE_LOG_LIMIT, FACTIONS, GAME_VERSION, GRADE_SCALE, META_KEYS, ROLE_LABELS, TERRAIN_TYPES } from "./config.js";
 import { createBattleState as createBattleRuntime, renderBattleScene, updateBattleState } from "./battle-system.js";
 import { getFactionSections, renderBuildGrid as renderBuildGridView, renderCapDetail as renderCapDetailView, renderHeroStats as renderHeroStatsView } from "./character-ui.js";
 import { renderBloodlineDatabase as renderBloodlineDatabaseView, renderCharacterDatabase as renderCharacterDatabaseView, renderEquipmentDatabase as renderEquipmentDatabaseView, renderEventDatabase as renderEventDatabaseView, renderSkillDatabase as renderSkillDatabaseView, renderStatusDatabase as renderStatusDatabaseView } from "./database-ui.js";
@@ -171,7 +171,7 @@ async function init() {
   await renderStorageStatus();
   await syncReferenceLibraries();
   await normalizeStoredData();
-  state.fastSimMeta = normalizeFastSimMeta(await state.storage.getMeta("fastSimMeta"));
+  state.fastSimMeta = normalizeFastSimMeta(await state.storage.getMeta(META_KEYS.FAST_SIM_META));
   syncFastSimButton();
   syncCombinedActionControls();
   await refreshAll();
@@ -336,7 +336,7 @@ async function toggleFastSimulation(mode = "fast") {
 
 async function saveFastSimMeta(nextMeta) {
   state.fastSimMeta = normalizeFastSimMeta(nextMeta);
-  await state.storage.saveMeta("fastSimMeta", state.fastSimMeta);
+  await state.storage.saveMeta(META_KEYS.FAST_SIM_META, state.fastSimMeta);
 }
 
 async function runFastSimulationStep() {
@@ -792,7 +792,7 @@ async function importRoleSave() {
     await importRoleSaveIntoStorage(state.storage);
     await syncReferenceLibraries();
     await normalizeStoredData();
-    state.fastSimMeta = normalizeFastSimMeta(await state.storage.getMeta("fastSimMeta"));
+    state.fastSimMeta = normalizeFastSimMeta(await state.storage.getMeta(META_KEYS.FAST_SIM_META));
     syncFastSimButton();
     await renderStorageStatus();
     await refreshAll();
@@ -848,16 +848,16 @@ async function loadReferenceData() {
   state.events = await state.storage.getAllEvents();
   state.bloodlines = await state.storage.getAllBloodlines();
   state.statuses = mergeStatusLibrary(await state.storage.getStatusesRaw());
-  state.winSummary = await state.storage.getMeta("battleWinSummary") || { totalWins: 0, byFaction: {} };
-  state.tournamentMeta = await state.storage.getMeta("tournamentHall") || { byFaction: {}, byCap: {} };
-  state.rankingMeta = await state.storage.getMeta("rankingHall") || { byFaction: {}, byCap: {} };
-  state.chronicle = normalizeChronicleState(await state.storage.getMeta("jianghuChronicle") || createChronicleState());
-  state.rankingHistory = normalizeRankingHistory(await state.storage.getMeta("rankingHistory") || []);
+  state.winSummary = await state.storage.getMeta(META_KEYS.BATTLE_WIN_SUMMARY) || { totalWins: 0, byFaction: {} };
+  state.tournamentMeta = await state.storage.getMeta(META_KEYS.TOURNAMENT_HALL) || { byFaction: {}, byCap: {} };
+  state.rankingMeta = await state.storage.getMeta(META_KEYS.RANKING_HALL) || { byFaction: {}, byCap: {} };
+  state.chronicle = normalizeChronicleState(await state.storage.getMeta(META_KEYS.JIANGHU_CHRONICLE) || createChronicleState());
+  state.rankingHistory = normalizeRankingHistory(await state.storage.getMeta(META_KEYS.RANKING_HISTORY) || []);
   if (state.selectedRankingHistoryIndex >= state.rankingHistory.length) {
     state.selectedRankingHistoryIndex = Math.max(0, state.rankingHistory.length - 1);
   }
-  state.fastSimMeta = normalizeFastSimMeta(await state.storage.getMeta("fastSimMeta"));
-  state.bloodlineTaskState = normalizeBloodlineTaskState(await state.storage.getMeta("bloodlineTaskState"));
+  state.fastSimMeta = normalizeFastSimMeta(await state.storage.getMeta(META_KEYS.FAST_SIM_META));
+  state.bloodlineTaskState = normalizeBloodlineTaskState(await state.storage.getMeta(META_KEYS.BLOODLINE_TASK_STATE));
   syncFastSimButton();
   if (state.statuses.length === 0) {
     state.statuses = getBuiltinStatuses();
@@ -1392,13 +1392,13 @@ async function resetAllLevels() {
   state.bloodlineTaskState = createDefaultBloodlineTaskState();
   syncFastSimButton();
   resetChronicleViewState();
-  await state.storage.saveMeta("battleWinSummary", state.winSummary);
-  await state.storage.saveMeta("tournamentHall", state.tournamentMeta);
-  await state.storage.saveMeta("rankingHall", state.rankingMeta);
-  await state.storage.saveMeta("jianghuChronicle", state.chronicle);
-  await state.storage.saveMeta("rankingHistory", state.rankingHistory);
-  await state.storage.saveMeta("fastSimMeta", state.fastSimMeta);
-  await state.storage.saveMeta("bloodlineTaskState", state.bloodlineTaskState);
+  await state.storage.saveMeta(META_KEYS.BATTLE_WIN_SUMMARY, state.winSummary);
+  await state.storage.saveMeta(META_KEYS.TOURNAMENT_HALL, state.tournamentMeta);
+  await state.storage.saveMeta(META_KEYS.RANKING_HALL, state.rankingMeta);
+  await state.storage.saveMeta(META_KEYS.JIANGHU_CHRONICLE, state.chronicle);
+  await state.storage.saveMeta(META_KEYS.RANKING_HISTORY, state.rankingHistory);
+  await state.storage.saveMeta(META_KEYS.FAST_SIM_META, state.fastSimMeta);
+  await state.storage.saveMeta(META_KEYS.BLOODLINE_TASK_STATE, state.bloodlineTaskState);
   resetBattle();
   await refreshAll();
 }
@@ -1795,7 +1795,7 @@ async function applyBattleRewards() {
       const factionWins = (winSummary.byFaction[state.battle.winner.key] || 0) + 1;
       winSummary.byFaction[state.battle.winner.key] = factionWins;
       state.winSummary = winSummary;
-      await state.storage.saveMeta("battleWinSummary", winSummary);
+      await state.storage.saveMeta(META_KEYS.BATTLE_WIN_SUMMARY, winSummary);
       if (factionWins % 10 === 0) {
         await appendChronicleEntry(buildFactionVictoryMilestoneEntry(state.battle.winner, factionWins));
       }
@@ -2058,22 +2058,21 @@ function renderBattlePrelude() {
   });
 }
 
-function clearBattleCanvas() {
+function clearCanvas({ bgColor, textColor, message }) {
   battleCtx.clearRect(0, 0, dom.battleCanvas.width, dom.battleCanvas.height);
-  battleCtx.fillStyle = "#efe3c1";
+  battleCtx.fillStyle = bgColor;
   battleCtx.fillRect(0, 0, dom.battleCanvas.width, dom.battleCanvas.height);
-  battleCtx.fillStyle = "rgba(31, 43, 36, 0.48)";
+  battleCtx.fillStyle = textColor;
   battleCtx.font = "22px sans-serif";
-  battleCtx.fillText("等待战斗开始", 32, 42);
+  battleCtx.fillText(message, 32, 42);
+}
+
+function clearBattleCanvas() {
+  clearCanvas({ bgColor: "#efe3c1", textColor: "rgba(31, 43, 36, 0.48)", message: "等待战斗开始" });
 }
 
 function clearTournamentCanvas() {
-  battleCtx.clearRect(0, 0, dom.battleCanvas.width, dom.battleCanvas.height);
-  battleCtx.fillStyle = "#ead5b2";
-  battleCtx.fillRect(0, 0, dom.battleCanvas.width, dom.battleCanvas.height);
-  battleCtx.fillStyle = "rgba(64, 43, 22, 0.55)";
-  battleCtx.font = "22px sans-serif";
-  battleCtx.fillText("等待武道会对决开始", 32, 42);
+  clearCanvas({ bgColor: "#ead5b2", textColor: "rgba(64, 43, 22, 0.55)", message: "等待武道会对决开始" });
 }
 
 function renderBattlePanels() {
@@ -2159,7 +2158,7 @@ function renderChronicleStage() {
 
 async function saveChronicleState(nextChronicle) {
   state.chronicle = normalizeChronicleState(nextChronicle);
-  await state.storage.saveMeta("jianghuChronicle", state.chronicle);
+  await state.storage.saveMeta(META_KEYS.JIANGHU_CHRONICLE, state.chronicle);
 }
 
 async function appendChronicleEntry(entry) {
@@ -2936,7 +2935,7 @@ async function finishRanking() {
   state.rankingHistory = [...state.rankingHistory, rankingSnapshot];
   state.selectedRankingHistoryIndex = Math.max(0, state.rankingHistory.length - 1);
   state.selectedRankingHistoryBoardTab = "swiss-final";
-  await state.storage.saveMeta("rankingHistory", state.rankingHistory);
+  await state.storage.saveMeta(META_KEYS.RANKING_HISTORY, state.rankingHistory);
   for (const code of state.ranking.participantCodes || []) {
     const entry = getEntryByCode(code);
     if (!entry) continue;
@@ -3318,7 +3317,7 @@ async function applyTournamentPlacementHonors(championCode, runnerUpCode, topFou
   }
 
   state.tournamentMeta = hall;
-  await state.storage.saveMeta("tournamentHall", hall);
+  await state.storage.saveMeta(META_KEYS.TOURNAMENT_HALL, hall);
 }
 
 async function applyRankingPlacementHonors(championCode, runnerUpCode, topFourCodes = []) {
@@ -3357,7 +3356,7 @@ async function applyRankingPlacementHonors(championCode, runnerUpCode, topFourCo
   }
 
   state.rankingMeta = hall;
-  await state.storage.saveMeta("rankingHall", hall);
+  await state.storage.saveMeta(META_KEYS.RANKING_HALL, hall);
 }
 
 function syncTournamentParticipants() {

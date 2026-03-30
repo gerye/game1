@@ -1,4 +1,7 @@
-export const EXPLORATION_GRADE_FLOW = ["E", "D", "C", "B", "A", "S", "SS", "SSS"];
+import { GRADE_SCALE } from "./config.js";
+import { shuffleArray as shuffleValues } from "./utils.js";
+
+export const EXPLORATION_GRADE_FLOW = GRADE_SCALE;
 
 export const EXPLORATION_QUESTION_BANK = [
   { id: "kills-even", text: "该角色击杀数是否为偶数？", check: ({ progress }) => isEven(progress.kills) },
@@ -56,11 +59,4 @@ function isEven(value) {
   return Math.abs(Math.round(Number(value || 0))) % 2 === 0;
 }
 
-export function shuffleValues(values) {
-  const items = [...values];
-  for (let index = items.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
-  }
-  return items;
-}
+export { shuffleValues };

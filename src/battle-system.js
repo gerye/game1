@@ -9,7 +9,7 @@ import {
   tickStatuses
 } from "./status-effects.js";
 import { expToNextLevel, getEffectiveSheet } from "./game-data.js";
-import { clamp, gradeColor as gradeTint, gradeIndex, lerp } from "./utils.js";
+import { clamp, gradeColor as gradeTint, gradeIndex, lerp, round2, shuffleArray } from "./utils.js";
 
 const HEX_DIRECTIONS = [
   { q: 1, r: 0 },
@@ -2312,10 +2312,6 @@ function setHudStatusMessage(entity, text) {
   entity.hudStatusMessage = text;
 }
 
-function round2(value) {
-  return Math.round(Number(value || 0) * 100) / 100;
-}
-
 function heuristic(fromKey, toKey) {
   return hexDistance(parseCellKey(fromKey), parseCellKey(toKey));
 }
@@ -2349,11 +2345,3 @@ function hexDistance(left, right) {
   return Math.max(Math.abs(lq - rq), Math.abs(lr - rr), Math.abs(ls - rs));
 }
 
-function shuffleArray(values) {
-  const items = [...values];
-  for (let index = items.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
-  }
-  return items;
-}

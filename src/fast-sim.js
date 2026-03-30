@@ -1,3 +1,5 @@
+import { EQUIPMENT_SLOT_LABELS } from "./equipment-data.js";
+
 const FAST_SIM_STAGES = [
   { level: 1, championGrade: "C", runnerUpGrade: "D" },
   { level: 11, championGrade: "B", runnerUpGrade: "C" },
@@ -8,7 +10,7 @@ const FAST_SIM_STAGES = [
 ];
 
 const FAST_SIM_EXPLORATION_STAGES = [5, 15, 25, 35, 45];
-const FAST_SIM_REWARD_SLOTS = ["weapon", "armor", "accessory"];
+const FAST_SIM_REWARD_SLOTS = Object.keys(EQUIPMENT_SLOT_LABELS);
 const ENDLESS_FAST_SIM_CYCLE = [
   ...Array.from({ length: 10 }, () => ({ type: "chaos" })),
   { type: "exploration" },

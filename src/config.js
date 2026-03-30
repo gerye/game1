@@ -8,6 +8,20 @@ export const BATTLE_LOG_LIMIT = 20;
 export const MAX_LEVEL = 50;
 export const AVATAR_SIZE = 192;
 
+export const CHRONICLE_ENTRY_LIMIT = 80;
+export const BIOGRAPHY_ENTRY_LIMIT = 24;
+export const DEFAULT_FACTION_COLOR = "#8f5d32";
+
+export const META_KEYS = Object.freeze({
+  BATTLE_WIN_SUMMARY:   "battleWinSummary",
+  TOURNAMENT_HALL:      "tournamentHall",
+  RANKING_HALL:         "rankingHall",
+  JIANGHU_CHRONICLE:    "jianghuChronicle",
+  RANKING_HISTORY:      "rankingHistory",
+  FAST_SIM_META:        "fastSimMeta",
+  BLOODLINE_TASK_STATE: "bloodlineTaskState"
+});
+
 export const CRIT_CHANCE = 0.05;
 export const CRIT_DAMAGE_MULTIPLIER = 1.5;
 

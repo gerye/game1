@@ -99,3 +99,18 @@ export function signedPct(value) {
   const pct = Math.round(value * 100);
   return `${pct > 0 ? "+" : ""}${pct}%`;
 }
+
+export function deepClone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+export function shuffleArray(values) {
+  const items = [...values];
+  for (let i = items.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
+export const round2 = (value) => Math.round(Number(value || 0) * 100) / 100;

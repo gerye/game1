@@ -1,3 +1,5 @@
+import { DEFAULT_FACTION_COLOR } from "./config.js";
+
 export function getDefaultRankingBoardTab(ranking) {
   if (!ranking) return "swiss-1";
   if (ranking.currentPhase === "knockout" && ranking.knockout) return "knockout";
@@ -68,7 +70,7 @@ function renderRankingRoundTable({ ranking, roundNumber, getRankingRoundRows, ge
           ${rows.map((row) => {
             const entry = getEntryByCode(row.code);
             const opponent = row.opponentCode ? getEntryByCode(row.opponentCode) : null;
-            const factionColor = entry?.build?.faction?.color || "#8f5d32";
+            const factionColor = entry?.build?.faction?.color || DEFAULT_FACTION_COLOR;
             const opponentText = row.outcome === "轮空" ? "轮空" : (row.opponentCode || "-");
             const opponentHtml = opponent
               ? `<span style="color:${gradeColor(opponent?.build?.potential || "E")}">${escapeHtml(opponent.displayName)}</span>`
@@ -111,7 +113,7 @@ function renderRankingSwissFinalTable({ ranking, getRankingStandings, getEntryBy
         <tbody>
           ${rows.map((row) => {
             const entry = getEntryByCode(row.code);
-            const factionColor = entry?.build?.faction?.color || "#8f5d32";
+            const factionColor = entry?.build?.faction?.color || DEFAULT_FACTION_COLOR;
             const rowClass = row.rank === 12 ? "ranking-cutoff-row" : "";
             return `
               <tr class="${rowClass}">
@@ -209,7 +211,7 @@ function renderRankingTreeSlot(code, winner, { getEntryByCode, gradeColor, escap
         ${labelPrefix}<span style="color:${gradeColor(entry.build.potential)}">${escapeHtml(entry.displayName)}</span>
       </div>
       <div class="ranking-tree-slot-meta">
-        <span style="color:${entry.build?.faction?.color || "#8f5d32"}">${escapeHtml(entry.build?.faction?.name || "-")}</span>
+        <span style="color:${entry.build?.faction?.color || DEFAULT_FACTION_COLOR}">${escapeHtml(entry.build?.faction?.name || "-")}</span>
       </div>
     </div>
   `;

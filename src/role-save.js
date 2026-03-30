@@ -1,3 +1,4 @@
+import { META_KEYS } from "./config.js";
 import { buildStorageSnapshot } from "./storage.js";
 
 export async function createRoleSaveSnapshot(storage, {
@@ -13,13 +14,13 @@ export async function createRoleSaveSnapshot(storage, {
   fastSimMeta = null,
   bloodlineTaskState = null
 } = {}) {
-  const latestWinSummary = await storage.getMeta("battleWinSummary") || winSummary || { totalWins: 0, byFaction: {} };
-  const latestTournamentMeta = await storage.getMeta("tournamentHall") || tournamentMeta || { byFaction: {}, byCap: {} };
-  const latestRankingMeta = await storage.getMeta("rankingHall") || rankingMeta || { byFaction: {}, byCap: {} };
-  const latestChronicle = await storage.getMeta("jianghuChronicle") || chronicle || null;
-  const latestRankingHistory = await storage.getMeta("rankingHistory") || rankingHistory || [];
-  const latestFastSimMeta = await storage.getMeta("fastSimMeta") || fastSimMeta || null;
-  const latestBloodlineTaskState = await storage.getMeta("bloodlineTaskState") || bloodlineTaskState || null;
+  const latestWinSummary = await storage.getMeta(META_KEYS.BATTLE_WIN_SUMMARY) || winSummary || { totalWins: 0, byFaction: {} };
+  const latestTournamentMeta = await storage.getMeta(META_KEYS.TOURNAMENT_HALL) || tournamentMeta || { byFaction: {}, byCap: {} };
+  const latestRankingMeta = await storage.getMeta(META_KEYS.RANKING_HALL) || rankingMeta || { byFaction: {}, byCap: {} };
+  const latestChronicle = await storage.getMeta(META_KEYS.JIANGHU_CHRONICLE) || chronicle || null;
+  const latestRankingHistory = await storage.getMeta(META_KEYS.RANKING_HISTORY) || rankingHistory || [];
+  const latestFastSimMeta = await storage.getMeta(META_KEYS.FAST_SIM_META) || fastSimMeta || null;
+  const latestBloodlineTaskState = await storage.getMeta(META_KEYS.BLOODLINE_TASK_STATE) || bloodlineTaskState || null;
   const latestEquipment = equipment.length > 0 ? equipment : await storage.getEquipmentRaw();
 
   return buildStorageSnapshot({
@@ -28,13 +29,13 @@ export async function createRoleSaveSnapshot(storage, {
     capProgress: progress,
     equipment: latestEquipment,
     meta: {
-      battleWinSummary: latestWinSummary,
-      tournamentHall: latestTournamentMeta,
-      rankingHall: latestRankingMeta,
-      jianghuChronicle: latestChronicle,
-      rankingHistory: latestRankingHistory,
-      fastSimMeta: latestFastSimMeta,
-      bloodlineTaskState: latestBloodlineTaskState
+      [META_KEYS.BATTLE_WIN_SUMMARY]:   latestWinSummary,
+      [META_KEYS.TOURNAMENT_HALL]:      latestTournamentMeta,
+      [META_KEYS.RANKING_HALL]:         latestRankingMeta,
+      [META_KEYS.JIANGHU_CHRONICLE]:    latestChronicle,
+      [META_KEYS.RANKING_HISTORY]:      latestRankingHistory,
+      [META_KEYS.FAST_SIM_META]:        latestFastSimMeta,
+      [META_KEYS.BLOODLINE_TASK_STATE]: latestBloodlineTaskState
     }
   });
 }

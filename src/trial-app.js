@@ -1,3 +1,4 @@
+import { META_KEYS } from "./config.js";
 import { createBattleState, renderBattleScene, updateBattleState } from "./battle-system.js";
 import { getBuiltinBloodlines, syncBloodlineLibrary } from "./bloodlines.js";
 import { normalizeEquipmentBySlot, syncEquipmentLibrary } from "./equipment-data.js";
@@ -172,10 +173,10 @@ async function refreshData() {
   if (state.bloodlines.length === 0) {
     state.bloodlines = getBuiltinBloodlines();
   }
-  state.tournamentMeta = await state.storage.getMeta("tournamentHall") || { byFaction: {}, byCap: {} };
-  state.rankingMeta = await state.storage.getMeta("rankingHall") || { byFaction: {}, byCap: {} };
-  state.winSummary = await state.storage.getMeta("battleWinSummary") || { totalWins: 0, byFaction: {} };
-  state.chronicle = await state.storage.getMeta("jianghuChronicle") || null;
+  state.tournamentMeta = await state.storage.getMeta(META_KEYS.TOURNAMENT_HALL) || { byFaction: {}, byCap: {} };
+  state.rankingMeta = await state.storage.getMeta(META_KEYS.RANKING_HALL) || { byFaction: {}, byCap: {} };
+  state.winSummary = await state.storage.getMeta(META_KEYS.BATTLE_WIN_SUMMARY) || { totalWins: 0, byFaction: {} };
+  state.chronicle = await state.storage.getMeta(META_KEYS.JIANGHU_CHRONICLE) || null;
   if (!state.leftCode) state.leftCode = state.bases[0]?.code || "";
   if (!state.rightCode) state.rightCode = state.bases[1]?.code || state.bases[0]?.code || "";
   renderSelectors();

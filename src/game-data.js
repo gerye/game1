@@ -1,4 +1,4 @@
-﻿import { CHARACTER_ARCH_VERSION, GAME_VERSION, GRADE_SCALE, MAX_LEVEL, ROLE_LABELS } from "./config.js";
+﻿import { BIOGRAPHY_ENTRY_LIMIT, CHARACTER_ARCH_VERSION, GAME_VERSION, GRADE_SCALE, MAX_LEVEL, ROLE_LABELS } from "./config.js";
 import { applyEquipmentBonuses, normalizeEquipmentBySlot } from "./equipment-data.js";
 import { pickFactionFromBase } from "./image-tools.js";
 import {
@@ -272,8 +272,6 @@ const ACTIVE_SKILL_COOLDOWNS = {
   SS: 12,
   SSS: 10
 };
-
-const BIOGRAPHY_ENTRY_LIMIT = 24;
 
 function isPinnedBiographyEntry(entry) {
   if (!entry || typeof entry !== "object") return false;

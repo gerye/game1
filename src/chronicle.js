@@ -1,12 +1,9 @@
-import { FACTIONS, GRADE_COLORS } from "./config.js";
+import { CHRONICLE_ENTRY_LIMIT, FACTIONS, GRADE_COLORS } from "./config.js";
+import { clamp } from "./utils.js";
 
 const FACTION_MAP = new Map(FACTIONS.map((faction) => [faction.key, faction]));
 const MILESTONE_LEVELS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
-const ENTRY_LIMIT = 80;
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
+const ENTRY_LIMIT = CHRONICLE_ENTRY_LIMIT;
 
 function hexToRgb(hex) {
   const normalized = String(hex || "").replace("#", "").trim();

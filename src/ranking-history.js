@@ -1,6 +1,4 @@
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
+import { deepClone as clone } from "./utils.js";
 
 function normalizeFaction(faction) {
   if (!faction || typeof faction !== "object") {

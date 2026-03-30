@@ -1,6 +1,4 @@
-﻿function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
+﻿import { deepClone as clone } from "./utils.js";
 
 function createRankingRecord(code, randomSeed = 0) {
   return {
@@ -179,7 +177,7 @@ function normalizePairings(round) {
     return {
       ...pairing,
       loserCode: pairing.winnerCode === pairing.leftCode ? pairing.rightCode : pairing.leftCode,
-      resultLabel: pairing.winnerCode === pairing.leftCode ? "宸﹁儨" : "鍙宠儨"
+      resultLabel: pairing.winnerCode === pairing.leftCode ? "左赢" : "右赢"
     };
   });
 }

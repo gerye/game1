@@ -1,3 +1,5 @@
+import { GRADE_SCALE as GRADE_ORDER } from "./config.js";
+
 export const BLOODLINE_TASK_TARGET = 20;
 
 export const BLOODLINE_TASKS = {
@@ -113,4 +115,3 @@ export function getTopBloodlineTaskCandidates(entries = [], bloodlines = [], blo
     .slice(0, Math.max(0, limit));
 }
 
-const GRADE_ORDER = ["E", "D", "C", "B", "A", "S", "SS", "SSS"];
