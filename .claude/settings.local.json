@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(ls -la /e/科研工作/博士工作/game/src/*.js)"
-    ]
-  }
-}
