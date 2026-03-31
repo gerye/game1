@@ -2005,6 +2005,28 @@ function drawAnimations(ctx, battle, layout) {
       ctx.moveTo(start.x, start.y);
       ctx.quadraticCurveTo(mx + nx * lift, my + ny * lift, end.x, end.y);
       ctx.stroke();
+      if (progress > 0.6) {
+        const trailFade = (progress - 0.6) / 0.4;
+        const trailOffsets = [8, 16, 24];
+        const trailAlphas = [0.40, 0.25, 0.10];
+        trailOffsets.forEach((offset, i) => {
+          ctx.save();
+          ctx.globalAlpha = trailAlphas[i] * (1 - trailFade * 0.6);
+          ctx.strokeStyle = animation.color;
+          ctx.lineWidth = animation.width * 0.6;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(start.x + nx * offset, start.y + ny * offset);
+          ctx.quadraticCurveTo(
+            mx + nx * (lift + offset),
+            my + ny * (lift + offset),
+            end.x + nx * offset,
+            end.y + ny * offset
+          );
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
     } else if (animation.type === "impact") {
       const pos = project(animation.q, animation.r, layout, battle.cameraMode);
       const maxRadius = animation.isCrit ? layout.hexRadius * 1.7 : layout.hexRadius * 1.2;
