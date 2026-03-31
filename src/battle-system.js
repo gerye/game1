@@ -2282,6 +2282,16 @@ function pushRadialAnimation(battle, q, r, color, radius, ttl) {
   battle.animations.push({ type: "radial", q, r, color, radius, ttl, maxTtl: ttl });
 }
 
+function pushImpactAnimation(battle, q, r, isCrit, ttlOverride) {
+  const ttl = ttlOverride ?? 0.18;
+  battle.animations.push({ type: "impact", q, r, isCrit: !!isCrit, ttl, maxTtl: ttl });
+}
+
+function pushGhostAnimation(battle, q, r, color, ttlOverride) {
+  const ttl = ttlOverride ?? 0.18;
+  battle.animations.push({ type: "ghost", q, r, color, ttl, maxTtl: ttl });
+}
+
 function pushAnnouncement(battle, entityId, text, color, options = {}) {
   const ttl = options.ttl || 1.05;
   battle.announcements.push({
