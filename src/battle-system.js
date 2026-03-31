@@ -194,6 +194,7 @@ function createBattleEntity(entry, skillMap, equipmentList, statusMap, index) {
     renderQ: 0,
     renderR: 0,
     moveAnim: null,
+    nudgeAnim: null,
     moveCharge: 1 + (index % 5) * 0.08,
     attackCooldown: entry.build.role === "caster" ? 0 : (index % 3) * 0.12,
     skills: entry.build.skillIds
@@ -1621,6 +1622,15 @@ function tickVisuals(battle, dt) {
   battle.entities.forEach((entity) => {
     if (entity.hp > entity.hpDamageAnchor) {
       entity.hpDamageAnchor = entity.hp;
+    }
+    if (entity.nudgeAnim) {
+      entity.nudgeAnim.elapsed += dt;
+      if (entity.nudgeAnim.phase === 'out' && entity.nudgeAnim.elapsed >= entity.nudgeAnim.outDuration) {
+        entity.nudgeAnim.elapsed -= entity.nudgeAnim.outDuration;
+        entity.nudgeAnim.phase = 'back';
+      } else if (entity.nudgeAnim.phase === 'back' && entity.nudgeAnim.elapsed >= entity.nudgeAnim.backDuration) {
+        entity.nudgeAnim = null;
+      }
     }
     if (!entity.moveAnim) {
       entity.renderQ = entity.q;
