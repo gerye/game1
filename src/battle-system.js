@@ -897,13 +897,31 @@ function castSkill(entity, target, enemies, skill, battle, occupancy) {
 
 function performBasicAttack(attacker, defender, damageType, battle, occupancy) {
   const color = gradeTint(attacker.potential);
+  const attackInterval = attacker.derived.attackInterval ?? 1.0;
+  const baseTtl = clamp(attackInterval * 0.4, 0.10, 0.45);
   if (damageType === "magic") {
-    pushProjectileAnimation(battle, attacker.q, attacker.r, defender.q, defender.r, color, 0.2, "orb");
-    pushRadialAnimation(battle, defender.q, defender.r, color, 0.72, 0.18);
+    pushProjectileAnimation(battle, attacker.q, attacker.r, defender.q, defender.r, color, baseTtl, "orb");
+    pushRadialAnimation(battle, defender.q, defender.r, color, 0.72, baseTtl * 0.85);
   } else if (attacker.role === "ranged") {
-    pushProjectileAnimation(battle, attacker.q, attacker.r, defender.q, defender.r, color, 0.16, "arrow");
+    pushProjectileAnimation(battle, attacker.q, attacker.r, defender.q, defender.r, color, baseTtl, "arrow");
+    attacker.nudgeAnim = {
+      fromQ: attacker.q, fromR: attacker.r,
+      toQ: defender.q, toR: defender.r,
+      distFrac: 0.15,
+      outDuration: clamp(attackInterval * 0.10, 0.04, 0.18),
+      backDuration: clamp(attackInterval * 0.10, 0.04, 0.18),
+      elapsed: 0, phase: "out"
+    };
   } else {
-    pushSlashAnimation(battle, attacker.q, attacker.r, defender.q, defender.r, color, 0.14, 4);
+    pushSlashAnimation(battle, attacker.q, attacker.r, defender.q, defender.r, color, baseTtl, 4);
+    attacker.nudgeAnim = {
+      fromQ: attacker.q, fromR: attacker.r,
+      toQ: defender.q, toR: defender.r,
+      distFrac: 0.30,
+      outDuration: clamp(attackInterval * 0.12, 0.05, 0.20),
+      backDuration: clamp(attackInterval * 0.12, 0.05, 0.20),
+      elapsed: 0, phase: "out"
+    };
   }
   return applyDamage(attacker, defender, 1, 0, damageType, battle, {
     label: "\u666e\u901a\u653b\u51fb: ",
@@ -944,10 +962,22 @@ function applyDamage(attacker, defender, powerScalar, flatDamage, damageType, ba
       pushBattleLog(battle, `${attacker.name} \u7684\u653b\u51fb\u88ab ${defender.name} \u95ea\u907f\u4e86\u3002`);
       defender.hpDamageAnchor = defender.hp;
       setHudAttackMessage(defender, `受到 ${attacker.name} 的${skill?.name || "攻击"}，损失 0 生命（闪避）`);
+      pushGhostAnimation(battle, defender.q, defender.r, gradeTint(defender.potential));
       return { hit: false, damage: 0, killed: false, evaded: true };
     }
   }
   const crit = Math.random() < CRIT_CHANCE ? CRIT_DAMAGE_MULTIPLIER : 1;
+  const isCrit = crit > 1;
+  const impactTtl = clamp((attacker.derived.attackInterval ?? 1.0) * 0.25, 0.08, 0.20);
+  pushImpactAnimation(battle, defender.q, defender.r, isCrit, impactTtl);
+  defender.nudgeAnim = {
+    fromQ: attacker.q, fromR: attacker.r,
+    toQ: defender.q, toR: defender.r,
+    distFrac: 0.15,
+    outDuration: 0.05,
+    backDuration: 0.07,
+    elapsed: 0, phase: "out"
+  };
   let damage = ((baseAttack * powerScalar * attackMod * crit) / Math.max(12, baseDefense * defenseMod)) * 13 + flatDamage;
   damage = Math.max(6, damage);
   let sleepAmp = 1;
