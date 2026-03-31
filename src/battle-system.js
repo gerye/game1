@@ -1886,6 +1886,18 @@ function drawEntities(ctx, battle, layout, getAvatarImage, gradeColor) {
 
   living.forEach((entity) => {
     const pos = project(entity.renderQ, entity.renderR, layout, battle.cameraMode);
+    if (entity.nudgeAnim) {
+      const nFrom = project(entity.nudgeAnim.fromQ, entity.nudgeAnim.fromR, layout, battle.cameraMode);
+      const nTo = project(entity.nudgeAnim.toQ, entity.nudgeAnim.toR, layout, battle.cameraMode);
+      const ndx = nTo.x - nFrom.x;
+      const ndy = nTo.y - nFrom.y;
+      const nlen = Math.hypot(ndx, ndy) || 1;
+      const maxDist = entity.nudgeAnim.distFrac * layout.hexRadius;
+      const nt = clamp(entity.nudgeAnim.elapsed / (entity.nudgeAnim.phase === 'out' ? entity.nudgeAnim.outDuration : entity.nudgeAnim.backDuration), 0, 1);
+      const dist = entity.nudgeAnim.phase === 'out' ? nt * maxDist : (1 - nt) * maxDist;
+      pos.x += (ndx / nlen) * dist;
+      pos.y += (ndy / nlen) * dist;
+    }
     const size = layout.entityRadius;
 
     ctx.save();
