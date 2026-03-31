@@ -2005,6 +2005,28 @@ function drawAnimations(ctx, battle, layout) {
       ctx.moveTo(start.x, start.y);
       ctx.quadraticCurveTo(mx + nx * lift, my + ny * lift, end.x, end.y);
       ctx.stroke();
+    } else if (animation.type === "impact") {
+      const pos = project(animation.q, animation.r, layout, battle.cameraMode);
+      const maxRadius = animation.isCrit ? layout.hexRadius * 1.7 : layout.hexRadius * 1.2;
+      const radius = progress * maxRadius;
+      const lineWidth = animation.isCrit ? lerp(2.5, 0.8, progress) : lerp(1.5, 0.5, progress);
+      ctx.save();
+      ctx.globalAlpha = 1 - progress;
+      ctx.strokeStyle = animation.isCrit ? '#FFD700' : 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = lineWidth;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, Math.max(0.1, radius), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    } else if (animation.type === "ghost") {
+      const pos = project(animation.q, animation.r, layout, battle.cameraMode);
+      ctx.save();
+      ctx.globalAlpha = 0.5 * (animation.ttl / animation.maxTtl);
+      ctx.fillStyle = animation.color;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, layout.entityRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
   });
 }
