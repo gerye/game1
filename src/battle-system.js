@@ -841,12 +841,28 @@ function castSkill(entity, target, enemies, skill, battle, occupancy) {
       }, occupancy, skill);
     });
     pushRadialAnimation(battle, target.q, target.r, "#c2410c", Math.max(1, spec.radius), 0.45);
+    const aoeInterval = entity.derived.attackInterval ?? 1.0;
+    const aoeTtl = clamp(aoeInterval * 0.4, 0.10, 0.45);
     if (entity.role === "melee") {
-      pushSlashAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), 0.24, 6);
+      pushSlashAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), aoeTtl, 6);
+      entity.nudgeAnim = {
+        fromQ: entity.q, fromR: entity.r, toQ: target.q, toR: target.r,
+        distFrac: 0.30,
+        outDuration: clamp(aoeInterval * 0.12, 0.05, 0.20),
+        backDuration: clamp(aoeInterval * 0.12, 0.05, 0.20),
+        elapsed: 0, phase: "out"
+      };
     } else if (entity.role === "ranged") {
-      pushProjectileAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), 0.24, "heavy-arrow");
+      pushProjectileAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), aoeTtl, "heavy-arrow");
+      entity.nudgeAnim = {
+        fromQ: entity.q, fromR: entity.r, toQ: target.q, toR: target.r,
+        distFrac: 0.15,
+        outDuration: clamp(aoeInterval * 0.10, 0.04, 0.18),
+        backDuration: clamp(aoeInterval * 0.10, 0.04, 0.18),
+        elapsed: 0, phase: "out"
+      };
     } else {
-      pushProjectileAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), 0.28, "flare");
+      pushProjectileAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), aoeTtl, "flare");
     }
     pushBattleLog(battle, `${entity.name} \u91ca\u653e ${skill.name}\uff0c\u547d\u4e2d ${victims.length} \u4e2a\u76ee\u6807\u3002`);
     return;
@@ -884,12 +900,28 @@ function castSkill(entity, target, enemies, skill, battle, occupancy) {
       }
     }
   }
+  const stInterval = entity.derived.attackInterval ?? 1.0;
+  const stTtl = clamp(stInterval * 0.4, 0.10, 0.45);
   if (entity.role === "melee") {
-    pushSlashAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), 0.22, 5);
+    pushSlashAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), stTtl, 5);
+    entity.nudgeAnim = {
+      fromQ: entity.q, fromR: entity.r, toQ: target.q, toR: target.r,
+      distFrac: 0.30,
+      outDuration: clamp(stInterval * 0.12, 0.05, 0.20),
+      backDuration: clamp(stInterval * 0.12, 0.05, 0.20),
+      elapsed: 0, phase: "out"
+    };
   } else if (entity.role === "ranged") {
-    pushProjectileAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), 0.22, "heavy-arrow");
+    pushProjectileAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), stTtl, "heavy-arrow");
+    entity.nudgeAnim = {
+      fromQ: entity.q, fromR: entity.r, toQ: target.q, toR: target.r,
+      distFrac: 0.15,
+      outDuration: clamp(stInterval * 0.10, 0.04, 0.18),
+      backDuration: clamp(stInterval * 0.10, 0.04, 0.18),
+      elapsed: 0, phase: "out"
+    };
   } else {
-    pushProjectileAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), 0.24, "flare");
+    pushProjectileAnimation(battle, entity.q, entity.r, target.q, target.r, gradeTint(skill.grade), stTtl, "flare");
     pushRadialAnimation(battle, target.q, target.r, gradeTint(skill.grade), 1.15, 0.26);
   }
   pushBattleLog(battle, `${entity.name} \u4f7f\u7528 ${skill.name} \u547d\u4e2d ${target.name}\u3002`);
