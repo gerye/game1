@@ -163,23 +163,33 @@ export function applyEquipmentBonuses(build, whitePrimary, whiteDerived, allEqui
     chantTime: 0
   };
 
+  const equipmentStars = build.equipmentStars || {};
   const equipped = getEquippedItems(build, allEquipment);
-  equipped.forEach(({ item }) => {
+  equipped.forEach(({ slot, item }) => {
     if (!item) return;
+    const stars = equipmentStars[slot] || 0;
+    const starMultiplier = 1 + stars * 0.05;
     (item.effects || []).forEach((effect) => {
       if (effect.target === "primary") {
-        greenPrimary[effect.key] += effect.mode === "pct"
+        const base = effect.mode === "pct"
           ? (whitePrimary[effect.key] || 0) * effect.value
           : effect.value;
+        greenPrimary[effect.key] += base * starMultiplier;
         return;
       }
-      greenDerived[effect.key] += effect.mode === "pct"
+      const base = effect.mode === "pct"
         ? (whiteDerived[effect.key] || 0) * effect.value
         : effect.value;
+      greenDerived[effect.key] += base * starMultiplier;
     });
   });
 
   return { greenPrimary, greenDerived };
+}
+
+function getMaxStarsForGrade(grade) {
+  if (grade === "S" || grade === "SS" || grade === "SSS") return 5;
+  return 3;
 }
 
 export function applyEquipmentDrop(build, equipmentId, allEquipment = []) {
@@ -187,14 +197,57 @@ export function applyEquipmentDrop(build, equipmentId, allEquipment = []) {
   if (!item || !canRoleEquip(item, build.role)) return build;
 
   const equipmentBySlot = normalizeEquipmentBySlot(build.equipmentBySlot, build.role, allEquipment);
+  const equipmentStars = { weapon: 0, armor: 0, accessory: 0, ...(build.equipmentStars || {}) };
   const previousId = equipmentBySlot[item.slot];
   const previous = allEquipment.find((equipment) => equipment.id === previousId) || null;
 
   if (previous) {
-    const nextGrade = gradeIndex(item.grade);
-    const previousGrade = gradeIndex(previous.grade);
-    if (nextGrade < previousGrade) return build;
-    if (nextGrade === previousGrade && previous.id === item.id) return build;
+    const nextGradeIdx = gradeIndex(item.grade);
+    const previousGradeIdx = gradeIndex(previous.grade);
+    if (nextGradeIdx < previousGradeIdx) return build;
+
+    if (nextGradeIdx === previousGradeIdx) {
+      const maxStars = getMaxStarsForGrade(previous.grade);
+      const currentStars = equipmentStars[item.slot] || 0;
+      const newStars = currentStars + 1;
+
+      if (newStars >= maxStars) {
+        const nextGradeStr = GRADE_SCALE[gradeIndex(previous.grade) + 1];
+        if (!nextGradeStr || previous.grade === "SSS") {
+          return {
+            ...build,
+            equipmentBySlot,
+            equipmentStars: { ...equipmentStars, [item.slot]: maxStars }
+          };
+        }
+        const upgradePool = allEquipment.filter((eq) =>
+          !eq.deleted &&
+          eq.grade === nextGradeStr &&
+          eq.slot === item.slot &&
+          canRoleEquip(eq, build.role)
+        );
+        if (upgradePool.length === 0) {
+          return {
+            ...build,
+            equipmentBySlot,
+            equipmentStars: { ...equipmentStars, [item.slot]: maxStars }
+          };
+        }
+        const rng = createSeededRandom(`${build.buildId}:star-upgrade:${item.slot}:${Date.now()}`);
+        const picked = upgradePool[Math.floor(rng() * upgradePool.length)];
+        return {
+          ...build,
+          equipmentBySlot: { ...equipmentBySlot, [item.slot]: picked.id },
+          equipmentStars: { ...equipmentStars, [item.slot]: 0 }
+        };
+      }
+
+      return {
+        ...build,
+        equipmentBySlot,
+        equipmentStars: { ...equipmentStars, [item.slot]: newStars }
+      };
+    }
   }
 
   return {
@@ -202,7 +255,8 @@ export function applyEquipmentDrop(build, equipmentId, allEquipment = []) {
     equipmentBySlot: {
       ...equipmentBySlot,
       [item.slot]: item.id
-    }
+    },
+    equipmentStars: { ...equipmentStars, [item.slot]: 0 }
   };
 }
 

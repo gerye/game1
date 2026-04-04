@@ -117,6 +117,8 @@ const state = {
   lastChronicleRenderKey: "",
   rankingHistory: [],
   bloodlineTaskState: createDefaultBloodlineTaskState(),
+  expandedFactions: new Set(),
+  detailPanelOpen: true,
   selectedCode: null,
   upload: null,
   battle: null,
@@ -812,8 +814,10 @@ async function refreshAll() {
     return progress;
   }));
   await loadReferenceData();
-  if (!state.selectedCode || !state.bases.some((base) => base.code === state.selectedCode)) {
-    state.selectedCode = state.bases[0]?.code || null;
+  // Only auto-select if there was a previously valid code that no longer exists (e.g. deleted).
+  // If selectedCode is null (user cleared it by collapsing), leave it null.
+  if (state.selectedCode && !state.bases.some((base) => base.code === state.selectedCode)) {
+    state.selectedCode = null;
   }
   renderHeroStats();
   renderBuildGrid();
@@ -1061,7 +1065,8 @@ function renderBuildGrid() {
     equipment: state.equipment,
     getEquippedItems,
     equippedSlotLabels: EQUIPMENT_SLOT_LABELS,
-    escapeHtml
+    escapeHtml,
+    expandedFactions: state.expandedFactions
   });
 }
 
@@ -1070,6 +1075,7 @@ function renderCapDetail() {
   renderCapDetailView({
     container: dom.capDetail,
     entry,
+    panelOpen: state.detailPanelOpen,
     roleLabels: ROLE_LABELS,
     gradeColor,
     expToNextLevel,
@@ -1166,6 +1172,24 @@ function renderStatusDatabase() {
 }
 
 async function handleBuildGridClick(event) {
+  const factionToggle = event.target.closest("[data-faction-toggle]");
+  if (factionToggle) {
+    const key = factionToggle.dataset.factionToggle;
+    if (state.expandedFactions.has(key)) {
+      state.expandedFactions.delete(key);
+      // If the selected character belongs to this now-collapsed faction, clear the detail panel
+      const selectedEntry = getEntries().find((e) => e.base.code === state.selectedCode);
+      if (selectedEntry?.build?.faction?.key === key) {
+        state.selectedCode = null;
+        renderCapDetail();
+      }
+    } else {
+      state.expandedFactions.add(key);
+    }
+    renderBuildGrid();
+    return;
+  }
+
   const card = event.target.closest("[data-open-id]");
   if (card) {
     state.selectedCode = card.dataset.openId;
@@ -1253,6 +1277,11 @@ async function handleBaseDatabaseClick(event) {
 async function handleDetailAction(event) {
   const button = event.target.closest("button[data-detail-action]");
   if (!button) return;
+  if (button.dataset.detailAction === "toggle-panel") {
+    state.detailPanelOpen = !state.detailPanelOpen;
+    renderCapDetail();
+    return;
+  }
   const code = button.dataset.id;
   if (button.dataset.detailAction === "regen") {
     await regenerateBuild(code);

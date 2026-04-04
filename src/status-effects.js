@@ -235,6 +235,40 @@ const STATUS_SEEDS = [
     visualAccent: "#c4b5fd"
   },
   {
+    id: "blazing-sun-aura",
+    name: "烈阳附体",
+    kind: "buff",
+    duration: 0,
+    unique: true,
+    desc: "物攻与法攻各提高 25%。",
+    derivedRatioBonuses: {
+      physicalAttack: 0.25,
+      magicAttack: 0.25
+    },
+    templateVersion: GAME_VERSION,
+    source: "system",
+    visualType: "buff",
+    visualColor: "#f59e0b",
+    visualAccent: "#fde68a"
+  },
+  {
+    id: "frost-ice-aura",
+    name: "寒冰附体",
+    kind: "buff",
+    duration: 0,
+    unique: true,
+    desc: "物防与法防各提高 30%。",
+    derivedRatioBonuses: {
+      physicalDefense: 0.3,
+      magicDefense: 0.3
+    },
+    templateVersion: GAME_VERSION,
+    source: "system",
+    visualType: "buff",
+    visualColor: "#7dd3fc",
+    visualAccent: "#e0f2fe"
+  },
+  {
     id: "feral-beast-aura",
     name: "凶兽附体",
     kind: "buff",

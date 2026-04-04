@@ -316,7 +316,7 @@ code {
 
 .form-grid              { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .analysis-area          { display: grid; gap: 14px; grid-template-columns: 230px minmax(0, 1fr); }
-.codex-layout           { display: grid; gap: 14px; grid-template-columns: minmax(0, 1.28fr) minmax(340px, 0.92fr); }
+.codex-layout           { display: grid; gap: 14px; grid-template-columns: minmax(0, 1.28fr) minmax(340px, 0.92fr); align-items: start; }
 .battlefield-grid       { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr) 330px; }
 .tournament-grid        { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr) 360px; }
 .trial-layout           { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr) 360px; }
@@ -652,8 +652,162 @@ button:disabled {
   align-items: center;
 }
 
+.faction-toggle-head {
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--r-md);
+  padding: 4px 2px;
+  transition: background var(--t-fast) var(--ease-out);
+}
+
+.faction-toggle-head:hover {
+  background: rgba(31, 43, 36, 0.06);
+}
+
+.faction-chevron {
+  font-size: 13px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Faction head layout */
+.faction-head-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.faction-head-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.faction-head-name {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.faction-total-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: rgba(31, 43, 36, 0.09);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.faction-head-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.78;
+  white-space: nowrap;
+}
+
+/* Grade distribution chips */
+.faction-grade-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.faction-grade-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 8px;
+  border: 1.5px solid;
+  background: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.faction-grade-chip small {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
 .faction-grid {
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.faction-grid--collapsed {
+  display: none;
+}
+
+/* Equipment stars */
+.equipment-art-wrap,
+.equipment-slot-art-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.equipment-stars {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  font-size: 9px;
+  line-height: 1;
+  color: #f0c040;
+  text-shadow: 0 0 3px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+.equipment-slot .equipment-stars {
+  font-size: 7px;
+  top: 1px;
+  right: 1px;
+}
+
+.equipment-star-bonus {
+  color: #c8a840;
+  font-size: 0.82em;
+  font-weight: 600;
+}
+
+/* Detail panel collapse */
+.detail-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.detail-panel-head .card-top {
+  margin-bottom: 0;
+}
+
+.detail-panel-toggle {
+  flex-shrink: 0;
+  padding: 2px 7px !important;
+  font-size: 12px !important;
+  line-height: 1;
+}
+
+/* Honor total */
+.honor-total-row {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.honor-total-value {
+  color: #d4af37 !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .exploration-tier-stack { display: grid; gap: 14px; }

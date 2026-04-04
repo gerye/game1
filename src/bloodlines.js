@@ -68,6 +68,28 @@ const BLOODLINE_SEEDS = [
     desc: "每秒回复最大生命值 0.4% 的生命，附带 2 次逆天改命，并习得 SS 级体质增强。"
   },
   {
+    id: "blazing-sun",
+    name: "烈阳血脉",
+    grade: "SS",
+    symbol: "☀️",
+    statusId: "blazing-sun-aura",
+    statusName: "烈阳附体",
+    fateBonus: 2,
+    skillId: "power-attack-ss",
+    desc: "物攻与法攻各提高 25%，附带 2 次逆天改命，并习得 SS 级强力攻击。"
+  },
+  {
+    id: "frost-ice",
+    name: "寒冰血脉",
+    grade: "SS",
+    symbol: "🧊",
+    statusId: "frost-ice-aura",
+    statusName: "寒冰附体",
+    fateBonus: 2,
+    skillId: "sleep-attack-ss",
+    desc: "物防与法防各提高 30%，附带 2 次逆天改命，并习得 SS 级睡眠攻击。"
+  },
+  {
     id: "feral-beast",
     name: "凶兽血脉",
     grade: "S",

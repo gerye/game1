@@ -1,4 +1,4 @@
-import { MAX_LEVEL } from "./config.js";
+import { GRADE_SCALE, MAX_LEVEL } from "./config.js";
 import { formatSkillDescription, formatSkillValueSummary } from "./game-data.js";
 
 const TEXT = {
@@ -54,7 +54,9 @@ const TEXT = {
   runnerUpGlory: "\u7a0d\u900a\u98ce\u9a9a",
   risingStar: "\u540e\u8d77\u4e4b\u79c0",
   fateChange: "\u9006\u5929\u6539\u547d",
-  wholeAttrBonus: "\u5168\u5c5e\u6027"
+  wholeAttrBonus: "\u5168\u5c5e\u6027",
+  honorTotal: "\u8363\u8a89\u603b\u8ba1",
+  factionCollapse: "\u70b9\u51fb\u5c55\u5f00/\u6298\u53e0"
 };
 
 export function renderHeroStats({ container, entries, gameVersion, winSummary, factionSections }) {
@@ -88,22 +90,33 @@ export function renderBuildGrid({
   equipment,
   getEquippedItems,
   equippedSlotLabels,
-  escapeHtml
+  escapeHtml,
+  expandedFactions = new Set()
 }) {
   if (entries.length === 0) {
     container.innerHTML = `<div class="cap-card"><p class="muted">${TEXT.noRoleData}</p></div>`;
     return;
   }
-  container.innerHTML = factionSections.map((section) => `
+  container.innerHTML = factionSections.map((section) => {
+    const isExpanded = expandedFactions.has(section.faction.key);
+    const gradePills = buildGradeDistPills(section.entries, gradeColor);
+    const totalWins = section.wins || 0;
+    const tChampions = tournamentMeta?.byFaction?.[section.faction.key] || 0;
+    const rChampions = rankingMeta?.byFaction?.[section.faction.key] || 0;
+    return `
     <section class="faction-section">
-      <div class="faction-section-head">
-        <div class="cell-stack">
-          <strong style="color:${section.faction.color}">${section.faction.name}</strong>
-          <span class="mini-text">${TEXT.factionWins} ${section.wins} | ${TEXT.tournamentChampion} ${tournamentMeta?.byFaction?.[section.faction.key] || 0} | ${TEXT.rankingChampion} ${rankingMeta?.byFaction?.[section.faction.key] || 0}</span>
+      <div class="faction-section-head faction-toggle-head" data-faction-toggle="${section.faction.key}" title="${TEXT.factionCollapse}">
+        <div class="faction-head-stack">
+          <div class="faction-head-row">
+            <strong class="faction-head-name" style="color:${section.faction.color}">${section.faction.name}</strong>
+            <span class="faction-total-badge">${section.entries.length}\u4eba</span>
+            <span class="faction-head-meta">\u4e89\u9738\u80dc ${totalWins}&ensp;\u00b7&ensp;\u6b66\u9053\u4f1a\u51a0 ${tChampions}&ensp;\u00b7&ensp;\u6392\u4f4d\u51a0 ${rChampions}</span>
+          </div>
+          ${gradePills}
         </div>
-        <span class="tag">${section.entries.length} ${TEXT.roles}</span>
+        <span class="faction-chevron">${isExpanded ? "\u25be" : "\u25b8"}</span>
       </div>
-      <div class="faction-grid">
+      <div class="faction-grid${isExpanded ? "" : " faction-grid--collapsed"}">
         ${section.entries.map((entry) => renderBuildCard({
           entry,
           selectedCode,
@@ -118,12 +131,32 @@ export function renderBuildGrid({
         })).join("")}
       </div>
     </section>
-  `).join("");
+  `;
+  }).join("");
+}
+
+function buildGradeDistPills(entries, gradeColor) {
+  const counts = {};
+  for (const entry of entries) {
+    const grade = entry.build?.potential;
+    if (!grade) continue;
+    counts[grade] = (counts[grade] || 0) + 1;
+  }
+  const chips = [...GRADE_SCALE]
+    .reverse()
+    .filter((g) => counts[g])
+    .map((g) => {
+      const color = gradeColor(g);
+      return `<span class="faction-grade-chip" style="color:${color};border-color:${color}">${g}<small>\xd7${counts[g]}</small></span>`;
+    })
+    .join("");
+  return chips ? `<div class="faction-grade-row">${chips}</div>` : "";
 }
 
 export function renderCapDetail({
   container,
   entry,
+  panelOpen = true,
   roleLabels,
   gradeColor,
   expToNextLevel,
@@ -135,23 +168,28 @@ export function renderCapDetail({
   equippedSlotLabels,
   escapeHtml
 }) {
+  const toggleBtn = `<button class="detail-panel-toggle tiny-btn alt" data-detail-action="toggle-panel" title="${panelOpen ? "\u6298\u53e0\u8be6\u60c5" : "\u5c55\u5f00\u8be6\u60c5"}">${panelOpen ? "\u25b4" : "\u25be"}</button>`;
   if (!entry) {
-    container.innerHTML = `<h3>${TEXT.roleDetail}</h3><p class="muted">${TEXT.clickCardTip}</p>`;
+    container.innerHTML = `<div class="detail-panel-head">${toggleBtn}<h3>${TEXT.roleDetail}</h3></div>${panelOpen ? `<p class="muted">${TEXT.clickCardTip}</p>` : ""}`;
     return;
   }
   if (!entry.build || !entry.progress) {
     container.innerHTML = `
-      <div class="card-top">
-        <img class="avatar large" src="${entry.base.avatarDataUrl}" alt="${escapeHtml(entry.displayName)}">
-        <div class="cell-stack">
-          <h3 style="color:${gradeColor(entry.build?.potential || "E")}">${escapeHtml(entry.displayName)}</h3>
-          <span class="mini-text">${TEXT.baseOnly}</span>
+      <div class="detail-panel-head">
+        ${toggleBtn}
+        <div class="card-top" style="flex:1">
+          <img class="avatar large" src="${entry.base.avatarDataUrl}" alt="${escapeHtml(entry.displayName)}">
+          <div class="cell-stack">
+            <h3 style="color:${gradeColor(entry.build?.potential || "E")}">${escapeHtml(entry.displayName)}</h3>
+            <span class="mini-text">${TEXT.baseOnly}</span>
+          </div>
         </div>
       </div>
+      ${panelOpen ? `
       <div class="detail-section"><p class="muted">${TEXT.noBuildTip}</p></div>
       <div class="card-actions">
         <button class="tiny-btn alt" data-detail-action="regen" data-id="${entry.base.code}">${TEXT.generateBuild}</button>
-      </div>
+      </div>` : ""}
     `;
     return;
   }
@@ -161,14 +199,18 @@ export function renderCapDetail({
   const final = getEffectiveSheet(entry.build, MAX_LEVEL, skills, equipment, honorContext);
 
   container.innerHTML = `
-    <div class="card-top">
-      <img class="avatar large" src="${entry.base.avatarDataUrl}" alt="${escapeHtml(entry.displayName)}">
-      <div class="cell-stack">
-        <h3 style="color:${gradeColor(entry.build.potential)}">${escapeHtml(entry.displayName)}</h3>
-        <span class="mini-text">${entry.build.faction.name} | ${roleLabels[entry.build.role]}</span>
+    <div class="detail-panel-head">
+      ${toggleBtn}
+      <div class="card-top" style="flex:1">
+        <img class="avatar large" src="${entry.base.avatarDataUrl}" alt="${escapeHtml(entry.displayName)}">
+        <div class="cell-stack">
+          <h3 style="color:${gradeColor(entry.build.potential)}">${escapeHtml(entry.displayName)}</h3>
+          <span class="mini-text">${entry.build.faction.name} | ${roleLabels[entry.build.role]}</span>
+        </div>
+        ${renderPotentialBadge(entry.build.potential, gradeColor)}
       </div>
-      ${renderPotentialBadge(entry.build.potential, gradeColor)}
     </div>
+    ${panelOpen ? `
     <div class="detail-section">
       <div class="stat-pair"><span>${TEXT.level}</span><strong>Lv.${entry.progress.level}</strong></div>
       <div class="stat-pair"><span>${TEXT.exp}</span><strong>${entry.progress.experience}/${expToNextLevel(entry.progress.level)}</strong></div>
@@ -214,6 +256,7 @@ export function renderCapDetail({
       <button class="tiny-btn alt" data-detail-action="reset" data-id="${entry.base.code}">${TEXT.resetLevel}</button>
       <button class="tiny-btn" data-detail-action="delete-build" data-id="${entry.base.code}">${TEXT.deleteBuild}</button>
     </div>
+    ` : ""}
   `;
 }
 
@@ -375,23 +418,25 @@ function renderSkillDetails(skillIds, slots, skills, roleLabels, gradeColor, esc
 
 function renderEquipmentStrip(build, equipment, getEquippedItems, equippedSlotLabels, gradeColor, roleLabels, escapeHtml) {
   const equipped = getEquippedItems(build, equipment);
+  const equipmentStars = build.equipmentStars || {};
   return `
     <div class="equipment-slot-row">
-      ${equipped.map(({ slot, item }) => renderEquipmentSlot(slot, item, equippedSlotLabels, gradeColor, roleLabels, escapeHtml, "compact")).join("")}
+      ${equipped.map(({ slot, item }) => renderEquipmentSlot(slot, item, equippedSlotLabels, gradeColor, roleLabels, escapeHtml, "compact", equipmentStars[slot] || 0)).join("")}
     </div>
   `;
 }
 
 function renderEquipmentDetails(build, equipment, getEquippedItems, equippedSlotLabels, gradeColor, roleLabels, escapeHtml) {
   const equipped = getEquippedItems(build, equipment);
+  const equipmentStars = build.equipmentStars || {};
   return `
     <div class="equipment-detail-list">
-      ${equipped.map(({ slot, item }) => renderEquipmentSlot(slot, item, equippedSlotLabels, gradeColor, roleLabels, escapeHtml, "detail")).join("")}
+      ${equipped.map(({ slot, item }) => renderEquipmentSlot(slot, item, equippedSlotLabels, gradeColor, roleLabels, escapeHtml, "detail", equipmentStars[slot] || 0)).join("")}
     </div>
   `;
 }
 
-function renderEquipmentSlot(slot, item, equippedSlotLabels, gradeColor, roleLabels, escapeHtml, mode = "compact") {
+function renderEquipmentSlot(slot, item, equippedSlotLabels, gradeColor, roleLabels, escapeHtml, mode = "compact", stars = 0) {
   const label = equippedSlotLabels[slot] || slot;
   if (!item) {
     return mode === "detail"
@@ -399,10 +444,14 @@ function renderEquipmentSlot(slot, item, equippedSlotLabels, gradeColor, roleLab
       : `<span class="equipment-slot empty-slot" data-slot="${slot}"><span class="equipment-slot-icon">${getEquipmentSlotGlyph(slot)}</span><span class="equipment-slot-label">${label}</span></span>`;
   }
 
+  const starsHtml = stars > 0
+    ? `<span class="equipment-stars">${Array.from({ length: stars }, () => "<span>\u2605</span>").join("")}</span>`
+    : "";
+
   const tooltip = `
     <span class="skill-tooltip">
-      <strong style="color:${gradeColor(item.grade)}">${escapeHtml(item.name)}</strong><br>
-      ${escapeHtml(label)} | ${escapeHtml((item.allowedRoles || []).map((role) => roleLabels[role]).join(" / "))}<br>
+      <strong style="color:${gradeColor(item.grade)}">${escapeHtml(item.name)}</strong>${stars > 0 ? ` ${"★".repeat(stars)}` : ""}<br>
+      ${escapeHtml(label)} | ${escapeHtml((item.allowedRoles || []).map((role) => roleLabels[role]).join(" / "))}${stars > 0 ? ` | +${stars * 5}%` : ""}<br>
       ${escapeHtml(item.desc || "")}
     </span>
   `;
@@ -412,11 +461,14 @@ function renderEquipmentSlot(slot, item, equippedSlotLabels, gradeColor, roleLab
       <div class="detail-skill-card equipment-card" style="border-color:${gradeColor(item.grade)}">
         <div class="detail-skill-head" style="color:${gradeColor(item.grade)}">
           <strong style="color:${gradeColor(item.grade)}">${escapeHtml(item.name)}</strong>
-          <span>${label} | ${item.grade}</span>
+          <span>${label} | ${item.grade}${stars > 0 ? ` | ${"★".repeat(stars)}` : ""}</span>
         </div>
         <div class="equipment-detail-top">
-          <img class="equipment-art" src="${item.iconDataUrl}" alt="${escapeHtml(item.name)}">
-          <p>${escapeHtml(item.desc || "")}</p>
+          <div class="equipment-art-wrap">
+            <img class="equipment-art" src="${item.iconDataUrl}" alt="${escapeHtml(item.name)}">
+            ${starsHtml}
+          </div>
+          <p>${escapeHtml(item.desc || "")}${stars > 0 ? `<br><span class="equipment-star-bonus">\u5c5e\u6027 +${stars * 5}%</span>` : ""}</p>
         </div>
       </div>
     `;
@@ -424,7 +476,10 @@ function renderEquipmentSlot(slot, item, equippedSlotLabels, gradeColor, roleLab
 
   return `
     <span class="equipment-slot" data-slot="${slot}" style="--slot-grade:${gradeColor(item.grade)}">
-      <img class="equipment-slot-art" src="${item.iconDataUrl}" alt="${escapeHtml(item.name)}">
+      <div class="equipment-slot-art-wrap">
+        <img class="equipment-slot-art" src="${item.iconDataUrl}" alt="${escapeHtml(item.name)}">
+        ${starsHtml}
+      </div>
       <span class="equipment-slot-label">${label}</span>
       ${tooltip}
     </span>
@@ -523,6 +578,18 @@ function renderHonorStatusView(entry, gradeColor) {
   if (rows.length === 0) {
     return `<p class="muted">${TEXT.noHonorTip}</p>`;
   }
+
+  const totalBonus =
+    battleWinLayers * 0.5 +
+    factionLayers * 2 +
+    championLayers * 5 +
+    runnerUpLayers * 2 +
+    topFourLayers * 1 +
+    fateLayers * 20;
+  if (totalBonus > 0) {
+    rows.push(`<div class="stat-pair honor-total-row"><span>${TEXT.honorTotal}</span><strong class="honor-total-value">${TEXT.wholeAttrBonus} +${formatHonorPercent(totalBonus)}%</strong></div>`);
+  }
+
   return rows.join("");
 }
 
