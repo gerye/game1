@@ -1,4 +1,5 @@
 import { buildBloodlineMap, decorateDisplayName, getBloodlineById, getBloodlinePersistentStatusIds } from "./bloodlines.js";
+import { normalizeCapAssetPath } from "./cap-asset-store.js";
 
 export function getBaseBrand(base) {
   return base?.brand ?? base?.sourceName ?? "";
@@ -13,6 +14,10 @@ export function normalizeBaseIdentity(base) {
   const name = getBaseName(base);
   return {
     ...base,
+    avatarPath: normalizeCapAssetPath(base?.avatarPath || ""),
+    photoPath: normalizeCapAssetPath(base?.photoPath || ""),
+    avatarDataUrl: normalizeCapAssetPath(base?.avatarDataUrl || ""),
+    photoDataUrl: normalizeCapAssetPath(base?.photoDataUrl || ""),
     brand,
     name,
     sourceName: `${brand}${name}` || base?.sourceName || base?.code || ""

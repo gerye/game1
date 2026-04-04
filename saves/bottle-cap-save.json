@@ -1046,6 +1046,64 @@
       "photoPath": "assets/caps/CAP-4B2D4686-photo.png"
     },
     {
+      "code": "CAP-516854FD",
+      "sourceName": "可口酷儿4",
+      "note": "",
+      "avatarDataUrl": "assets/caps/CAP-516854FD-avatar.png",
+      "photoDataUrl": "assets/caps/CAP-516854FD-photo.png",
+      "dominantColor": "#cddbac",
+      "hsl": {
+        "h": 77.31862590608257,
+        "s": 0.39137728293136204,
+        "l": 0.7671396292892156
+      },
+      "baseFillHsl": {
+        "h": 77.34945894334818,
+        "s": 0.9171044950379451,
+        "l": 0.3875565610859728
+      },
+      "accentHsl": {
+        "h": 87.41031668053155,
+        "s": 0.7514276140547345,
+        "l": 0.42053233369922904
+      },
+      "whiteRatio": 0,
+      "darkRatio": 0,
+      "metrics": {
+        "variance": 3037.9,
+        "edgeDensity": 29.8,
+        "radialContrast": 2.4,
+        "asymmetry": 10.3,
+        "flourish": 330,
+        "stripeScore": 382,
+        "mirrorSymmetry": 89.7,
+        "rotationalSymmetry": 88.8,
+        "mainColorCount": 3,
+        "colorRichness": 24,
+        "colorCountScore": 3,
+        "patternComplexity": 40,
+        "patternSymmetry": 48,
+        "patternSymmetryTier": 1,
+        "patternComplexityTier": 1,
+        "manualEdited": true
+      },
+      "perceptualHash": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111100000000000000000000000001111111000000000000000000000011110111011100000000000000000011111011010011000000000000000011111001001111011000000000000001111010011000110110000000000001111010011100101101000000000000111100011110010110110000000000011110011001011101011000000000011111011101101010110100000000001100011110110010011111000000000111001010011100011001100000000011101011001110001100100000000000111100100010010110110000000000011111010010010111011000000000001111100010010111001000000000000011011100111101001100000000000001100101011010100100000000000000011001101111011100000000000000000111010101111000000000000000000000111011101000000000000000000000000111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "featureSignature": "6-8-15-759-15-1-3-110-000000000-000000000-000000000-000000000-000000000-000000000-000000000-000000000-000000000-000000000",
+      "rotation": 1.0117041331407042,
+      "createdAt": 1775326356843,
+      "regionIndex": 1,
+      "regionBounds": {
+        "x": 202,
+        "y": 618,
+        "size": 306
+      },
+      "brand": "可口",
+      "name": "酷儿4",
+      "imageId": "CAP-516854FD",
+      "avatarPath": "assets/caps/CAP-516854FD-avatar.png",
+      "photoPath": "assets/caps/CAP-516854FD-photo.png"
+    },
+    {
       "code": "CAP-543CB835",
       "sourceName": "可口健爽美茶",
       "note": "",
@@ -4190,7 +4248,7 @@
         "level50Average": 354.3
       },
       "combatScore": 4336,
-      "generatedAt": 1775325993194
+      "generatedAt": 1775326434924
     },
     {
       "buildId": "1.1.0:CAP-07AF88D1",
@@ -5769,7 +5827,7 @@
         "level50Average": 389.7
       },
       "combatScore": 4726,
-      "generatedAt": 1775325993205
+      "generatedAt": 1775326434934
     },
     {
       "buildId": "1.1.0:CAP-0D9F2D4C",
@@ -7348,7 +7406,7 @@
         "level50Average": 266.2
       },
       "combatScore": 3228,
-      "generatedAt": 1775325993216
+      "generatedAt": 1775326434943
     },
     {
       "buildId": "1.1.0:CAP-0DCC7799",
@@ -8927,7 +8985,7 @@
         "level50Average": 322.1
       },
       "combatScore": 3937,
-      "generatedAt": 1775325993225
+      "generatedAt": 1775326434951
     },
     {
       "buildId": "1.1.0:CAP-10580F8D",
@@ -10506,7 +10564,7 @@
         "level50Average": 354.3
       },
       "combatScore": 4317,
-      "generatedAt": 1775325993234
+      "generatedAt": 1775326434959
     },
     {
       "buildId": "1.1.0:CAP-1359B3FC",
@@ -12085,7 +12143,7 @@
         "level50Average": 200.2
       },
       "combatScore": 2428,
-      "generatedAt": 1775325993243
+      "generatedAt": 1775326434967
     },
     {
       "buildId": "1.1.0:CAP-19AB334D",
@@ -13664,7 +13722,7 @@
         "level50Average": 354.3
       },
       "combatScore": 4336,
-      "generatedAt": 1775325993252
+      "generatedAt": 1775326434976
     },
     {
       "buildId": "1.1.0:CAP-19E80254",
@@ -15243,7 +15301,7 @@
         "level50Average": 354.3
       },
       "combatScore": 4298,
-      "generatedAt": 1775325993261
+      "generatedAt": 1775326434984
     },
     {
       "buildId": "1.1.0:CAP-1A945A22",
@@ -16822,7 +16880,7 @@
         "level50Average": 242
       },
       "combatScore": 2940,
-      "generatedAt": 1775325993269
+      "generatedAt": 1775326434993
     },
     {
       "buildId": "1.1.0:CAP-1D0BC675",
@@ -18401,7 +18459,7 @@
         "level50Average": 210.1
       },
       "combatScore": 2545,
-      "generatedAt": 1775325993277
+      "generatedAt": 1775326435001
     },
     {
       "buildId": "1.1.0:CAP-250F9124",
@@ -19980,7 +20038,7 @@
         "level50Average": 220
       },
       "combatScore": 2666,
-      "generatedAt": 1775325993285
+      "generatedAt": 1775326435009
     },
     {
       "buildId": "1.1.0:CAP-2647B307",
@@ -21559,7 +21617,7 @@
         "level50Average": 242
       },
       "combatScore": 2934,
-      "generatedAt": 1775325993294
+      "generatedAt": 1775326435017
     },
     {
       "buildId": "1.1.0:CAP-29936D06",
@@ -23138,7 +23196,7 @@
         "level50Average": 210.1
       },
       "combatScore": 2547,
-      "generatedAt": 1775325993303
+      "generatedAt": 1775326435031
     },
     {
       "buildId": "1.1.0:CAP-2C987DA5",
@@ -24717,7 +24775,7 @@
         "level50Average": 242
       },
       "combatScore": 2940,
-      "generatedAt": 1775325993319
+      "generatedAt": 1775326435041
     },
     {
       "buildId": "1.1.0:CAP-3059045B",
@@ -26296,7 +26354,7 @@
         "level50Average": 322.1
       },
       "combatScore": 3937,
-      "generatedAt": 1775325993328
+      "generatedAt": 1775326435050
     },
     {
       "buildId": "1.1.0:CAP-32BD0730",
@@ -27875,7 +27933,7 @@
         "level50Average": 191
       },
       "combatScore": 2304,
-      "generatedAt": 1775325993337
+      "generatedAt": 1775326435059
     },
     {
       "buildId": "1.1.0:CAP-49F247E2",
@@ -29454,7 +29512,7 @@
         "level50Average": 307.6
       },
       "combatScore": 3763,
-      "generatedAt": 1775325993345
+      "generatedAt": 1775326435072
     },
     {
       "buildId": "1.1.0:CAP-4B2D4686",
@@ -31033,7 +31091,1586 @@
         "level50Average": 354.3
       },
       "combatScore": 4317,
-      "generatedAt": 1775325993361
+      "generatedAt": 1775326435080
+    },
+    {
+      "buildId": "1.1.0:CAP-516854FD",
+      "capCode": "CAP-516854FD",
+      "archVersion": 4,
+      "gameVersion": "1.1.0",
+      "faction": {
+        "key": "qingyun",
+        "name": "青云门",
+        "color": "#3d8d56",
+        "terrainAffinity": "forest",
+        "hue": [
+          75,
+          170
+        ],
+        "light": [
+          14,
+          100
+        ],
+        "sat": [
+          18,
+          100
+        ]
+      },
+      "role": "ranged",
+      "roleLabel": "远射",
+      "potential": "S",
+      "potentialScore": 626.3,
+      "potentialReason": {
+        "colors": 3,
+        "complexity": 1,
+        "complexityLabel": "基础",
+        "symmetry": 1,
+        "symmetryLabel": "规整"
+      },
+      "primaryStart": {
+        "strength": 1.6,
+        "vitality": 1.4,
+        "agility": 1.9,
+        "intelligence": 1.3,
+        "spirit": 1.8
+      },
+      "primaryFinal": {
+        "strength": 327.1,
+        "vitality": 300.6,
+        "agility": 394.2,
+        "intelligence": 264.2,
+        "spirit": 324.4
+      },
+      "growthCurves": {
+        "strength": 1.85,
+        "vitality": 1.85,
+        "agility": 1.85,
+        "intelligence": 1.85,
+        "spirit": 1.85
+      },
+      "growthSeries": [
+        {
+          "level": 1,
+          "primary": {
+            "strength": 1.6,
+            "vitality": 1.4,
+            "agility": 1.9,
+            "intelligence": 1.3,
+            "spirit": 1.8
+          },
+          "derived": {
+            "physicalAttack": 4.800000000000001,
+            "magicAttack": 3.9000000000000004,
+            "physicalDefense": 1.4,
+            "magicDefense": 1.8,
+            "hpMax": 114,
+            "hpRegen": 0.3,
+            "castSpeed": 1.1,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 0.6,
+            "cooldownDurationMultiplierPct": 99.4,
+            "statusResistance": 0.6,
+            "statusDurationMultiplierPct": 99.4,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1.4,
+            "chantTime": 2.1
+          }
+        },
+        {
+          "level": 2,
+          "primary": {
+            "strength": 1.8,
+            "vitality": 1.6,
+            "agility": 2.2,
+            "intelligence": 1.5,
+            "spirit": 2
+          },
+          "derived": {
+            "physicalAttack": 5.4,
+            "magicAttack": 4.5,
+            "physicalDefense": 1.6,
+            "magicDefense": 2,
+            "hpMax": 116,
+            "hpRegen": 0.3,
+            "castSpeed": 1.1,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 0.7,
+            "cooldownDurationMultiplierPct": 99.3,
+            "statusResistance": 0.7,
+            "statusDurationMultiplierPct": 99.3,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1.4,
+            "chantTime": 2.1
+          }
+        },
+        {
+          "level": 3,
+          "primary": {
+            "strength": 2.5,
+            "vitality": 2.2,
+            "agility": 3,
+            "intelligence": 2,
+            "spirit": 2.7
+          },
+          "derived": {
+            "physicalAttack": 7.5,
+            "magicAttack": 6,
+            "physicalDefense": 2.2,
+            "magicDefense": 2.7,
+            "hpMax": 122,
+            "hpRegen": 0.4,
+            "castSpeed": 1.2,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 0.9,
+            "cooldownDurationMultiplierPct": 99.1,
+            "statusResistance": 0.9,
+            "statusDurationMultiplierPct": 99.1,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1.4,
+            "chantTime": 2.1
+          }
+        },
+        {
+          "level": 4,
+          "primary": {
+            "strength": 3.5,
+            "vitality": 3.1,
+            "agility": 4.1,
+            "intelligence": 2.8,
+            "spirit": 3.6
+          },
+          "derived": {
+            "physicalAttack": 10.5,
+            "magicAttack": 8.399999999999999,
+            "physicalDefense": 3.1,
+            "magicDefense": 3.6,
+            "hpMax": 131,
+            "hpRegen": 0.6,
+            "castSpeed": 1.3,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 1.3,
+            "cooldownDurationMultiplierPct": 98.7,
+            "statusResistance": 1.3,
+            "statusDurationMultiplierPct": 98.7,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1.4,
+            "chantTime": 2
+          }
+        },
+        {
+          "level": 5,
+          "primary": {
+            "strength": 4.8,
+            "vitality": 4.3,
+            "agility": 5.7,
+            "intelligence": 3.9,
+            "spirit": 4.9
+          },
+          "derived": {
+            "physicalAttack": 14.399999999999999,
+            "magicAttack": 11.7,
+            "physicalDefense": 4.3,
+            "magicDefense": 4.9,
+            "hpMax": 143,
+            "hpRegen": 0.9,
+            "castSpeed": 1.4,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 1.7,
+            "cooldownDurationMultiplierPct": 98.3,
+            "statusResistance": 1.8,
+            "statusDurationMultiplierPct": 98.2,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1.3,
+            "chantTime": 1.9
+          }
+        },
+        {
+          "level": 6,
+          "primary": {
+            "strength": 6.4,
+            "vitality": 5.8,
+            "agility": 7.7,
+            "intelligence": 5.2,
+            "spirit": 6.5
+          },
+          "derived": {
+            "physicalAttack": 19.200000000000003,
+            "magicAttack": 15.600000000000001,
+            "physicalDefense": 5.8,
+            "magicDefense": 6.5,
+            "hpMax": 158,
+            "hpRegen": 1.2,
+            "castSpeed": 1.5,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 2.3,
+            "cooldownDurationMultiplierPct": 97.7,
+            "statusResistance": 2.4,
+            "statusDurationMultiplierPct": 97.6,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1.3,
+            "chantTime": 1.8
+          }
+        },
+        {
+          "level": 7,
+          "primary": {
+            "strength": 8.3,
+            "vitality": 7.5,
+            "agility": 10,
+            "intelligence": 6.7,
+            "spirit": 8.4
+          },
+          "derived": {
+            "physicalAttack": 24.900000000000002,
+            "magicAttack": 20.1,
+            "physicalDefense": 7.5,
+            "magicDefense": 8.4,
+            "hpMax": 175,
+            "hpRegen": 1.5,
+            "castSpeed": 1.7,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 2.9,
+            "cooldownDurationMultiplierPct": 97.1,
+            "statusResistance": 3,
+            "statusDurationMultiplierPct": 97,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1.3,
+            "chantTime": 1.7
+          }
+        },
+        {
+          "level": 8,
+          "primary": {
+            "strength": 10.5,
+            "vitality": 9.6,
+            "agility": 12.6,
+            "intelligence": 8.5,
+            "spirit": 10.6
+          },
+          "derived": {
+            "physicalAttack": 31.5,
+            "magicAttack": 25.5,
+            "physicalDefense": 9.6,
+            "magicDefense": 10.6,
+            "hpMax": 196,
+            "hpRegen": 1.9,
+            "castSpeed": 1.8,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 3.6,
+            "cooldownDurationMultiplierPct": 96.4,
+            "statusResistance": 3.8,
+            "statusDurationMultiplierPct": 96.2,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1.2,
+            "chantTime": 1.6
+          }
+        },
+        {
+          "level": 9,
+          "primary": {
+            "strength": 13,
+            "vitality": 11.9,
+            "agility": 15.6,
+            "intelligence": 10.5,
+            "spirit": 13.1
+          },
+          "derived": {
+            "physicalAttack": 39,
+            "magicAttack": 31.5,
+            "physicalDefense": 11.9,
+            "magicDefense": 13.1,
+            "hpMax": 219,
+            "hpRegen": 2.4,
+            "castSpeed": 2,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 4.4,
+            "cooldownDurationMultiplierPct": 95.6,
+            "statusResistance": 4.6,
+            "statusDurationMultiplierPct": 95.4,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1.2,
+            "chantTime": 1.4
+          }
+        },
+        {
+          "level": 10,
+          "primary": {
+            "strength": 15.8,
+            "vitality": 14.4,
+            "agility": 19,
+            "intelligence": 12.7,
+            "spirit": 15.8
+          },
+          "derived": {
+            "physicalAttack": 47.400000000000006,
+            "magicAttack": 38.099999999999994,
+            "physicalDefense": 14.4,
+            "magicDefense": 15.8,
+            "hpMax": 244,
+            "hpRegen": 2.9,
+            "castSpeed": 2.3,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 5.3,
+            "cooldownDurationMultiplierPct": 94.7,
+            "statusResistance": 5.5,
+            "statusDurationMultiplierPct": 94.5,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1.1,
+            "chantTime": 1.2
+          }
+        },
+        {
+          "level": 11,
+          "primary": {
+            "strength": 18.8,
+            "vitality": 17.2,
+            "agility": 22.6,
+            "intelligence": 15.2,
+            "spirit": 18.9
+          },
+          "derived": {
+            "physicalAttack": 56.400000000000006,
+            "magicAttack": 45.599999999999994,
+            "physicalDefense": 17.2,
+            "magicDefense": 18.9,
+            "hpMax": 272,
+            "hpRegen": 3.4,
+            "castSpeed": 2.5,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 6.2,
+            "cooldownDurationMultiplierPct": 93.8,
+            "statusResistance": 6.5,
+            "statusDurationMultiplierPct": 93.5,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1,
+            "chantTime": 1.1
+          }
+        },
+        {
+          "level": 12,
+          "primary": {
+            "strength": 22.1,
+            "vitality": 20.3,
+            "agility": 26.6,
+            "intelligence": 17.9,
+            "spirit": 22.1
+          },
+          "derived": {
+            "physicalAttack": 66.30000000000001,
+            "magicAttack": 53.699999999999996,
+            "physicalDefense": 20.3,
+            "magicDefense": 22.1,
+            "hpMax": 303,
+            "hpRegen": 4.1,
+            "castSpeed": 2.8,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 7.1,
+            "cooldownDurationMultiplierPct": 92.9,
+            "statusResistance": 7.5,
+            "statusDurationMultiplierPct": 92.5,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 1,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 13,
+          "primary": {
+            "strength": 25.7,
+            "vitality": 23.6,
+            "agility": 31,
+            "intelligence": 20.8,
+            "spirit": 25.7
+          },
+          "derived": {
+            "physicalAttack": 77.1,
+            "magicAttack": 62.400000000000006,
+            "physicalDefense": 23.6,
+            "magicDefense": 25.7,
+            "hpMax": 336,
+            "hpRegen": 4.7,
+            "castSpeed": 3.1,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 8.2,
+            "cooldownDurationMultiplierPct": 91.8,
+            "statusResistance": 8.6,
+            "statusDurationMultiplierPct": 91.4,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.9,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 14,
+          "primary": {
+            "strength": 29.6,
+            "vitality": 27.1,
+            "agility": 35.6,
+            "intelligence": 23.9,
+            "spirit": 29.5
+          },
+          "derived": {
+            "physicalAttack": 88.80000000000001,
+            "magicAttack": 71.69999999999999,
+            "physicalDefense": 27.1,
+            "magicDefense": 29.5,
+            "hpMax": 371,
+            "hpRegen": 5.4,
+            "castSpeed": 3.4,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 9.2,
+            "cooldownDurationMultiplierPct": 90.8,
+            "statusResistance": 9.7,
+            "statusDurationMultiplierPct": 90.3,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.8,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 15,
+          "primary": {
+            "strength": 33.7,
+            "vitality": 30.9,
+            "agility": 40.5,
+            "intelligence": 27.2,
+            "spirit": 33.6
+          },
+          "derived": {
+            "physicalAttack": 101.10000000000001,
+            "magicAttack": 81.6,
+            "physicalDefense": 30.9,
+            "magicDefense": 33.6,
+            "hpMax": 409,
+            "hpRegen": 6.2,
+            "castSpeed": 3.7,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 10.3,
+            "cooldownDurationMultiplierPct": 89.7,
+            "statusResistance": 10.8,
+            "statusDurationMultiplierPct": 89.2,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 16,
+          "primary": {
+            "strength": 38,
+            "vitality": 34.9,
+            "agility": 45.8,
+            "intelligence": 30.7,
+            "spirit": 37.9
+          },
+          "derived": {
+            "physicalAttack": 114,
+            "magicAttack": 92.1,
+            "physicalDefense": 34.9,
+            "magicDefense": 37.9,
+            "hpMax": 449,
+            "hpRegen": 7,
+            "castSpeed": 4.1,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 11.4,
+            "cooldownDurationMultiplierPct": 88.6,
+            "statusResistance": 12,
+            "statusDurationMultiplierPct": 88,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 17,
+          "primary": {
+            "strength": 42.6,
+            "vitality": 39.1,
+            "agility": 51.4,
+            "intelligence": 34.5,
+            "spirit": 42.5
+          },
+          "derived": {
+            "physicalAttack": 127.80000000000001,
+            "magicAttack": 103.5,
+            "physicalDefense": 39.1,
+            "magicDefense": 42.5,
+            "hpMax": 491,
+            "hpRegen": 7.8,
+            "castSpeed": 4.4,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 12.5,
+            "cooldownDurationMultiplierPct": 87.5,
+            "statusResistance": 13.1,
+            "statusDurationMultiplierPct": 86.9,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 18,
+          "primary": {
+            "strength": 47.5,
+            "vitality": 43.6,
+            "agility": 57.2,
+            "intelligence": 38.4,
+            "spirit": 47.3
+          },
+          "derived": {
+            "physicalAttack": 142.5,
+            "magicAttack": 115.19999999999999,
+            "physicalDefense": 43.6,
+            "magicDefense": 47.3,
+            "hpMax": 536,
+            "hpRegen": 8.7,
+            "castSpeed": 4.8,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 13.6,
+            "cooldownDurationMultiplierPct": 86.4,
+            "statusResistance": 14.3,
+            "statusDurationMultiplierPct": 85.7,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 19,
+          "primary": {
+            "strength": 52.6,
+            "vitality": 48.3,
+            "agility": 63.4,
+            "intelligence": 42.5,
+            "spirit": 52.4
+          },
+          "derived": {
+            "physicalAttack": 157.8,
+            "magicAttack": 127.5,
+            "physicalDefense": 48.3,
+            "magicDefense": 52.4,
+            "hpMax": 583,
+            "hpRegen": 9.7,
+            "castSpeed": 5.2,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 14.8,
+            "cooldownDurationMultiplierPct": 85.2,
+            "statusResistance": 15.5,
+            "statusDurationMultiplierPct": 84.5,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 20,
+          "primary": {
+            "strength": 58,
+            "vitality": 53.3,
+            "agility": 69.9,
+            "intelligence": 46.9,
+            "spirit": 57.7
+          },
+          "derived": {
+            "physicalAttack": 174,
+            "magicAttack": 140.7,
+            "physicalDefense": 53.3,
+            "magicDefense": 57.7,
+            "hpMax": 633,
+            "hpRegen": 10.7,
+            "castSpeed": 5.7,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 15.9,
+            "cooldownDurationMultiplierPct": 84.1,
+            "statusResistance": 16.7,
+            "statusDurationMultiplierPct": 83.3,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 21,
+          "primary": {
+            "strength": 63.6,
+            "vitality": 58.4,
+            "agility": 76.7,
+            "intelligence": 51.4,
+            "spirit": 63.3
+          },
+          "derived": {
+            "physicalAttack": 190.8,
+            "magicAttack": 154.2,
+            "physicalDefense": 58.4,
+            "magicDefense": 63.3,
+            "hpMax": 684,
+            "hpRegen": 11.7,
+            "castSpeed": 6.1,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 17.1,
+            "cooldownDurationMultiplierPct": 82.9,
+            "statusResistance": 17.9,
+            "statusDurationMultiplierPct": 82.1,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 22,
+          "primary": {
+            "strength": 69.5,
+            "vitality": 63.8,
+            "agility": 83.7,
+            "intelligence": 56.1,
+            "spirit": 69.1
+          },
+          "derived": {
+            "physicalAttack": 208.5,
+            "magicAttack": 168.3,
+            "physicalDefense": 63.8,
+            "magicDefense": 69.1,
+            "hpMax": 738,
+            "hpRegen": 12.8,
+            "castSpeed": 6.6,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 18.2,
+            "cooldownDurationMultiplierPct": 81.8,
+            "statusResistance": 19,
+            "statusDurationMultiplierPct": 81,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 23,
+          "primary": {
+            "strength": 75.6,
+            "vitality": 69.4,
+            "agility": 91.1,
+            "intelligence": 61.1,
+            "spirit": 75.1
+          },
+          "derived": {
+            "physicalAttack": 226.79999999999998,
+            "magicAttack": 183.3,
+            "physicalDefense": 69.4,
+            "magicDefense": 75.1,
+            "hpMax": 794,
+            "hpRegen": 13.9,
+            "castSpeed": 7.1,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 19.3,
+            "cooldownDurationMultiplierPct": 80.7,
+            "statusResistance": 20.2,
+            "statusDurationMultiplierPct": 79.8,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 24,
+          "primary": {
+            "strength": 81.9,
+            "vitality": 75.2,
+            "agility": 98.7,
+            "intelligence": 66.2,
+            "spirit": 81.4
+          },
+          "derived": {
+            "physicalAttack": 245.70000000000002,
+            "magicAttack": 198.60000000000002,
+            "physicalDefense": 75.2,
+            "magicDefense": 81.4,
+            "hpMax": 852,
+            "hpRegen": 15,
+            "castSpeed": 7.6,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 20.5,
+            "cooldownDurationMultiplierPct": 79.5,
+            "statusResistance": 21.4,
+            "statusDurationMultiplierPct": 78.6,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 25,
+          "primary": {
+            "strength": 88.5,
+            "vitality": 81.3,
+            "agility": 106.6,
+            "intelligence": 71.5,
+            "spirit": 87.9
+          },
+          "derived": {
+            "physicalAttack": 265.5,
+            "magicAttack": 214.5,
+            "physicalDefense": 81.3,
+            "magicDefense": 87.9,
+            "hpMax": 913,
+            "hpRegen": 16.3,
+            "castSpeed": 8.1,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 21.6,
+            "cooldownDurationMultiplierPct": 78.4,
+            "statusResistance": 22.5,
+            "statusDurationMultiplierPct": 77.5,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 26,
+          "primary": {
+            "strength": 95.3,
+            "vitality": 87.6,
+            "agility": 114.9,
+            "intelligence": 77,
+            "spirit": 94.7
+          },
+          "derived": {
+            "physicalAttack": 285.9,
+            "magicAttack": 231,
+            "physicalDefense": 87.6,
+            "magicDefense": 94.7,
+            "hpMax": 976,
+            "hpRegen": 17.5,
+            "castSpeed": 8.7,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 22.7,
+            "cooldownDurationMultiplierPct": 77.3,
+            "statusResistance": 23.6,
+            "statusDurationMultiplierPct": 76.4,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 27,
+          "primary": {
+            "strength": 102.4,
+            "vitality": 94,
+            "agility": 123.4,
+            "intelligence": 82.7,
+            "spirit": 101.7
+          },
+          "derived": {
+            "physicalAttack": 307.20000000000005,
+            "magicAttack": 248.10000000000002,
+            "physicalDefense": 94,
+            "magicDefense": 101.7,
+            "hpMax": 1040,
+            "hpRegen": 18.8,
+            "castSpeed": 9.2,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 23.7,
+            "cooldownDurationMultiplierPct": 76.3,
+            "statusResistance": 24.7,
+            "statusDurationMultiplierPct": 75.3,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 28,
+          "primary": {
+            "strength": 109.7,
+            "vitality": 100.7,
+            "agility": 132.2,
+            "intelligence": 88.6,
+            "spirit": 108.9
+          },
+          "derived": {
+            "physicalAttack": 329.1,
+            "magicAttack": 265.79999999999995,
+            "physicalDefense": 100.7,
+            "magicDefense": 108.9,
+            "hpMax": 1107,
+            "hpRegen": 20.1,
+            "castSpeed": 9.8,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 24.8,
+            "cooldownDurationMultiplierPct": 75.2,
+            "statusResistance": 25.8,
+            "statusDurationMultiplierPct": 74.2,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 29,
+          "primary": {
+            "strength": 117.2,
+            "vitality": 107.7,
+            "agility": 141.2,
+            "intelligence": 94.7,
+            "spirit": 116.4
+          },
+          "derived": {
+            "physicalAttack": 351.6,
+            "magicAttack": 284.1,
+            "physicalDefense": 107.7,
+            "magicDefense": 116.4,
+            "hpMax": 1177,
+            "hpRegen": 21.5,
+            "castSpeed": 10.4,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 25.8,
+            "cooldownDurationMultiplierPct": 74.2,
+            "statusResistance": 26.9,
+            "statusDurationMultiplierPct": 73.1,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 30,
+          "primary": {
+            "strength": 124.9,
+            "vitality": 114.8,
+            "agility": 150.6,
+            "intelligence": 100.9,
+            "spirit": 124
+          },
+          "derived": {
+            "physicalAttack": 374.70000000000005,
+            "magicAttack": 302.70000000000005,
+            "physicalDefense": 114.8,
+            "magicDefense": 124,
+            "hpMax": 1248,
+            "hpRegen": 23,
+            "castSpeed": 11.1,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 26.9,
+            "cooldownDurationMultiplierPct": 73.1,
+            "statusResistance": 27.9,
+            "statusDurationMultiplierPct": 72.1,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 31,
+          "primary": {
+            "strength": 132.9,
+            "vitality": 122.1,
+            "agility": 160.2,
+            "intelligence": 107.4,
+            "spirit": 132
+          },
+          "derived": {
+            "physicalAttack": 398.70000000000005,
+            "magicAttack": 322.20000000000005,
+            "physicalDefense": 122.1,
+            "magicDefense": 132,
+            "hpMax": 1321,
+            "hpRegen": 24.4,
+            "castSpeed": 11.7,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 27.9,
+            "cooldownDurationMultiplierPct": 72.1,
+            "statusResistance": 28.9,
+            "statusDurationMultiplierPct": 71.1,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 32,
+          "primary": {
+            "strength": 141.1,
+            "vitality": 129.7,
+            "agility": 170.1,
+            "intelligence": 114,
+            "spirit": 140.1
+          },
+          "derived": {
+            "physicalAttack": 423.29999999999995,
+            "magicAttack": 342,
+            "physicalDefense": 129.7,
+            "magicDefense": 140.1,
+            "hpMax": 1397,
+            "hpRegen": 25.9,
+            "castSpeed": 12.4,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 28.8,
+            "cooldownDurationMultiplierPct": 71.2,
+            "statusResistance": 29.9,
+            "statusDurationMultiplierPct": 70.1,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 33,
+          "primary": {
+            "strength": 149.6,
+            "vitality": 137.4,
+            "agility": 180.3,
+            "intelligence": 120.8,
+            "spirit": 148.5
+          },
+          "derived": {
+            "physicalAttack": 448.79999999999995,
+            "magicAttack": 362.4,
+            "physicalDefense": 137.4,
+            "magicDefense": 148.5,
+            "hpMax": 1474,
+            "hpRegen": 27.5,
+            "castSpeed": 13,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 29.8,
+            "cooldownDurationMultiplierPct": 70.2,
+            "statusResistance": 30.8,
+            "statusDurationMultiplierPct": 69.2,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 34,
+          "primary": {
+            "strength": 158.3,
+            "vitality": 145.4,
+            "agility": 190.7,
+            "intelligence": 127.8,
+            "spirit": 157.1
+          },
+          "derived": {
+            "physicalAttack": 474.90000000000003,
+            "magicAttack": 383.4,
+            "physicalDefense": 145.4,
+            "magicDefense": 157.1,
+            "hpMax": 1554,
+            "hpRegen": 29.1,
+            "castSpeed": 13.7,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 30.7,
+            "cooldownDurationMultiplierPct": 69.3,
+            "statusResistance": 31.8,
+            "statusDurationMultiplierPct": 68.2,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 35,
+          "primary": {
+            "strength": 167.1,
+            "vitality": 153.6,
+            "agility": 201.4,
+            "intelligence": 135,
+            "spirit": 165.9
+          },
+          "derived": {
+            "physicalAttack": 501.29999999999995,
+            "magicAttack": 405,
+            "physicalDefense": 153.6,
+            "magicDefense": 165.9,
+            "hpMax": 1636,
+            "hpRegen": 30.7,
+            "castSpeed": 14.5,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 31.6,
+            "cooldownDurationMultiplierPct": 68.4,
+            "statusResistance": 32.7,
+            "statusDurationMultiplierPct": 67.3,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 36,
+          "primary": {
+            "strength": 176.3,
+            "vitality": 162,
+            "agility": 212.4,
+            "intelligence": 142.4,
+            "spirit": 174.9
+          },
+          "derived": {
+            "physicalAttack": 528.9000000000001,
+            "magicAttack": 427.20000000000005,
+            "physicalDefense": 162,
+            "magicDefense": 174.9,
+            "hpMax": 1720,
+            "hpRegen": 32.4,
+            "castSpeed": 15.2,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 32.5,
+            "cooldownDurationMultiplierPct": 67.5,
+            "statusResistance": 33.6,
+            "statusDurationMultiplierPct": 66.4,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 37,
+          "primary": {
+            "strength": 185.6,
+            "vitality": 170.5,
+            "agility": 223.7,
+            "intelligence": 149.9,
+            "spirit": 184.2
+          },
+          "derived": {
+            "physicalAttack": 556.8,
+            "magicAttack": 449.70000000000005,
+            "physicalDefense": 170.5,
+            "magicDefense": 184.2,
+            "hpMax": 1805,
+            "hpRegen": 34.1,
+            "castSpeed": 15.9,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 33.4,
+            "cooldownDurationMultiplierPct": 66.6,
+            "statusResistance": 34.4,
+            "statusDurationMultiplierPct": 65.6,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 38,
+          "primary": {
+            "strength": 195.2,
+            "vitality": 179.3,
+            "agility": 235.2,
+            "intelligence": 157.7,
+            "spirit": 193.7
+          },
+          "derived": {
+            "physicalAttack": 585.5999999999999,
+            "magicAttack": 473.09999999999997,
+            "physicalDefense": 179.3,
+            "magicDefense": 193.7,
+            "hpMax": 1893,
+            "hpRegen": 35.9,
+            "castSpeed": 16.7,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 34.2,
+            "cooldownDurationMultiplierPct": 65.8,
+            "statusResistance": 35.3,
+            "statusDurationMultiplierPct": 64.7,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 39,
+          "primary": {
+            "strength": 205,
+            "vitality": 188.3,
+            "agility": 247,
+            "intelligence": 165.6,
+            "spirit": 203.4
+          },
+          "derived": {
+            "physicalAttack": 615,
+            "magicAttack": 496.79999999999995,
+            "physicalDefense": 188.3,
+            "magicDefense": 203.4,
+            "hpMax": 1983,
+            "hpRegen": 37.7,
+            "castSpeed": 17.5,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 35,
+            "cooldownDurationMultiplierPct": 65,
+            "statusResistance": 36.1,
+            "statusDurationMultiplierPct": 63.9,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 40,
+          "primary": {
+            "strength": 215,
+            "vitality": 197.5,
+            "agility": 259.1,
+            "intelligence": 173.6,
+            "spirit": 213.3
+          },
+          "derived": {
+            "physicalAttack": 645,
+            "magicAttack": 520.8,
+            "physicalDefense": 197.5,
+            "magicDefense": 213.3,
+            "hpMax": 2075,
+            "hpRegen": 39.5,
+            "castSpeed": 18.3,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 35.8,
+            "cooldownDurationMultiplierPct": 64.2,
+            "statusResistance": 36.9,
+            "statusDurationMultiplierPct": 63.1,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 41,
+          "primary": {
+            "strength": 225.2,
+            "vitality": 206.9,
+            "agility": 271.4,
+            "intelligence": 181.9,
+            "spirit": 223.4
+          },
+          "derived": {
+            "physicalAttack": 675.5999999999999,
+            "magicAttack": 545.7,
+            "physicalDefense": 206.9,
+            "magicDefense": 223.4,
+            "hpMax": 2169,
+            "hpRegen": 41.4,
+            "castSpeed": 19.1,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 36.6,
+            "cooldownDurationMultiplierPct": 63.4,
+            "statusResistance": 37.6,
+            "statusDurationMultiplierPct": 62.4,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 42,
+          "primary": {
+            "strength": 235.7,
+            "vitality": 216.6,
+            "agility": 284,
+            "intelligence": 190.4,
+            "spirit": 233.8
+          },
+          "derived": {
+            "physicalAttack": 707.0999999999999,
+            "magicAttack": 571.2,
+            "physicalDefense": 216.6,
+            "magicDefense": 233.8,
+            "hpMax": 2266,
+            "hpRegen": 43.3,
+            "castSpeed": 20,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 37.3,
+            "cooldownDurationMultiplierPct": 62.7,
+            "statusResistance": 38.4,
+            "statusDurationMultiplierPct": 61.6,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 43,
+          "primary": {
+            "strength": 246.3,
+            "vitality": 226.4,
+            "agility": 296.9,
+            "intelligence": 199,
+            "spirit": 244.4
+          },
+          "derived": {
+            "physicalAttack": 738.9000000000001,
+            "magicAttack": 597,
+            "physicalDefense": 226.4,
+            "magicDefense": 244.4,
+            "hpMax": 2364,
+            "hpRegen": 45.3,
+            "castSpeed": 20.8,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 38.1,
+            "cooldownDurationMultiplierPct": 61.9,
+            "statusResistance": 39.1,
+            "statusDurationMultiplierPct": 60.9,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 44,
+          "primary": {
+            "strength": 257.2,
+            "vitality": 236.4,
+            "agility": 310,
+            "intelligence": 207.8,
+            "spirit": 255.1
+          },
+          "derived": {
+            "physicalAttack": 771.5999999999999,
+            "magicAttack": 623.4000000000001,
+            "physicalDefense": 236.4,
+            "magicDefense": 255.1,
+            "hpMax": 2464,
+            "hpRegen": 47.3,
+            "castSpeed": 21.7,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 38.8,
+            "cooldownDurationMultiplierPct": 61.2,
+            "statusResistance": 39.8,
+            "statusDurationMultiplierPct": 60.2,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 45,
+          "primary": {
+            "strength": 268.3,
+            "vitality": 246.6,
+            "agility": 323.4,
+            "intelligence": 216.7,
+            "spirit": 266.2
+          },
+          "derived": {
+            "physicalAttack": 804.9000000000001,
+            "magicAttack": 650.0999999999999,
+            "physicalDefense": 246.6,
+            "magicDefense": 266.2,
+            "hpMax": 2566,
+            "hpRegen": 49.3,
+            "castSpeed": 22.6,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 39.4,
+            "cooldownDurationMultiplierPct": 60.6,
+            "statusResistance": 40.5,
+            "statusDurationMultiplierPct": 59.5,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 46,
+          "primary": {
+            "strength": 279.7,
+            "vitality": 257,
+            "agility": 337,
+            "intelligence": 225.9,
+            "spirit": 277.4
+          },
+          "derived": {
+            "physicalAttack": 839.0999999999999,
+            "magicAttack": 677.7,
+            "physicalDefense": 257,
+            "magicDefense": 277.4,
+            "hpMax": 2670,
+            "hpRegen": 51.4,
+            "castSpeed": 23.5,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 40.1,
+            "cooldownDurationMultiplierPct": 59.9,
+            "statusResistance": 41.1,
+            "statusDurationMultiplierPct": 58.9,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 47,
+          "primary": {
+            "strength": 291.2,
+            "vitality": 267.6,
+            "agility": 350.9,
+            "intelligence": 235.2,
+            "spirit": 288.8
+          },
+          "derived": {
+            "physicalAttack": 873.5999999999999,
+            "magicAttack": 705.5999999999999,
+            "physicalDefense": 267.6,
+            "magicDefense": 288.8,
+            "hpMax": 2776,
+            "hpRegen": 53.5,
+            "castSpeed": 24.4,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 40.7,
+            "cooldownDurationMultiplierPct": 59.3,
+            "statusResistance": 41.8,
+            "statusDurationMultiplierPct": 58.2,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 48,
+          "primary": {
+            "strength": 302.9,
+            "vitality": 278.4,
+            "agility": 365.1,
+            "intelligence": 244.7,
+            "spirit": 300.5
+          },
+          "derived": {
+            "physicalAttack": 908.6999999999999,
+            "magicAttack": 734.0999999999999,
+            "physicalDefense": 278.4,
+            "magicDefense": 300.5,
+            "hpMax": 2884,
+            "hpRegen": 55.7,
+            "castSpeed": 25.4,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 41.4,
+            "cooldownDurationMultiplierPct": 58.6,
+            "statusResistance": 42.4,
+            "statusDurationMultiplierPct": 57.6,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 49,
+          "primary": {
+            "strength": 314.9,
+            "vitality": 289.4,
+            "agility": 379.5,
+            "intelligence": 254.4,
+            "spirit": 312.3
+          },
+          "derived": {
+            "physicalAttack": 944.6999999999999,
+            "magicAttack": 763.2,
+            "physicalDefense": 289.4,
+            "magicDefense": 312.3,
+            "hpMax": 2994,
+            "hpRegen": 57.9,
+            "castSpeed": 26.4,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 42,
+            "cooldownDurationMultiplierPct": 58,
+            "statusResistance": 43,
+            "statusDurationMultiplierPct": 57,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        },
+        {
+          "level": 50,
+          "primary": {
+            "strength": 327.1,
+            "vitality": 300.6,
+            "agility": 394.2,
+            "intelligence": 264.2,
+            "spirit": 324.4
+          },
+          "derived": {
+            "physicalAttack": 981.3000000000001,
+            "magicAttack": 792.5999999999999,
+            "physicalDefense": 300.6,
+            "magicDefense": 324.4,
+            "hpMax": 3106,
+            "hpRegen": 60.1,
+            "castSpeed": 27.3,
+            "mpMax": 0,
+            "mpRegen": 0,
+            "cooldownReduction": 42.6,
+            "cooldownDurationMultiplierPct": 57.4,
+            "statusResistance": 43.5,
+            "statusDurationMultiplierPct": 56.5,
+            "meleeRange": 1.25,
+            "rangedRange": 4,
+            "magicRange": 4.6,
+            "attackInterval": 0.7,
+            "chantTime": 0.9
+          }
+        }
+      ],
+      "skillSlots": 3,
+      "skillIds": [
+        "physical-attack-boost-s"
+      ],
+      "equipmentBySlot": {
+        "weapon": "equip-starter-bow-e",
+        "armor": "equip-starter-shield-e",
+        "accessory": ""
+      },
+      "skillScore": 72,
+      "attributeBand": {
+        "baseLevel1Average": 1.6,
+        "baseLevel50Average": 322.1,
+        "floorLevel1Average": 1.6,
+        "floorLevel50Average": 322.1,
+        "skillBurden": 0,
+        "level1Average": 1.6,
+        "level50Average": 322.1
+      },
+      "combatScore": 3937,
+      "generatedAt": 1775326435089
     },
     {
       "buildId": "1.1.0:CAP-543CB835",
@@ -32612,7 +34249,7 @@
         "level50Average": 293.1
       },
       "combatScore": 3589,
-      "generatedAt": 1775325993371
+      "generatedAt": 1775326435098
     },
     {
       "buildId": "1.1.0:CAP-558CA171",
@@ -34191,7 +35828,7 @@
         "level50Average": 354.3
       },
       "combatScore": 4336,
-      "generatedAt": 1775325993379
+      "generatedAt": 1775326435107
     },
     {
       "buildId": "1.1.0:CAP-55F094E1",
@@ -35770,7 +37407,7 @@
         "level50Average": 307.6
       },
       "combatScore": 3763,
-      "generatedAt": 1775325993387
+      "generatedAt": 1775326435116
     },
     {
       "buildId": "1.1.0:CAP-55F670C5",
@@ -37349,7 +38986,7 @@
         "level50Average": 354.3
       },
       "combatScore": 4336,
-      "generatedAt": 1775325993396
+      "generatedAt": 1775326435125
     },
     {
       "buildId": "1.1.0:CAP-57359C32",
@@ -38928,7 +40565,7 @@
         "level50Average": 322.1
       },
       "combatScore": 3907,
-      "generatedAt": 1775325993405
+      "generatedAt": 1775326435133
     },
     {
       "buildId": "1.1.0:CAP-6865E3FE",
@@ -40507,7 +42144,7 @@
         "level50Average": 354.3
       },
       "combatScore": 4317,
-      "generatedAt": 1775325993414
+      "generatedAt": 1775326435142
     },
     {
       "buildId": "1.1.0:CAP-69314498",
@@ -42086,7 +43723,7 @@
         "level50Average": 242
       },
       "combatScore": 2940,
-      "generatedAt": 1775325993422
+      "generatedAt": 1775326435151
     },
     {
       "buildId": "1.1.0:CAP-69C2907B",
@@ -43665,7 +45302,7 @@
         "level50Average": 242
       },
       "combatScore": 2940,
-      "generatedAt": 1775325993430
+      "generatedAt": 1775326435160
     },
     {
       "buildId": "1.1.0:CAP-6A1A4D30",
@@ -45244,7 +46881,7 @@
         "level50Average": 266.2
       },
       "combatScore": 3228,
-      "generatedAt": 1775325993438
+      "generatedAt": 1775326435167
     },
     {
       "buildId": "1.1.0:CAP-73E28777",
@@ -46823,7 +48460,7 @@
         "level50Average": 220
       },
       "combatScore": 2665,
-      "generatedAt": 1775325993446
+      "generatedAt": 1775326435175
     },
     {
       "buildId": "1.1.0:CAP-7EA41723",
@@ -48402,7 +50039,7 @@
         "level50Average": 322.1
       },
       "combatScore": 3919,
-      "generatedAt": 1775325993454
+      "generatedAt": 1775326435186
     },
     {
       "buildId": "1.1.0:CAP-7FCF2E92",
@@ -49981,7 +51618,7 @@
         "level50Average": 220
       },
       "combatScore": 2664,
-      "generatedAt": 1775325993463
+      "generatedAt": 1775326435204
     },
     {
       "buildId": "1.1.0:CAP-804419B6",
@@ -51560,7 +53197,7 @@
         "level50Average": 210.1
       },
       "combatScore": 2545,
-      "generatedAt": 1775325993471
+      "generatedAt": 1775326435212
     },
     {
       "buildId": "1.1.0:CAP-84D6FC74",
@@ -53139,7 +54776,7 @@
         "level50Average": 307.6
       },
       "combatScore": 3763,
-      "generatedAt": 1775325993480
+      "generatedAt": 1775326435219
     },
     {
       "buildId": "1.1.0:CAP-8B485BB2",
@@ -54718,7 +56355,7 @@
         "level50Average": 231.1
       },
       "combatScore": 2809,
-      "generatedAt": 1775325993489
+      "generatedAt": 1775326435227
     },
     {
       "buildId": "1.1.0:CAP-9947339F",
@@ -56297,7 +57934,7 @@
         "level50Average": 220
       },
       "combatScore": 2670,
-      "generatedAt": 1775325993497
+      "generatedAt": 1775326435234
     },
     {
       "buildId": "1.1.0:CAP-B802E47C",
@@ -57876,7 +59513,7 @@
         "level50Average": 242
       },
       "combatScore": 2934,
-      "generatedAt": 1775325993506
+      "generatedAt": 1775326435242
     },
     {
       "buildId": "1.1.0:CAP-C5E7FEB4",
@@ -59455,7 +61092,7 @@
         "level50Average": 293.1
       },
       "combatScore": 3589,
-      "generatedAt": 1775325993514
+      "generatedAt": 1775326435249
     },
     {
       "buildId": "1.1.0:CAP-CD7BAC3D",
@@ -61034,7 +62671,7 @@
         "level50Average": 372.2
       },
       "combatScore": 4562,
-      "generatedAt": 1775325993523
+      "generatedAt": 1775326435257
     },
     {
       "buildId": "1.1.0:CAP-CE685CE0",
@@ -62613,7 +64250,7 @@
         "level50Average": 220
       },
       "combatScore": 2664,
-      "generatedAt": 1775325993531
+      "generatedAt": 1775326435264
     },
     {
       "buildId": "1.1.0:CAP-CEFA9EC1",
@@ -64192,7 +65829,7 @@
         "level50Average": 322.4
       },
       "combatScore": 3915,
-      "generatedAt": 1775325993539
+      "generatedAt": 1775326435271
     },
     {
       "buildId": "1.1.0:CAP-D4035366",
@@ -65771,7 +67408,7 @@
         "level50Average": 231.1
       },
       "combatScore": 2809,
-      "generatedAt": 1775325993549
+      "generatedAt": 1775326435279
     },
     {
       "buildId": "1.1.0:CAP-E724B1D5",
@@ -67350,7 +68987,7 @@
         "level50Average": 231.1
       },
       "combatScore": 2803,
-      "generatedAt": 1775325993558
+      "generatedAt": 1775326435287
     },
     {
       "buildId": "1.1.0:CAP-EA2FA9B1",
@@ -68929,7 +70566,7 @@
         "level50Average": 242
       },
       "combatScore": 2940,
-      "generatedAt": 1775325993566
+      "generatedAt": 1775326435295
     },
     {
       "buildId": "1.1.0:CAP-EC1DA83D",
@@ -70508,7 +72145,7 @@
         "level50Average": 210.1
       },
       "combatScore": 2545,
-      "generatedAt": 1775325993576
+      "generatedAt": 1775326435302
     },
     {
       "buildId": "1.1.0:CAP-F064E7F9",
@@ -72087,7 +73724,7 @@
         "level50Average": 220
       },
       "combatScore": 2665,
-      "generatedAt": 1775325993585
+      "generatedAt": 1775326435311
     },
     {
       "buildId": "1.1.0:CAP-F5AB256B",
@@ -73666,17 +75303,17 @@
         "level50Average": 322.1
       },
       "combatScore": 3907,
-      "generatedAt": 1775325993593
+      "generatedAt": 1775326435319
     }
   ],
   "capProgress": [
     {
       "buildId": "1.1.0:CAP-053855BA",
       "level": 1,
-      "experience": 0,
-      "totalBattles": 0,
-      "wins": 0,
-      "kills": 0,
+      "experience": 40,
+      "totalBattles": 1,
+      "wins": 1,
+      "kills": 1,
       "assists": 0,
       "deaths": 0,
       "nextBattleHalfHp": false,
@@ -73712,10 +75349,10 @@
     {
       "buildId": "1.1.0:CAP-07AF88D1",
       "level": 1,
-      "experience": 0,
-      "totalBattles": 0,
-      "wins": 0,
-      "kills": 0,
+      "experience": 80,
+      "totalBattles": 2,
+      "wins": 2,
+      "kills": 2,
       "assists": 0,
       "deaths": 0,
       "nextBattleHalfHp": false,
@@ -73752,11 +75389,11 @@
       "buildId": "1.1.0:CAP-0D9F2D4C",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -73791,11 +75428,11 @@
       "buildId": "1.1.0:CAP-0DCC7799",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -73869,11 +75506,11 @@
       "buildId": "1.1.0:CAP-1359B3FC",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -73906,11 +75543,11 @@
     },
     {
       "buildId": "1.1.0:CAP-19AB334D",
-      "level": 1,
-      "experience": 40,
-      "totalBattles": 1,
-      "wins": 1,
-      "kills": 1,
+      "level": 2,
+      "experience": 20,
+      "totalBattles": 3,
+      "wins": 3,
+      "kills": 3,
       "assists": 0,
       "deaths": 0,
       "nextBattleHalfHp": false,
@@ -73986,11 +75623,11 @@
       "buildId": "1.1.0:CAP-1A945A22",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -74064,11 +75701,11 @@
       "buildId": "1.1.0:CAP-250F9124",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 2,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 2,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -74142,11 +75779,11 @@
       "buildId": "1.1.0:CAP-29936D06",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -74181,11 +75818,11 @@
       "buildId": "1.1.0:CAP-2C987DA5",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -74220,11 +75857,11 @@
       "buildId": "1.1.0:CAP-3059045B",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -74258,10 +75895,10 @@
     {
       "buildId": "1.1.0:CAP-32BD0730",
       "level": 1,
-      "experience": 0,
-      "totalBattles": 0,
-      "wins": 0,
-      "kills": 0,
+      "experience": 40,
+      "totalBattles": 1,
+      "wins": 1,
+      "kills": 1,
       "assists": 0,
       "deaths": 0,
       "nextBattleHalfHp": false,
@@ -74297,10 +75934,49 @@
     {
       "buildId": "1.1.0:CAP-49F247E2",
       "level": 1,
-      "experience": 0,
-      "totalBattles": 0,
-      "wins": 0,
-      "kills": 0,
+      "experience": 40,
+      "totalBattles": 2,
+      "wins": 1,
+      "kills": 1,
+      "assists": 0,
+      "deaths": 1,
+      "nextBattleHalfHp": false,
+      "nextBattleRevive": false,
+      "nextBattleRandomSpawn": false,
+      "pendingStatusIds": [],
+      "bloodlineId": "",
+      "bloodlineGrantedSkillId": "",
+      "bloodlineFateBonusApplied": 0,
+      "nonBloodlineFateChangeCount": 0,
+      "bloodlineTaskCounts": {
+        "azureDragonHealerWins": 0,
+        "whiteTigerRecordBreaks": 0,
+        "vermilionBirdRevives": 0,
+        "blackTortoiseTankWins": 0
+      },
+      "primaryBonus": {
+        "strength": 0,
+        "vitality": 0,
+        "agility": 0,
+        "intelligence": 0,
+        "spirit": 0
+      },
+      "lastEventId": "",
+      "lastEventText": "",
+      "tournamentChampionCount": 0,
+      "tournamentRunnerUpCount": 0,
+      "tournamentTopFourCount": 0,
+      "fateChangeCount": 0,
+      "killMilestones": [],
+      "biographyEntries": []
+    },
+    {
+      "buildId": "1.1.0:CAP-4B2D4686",
+      "level": 1,
+      "experience": 80,
+      "totalBattles": 2,
+      "wins": 2,
+      "kills": 2,
       "assists": 0,
       "deaths": 0,
       "nextBattleHalfHp": false,
@@ -74334,7 +76010,7 @@
       "biographyEntries": []
     },
     {
-      "buildId": "1.1.0:CAP-4B2D4686",
+      "buildId": "1.1.0:CAP-516854FD",
       "level": 1,
       "experience": 0,
       "totalBattles": 0,
@@ -74375,10 +76051,10 @@
     {
       "buildId": "1.1.0:CAP-543CB835",
       "level": 1,
-      "experience": 0,
-      "totalBattles": 0,
-      "wins": 0,
-      "kills": 0,
+      "experience": 40,
+      "totalBattles": 1,
+      "wins": 1,
+      "kills": 1,
       "assists": 0,
       "deaths": 0,
       "nextBattleHalfHp": false,
@@ -74414,10 +76090,10 @@
     {
       "buildId": "1.1.0:CAP-558CA171",
       "level": 1,
-      "experience": 0,
-      "totalBattles": 1,
-      "wins": 0,
-      "kills": 0,
+      "experience": 40,
+      "totalBattles": 2,
+      "wins": 1,
+      "kills": 1,
       "assists": 0,
       "deaths": 1,
       "nextBattleHalfHp": false,
@@ -74492,10 +76168,10 @@
     {
       "buildId": "1.1.0:CAP-55F670C5",
       "level": 1,
-      "experience": 0,
-      "totalBattles": 0,
-      "wins": 0,
-      "kills": 0,
+      "experience": 40,
+      "totalBattles": 1,
+      "wins": 1,
+      "kills": 1,
       "assists": 0,
       "deaths": 0,
       "nextBattleHalfHp": false,
@@ -74610,11 +76286,11 @@
       "buildId": "1.1.0:CAP-69314498",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -74649,11 +76325,11 @@
       "buildId": "1.1.0:CAP-69C2907B",
       "level": 1,
       "experience": 0,
-      "totalBattles": 1,
+      "totalBattles": 2,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 1,
+      "deaths": 2,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -74726,10 +76402,10 @@
     {
       "buildId": "1.1.0:CAP-73E28777",
       "level": 1,
-      "experience": 0,
-      "totalBattles": 0,
-      "wins": 0,
-      "kills": 0,
+      "experience": 40,
+      "totalBattles": 1,
+      "wins": 1,
+      "kills": 1,
       "assists": 0,
       "deaths": 0,
       "nextBattleHalfHp": false,
@@ -74805,11 +76481,11 @@
       "buildId": "1.1.0:CAP-7FCF2E92",
       "level": 1,
       "experience": 0,
-      "totalBattles": 1,
+      "totalBattles": 2,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 1,
+      "deaths": 2,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -74881,11 +76557,11 @@
     },
     {
       "buildId": "1.1.0:CAP-84D6FC74",
-      "level": 1,
-      "experience": 40,
-      "totalBattles": 1,
-      "wins": 1,
-      "kills": 1,
+      "level": 2,
+      "experience": 20,
+      "totalBattles": 3,
+      "wins": 3,
+      "kills": 3,
       "assists": 0,
       "deaths": 0,
       "nextBattleHalfHp": false,
@@ -74922,11 +76598,11 @@
       "buildId": "1.1.0:CAP-8B485BB2",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -74961,11 +76637,11 @@
       "buildId": "1.1.0:CAP-9947339F",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -74998,84 +76674,6 @@
     },
     {
       "buildId": "1.1.0:CAP-B802E47C",
-      "level": 1,
-      "experience": 0,
-      "totalBattles": 0,
-      "wins": 0,
-      "kills": 0,
-      "assists": 0,
-      "deaths": 0,
-      "nextBattleHalfHp": false,
-      "nextBattleRevive": false,
-      "nextBattleRandomSpawn": false,
-      "pendingStatusIds": [],
-      "bloodlineId": "",
-      "bloodlineGrantedSkillId": "",
-      "bloodlineFateBonusApplied": 0,
-      "nonBloodlineFateChangeCount": 0,
-      "bloodlineTaskCounts": {
-        "azureDragonHealerWins": 0,
-        "whiteTigerRecordBreaks": 0,
-        "vermilionBirdRevives": 0,
-        "blackTortoiseTankWins": 0
-      },
-      "primaryBonus": {
-        "strength": 0,
-        "vitality": 0,
-        "agility": 0,
-        "intelligence": 0,
-        "spirit": 0
-      },
-      "lastEventId": "",
-      "lastEventText": "",
-      "tournamentChampionCount": 0,
-      "tournamentRunnerUpCount": 0,
-      "tournamentTopFourCount": 0,
-      "fateChangeCount": 0,
-      "killMilestones": [],
-      "biographyEntries": []
-    },
-    {
-      "buildId": "1.1.0:CAP-C5E7FEB4",
-      "level": 1,
-      "experience": 0,
-      "totalBattles": 0,
-      "wins": 0,
-      "kills": 0,
-      "assists": 0,
-      "deaths": 0,
-      "nextBattleHalfHp": false,
-      "nextBattleRevive": false,
-      "nextBattleRandomSpawn": false,
-      "pendingStatusIds": [],
-      "bloodlineId": "",
-      "bloodlineGrantedSkillId": "",
-      "bloodlineFateBonusApplied": 0,
-      "nonBloodlineFateChangeCount": 0,
-      "bloodlineTaskCounts": {
-        "azureDragonHealerWins": 0,
-        "whiteTigerRecordBreaks": 0,
-        "vermilionBirdRevives": 0,
-        "blackTortoiseTankWins": 0
-      },
-      "primaryBonus": {
-        "strength": 0,
-        "vitality": 0,
-        "agility": 0,
-        "intelligence": 0,
-        "spirit": 0
-      },
-      "lastEventId": "",
-      "lastEventText": "",
-      "tournamentChampionCount": 0,
-      "tournamentRunnerUpCount": 0,
-      "tournamentTopFourCount": 0,
-      "fateChangeCount": 0,
-      "killMilestones": [],
-      "biographyEntries": []
-    },
-    {
-      "buildId": "1.1.0:CAP-CD7BAC3D",
       "level": 1,
       "experience": 40,
       "totalBattles": 1,
@@ -75114,12 +76712,51 @@
       "biographyEntries": []
     },
     {
-      "buildId": "1.1.0:CAP-CE685CE0",
+      "buildId": "1.1.0:CAP-C5E7FEB4",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
+      "assists": 0,
+      "deaths": 1,
+      "nextBattleHalfHp": false,
+      "nextBattleRevive": false,
+      "nextBattleRandomSpawn": false,
+      "pendingStatusIds": [],
+      "bloodlineId": "",
+      "bloodlineGrantedSkillId": "",
+      "bloodlineFateBonusApplied": 0,
+      "nonBloodlineFateChangeCount": 0,
+      "bloodlineTaskCounts": {
+        "azureDragonHealerWins": 0,
+        "whiteTigerRecordBreaks": 0,
+        "vermilionBirdRevives": 0,
+        "blackTortoiseTankWins": 0
+      },
+      "primaryBonus": {
+        "strength": 0,
+        "vitality": 0,
+        "agility": 0,
+        "intelligence": 0,
+        "spirit": 0
+      },
+      "lastEventId": "",
+      "lastEventText": "",
+      "tournamentChampionCount": 0,
+      "tournamentRunnerUpCount": 0,
+      "tournamentTopFourCount": 0,
+      "fateChangeCount": 0,
+      "killMilestones": [],
+      "biographyEntries": []
+    },
+    {
+      "buildId": "1.1.0:CAP-CD7BAC3D",
+      "level": 1,
+      "experience": 80,
+      "totalBattles": 2,
+      "wins": 2,
+      "kills": 2,
       "assists": 0,
       "deaths": 0,
       "nextBattleHalfHp": false,
@@ -75153,14 +76790,53 @@
       "biographyEntries": []
     },
     {
-      "buildId": "1.1.0:CAP-CEFA9EC1",
+      "buildId": "1.1.0:CAP-CE685CE0",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
+      "nextBattleHalfHp": false,
+      "nextBattleRevive": false,
+      "nextBattleRandomSpawn": false,
+      "pendingStatusIds": [],
+      "bloodlineId": "",
+      "bloodlineGrantedSkillId": "",
+      "bloodlineFateBonusApplied": 0,
+      "nonBloodlineFateChangeCount": 0,
+      "bloodlineTaskCounts": {
+        "azureDragonHealerWins": 0,
+        "whiteTigerRecordBreaks": 0,
+        "vermilionBirdRevives": 0,
+        "blackTortoiseTankWins": 0
+      },
+      "primaryBonus": {
+        "strength": 0,
+        "vitality": 0,
+        "agility": 0,
+        "intelligence": 0,
+        "spirit": 0
+      },
+      "lastEventId": "",
+      "lastEventText": "",
+      "tournamentChampionCount": 0,
+      "tournamentRunnerUpCount": 0,
+      "tournamentTopFourCount": 0,
+      "fateChangeCount": 0,
+      "killMilestones": [],
+      "biographyEntries": []
+    },
+    {
+      "buildId": "1.1.0:CAP-CEFA9EC1",
+      "level": 1,
+      "experience": 40,
+      "totalBattles": 2,
+      "wins": 1,
+      "kills": 1,
+      "assists": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,
@@ -75272,10 +76948,10 @@
     {
       "buildId": "1.1.0:CAP-EA2FA9B1",
       "level": 1,
-      "experience": 0,
-      "totalBattles": 1,
-      "wins": 0,
-      "kills": 0,
+      "experience": 40,
+      "totalBattles": 2,
+      "wins": 1,
+      "kills": 1,
       "assists": 0,
       "deaths": 1,
       "nextBattleHalfHp": false,
@@ -75312,11 +76988,11 @@
       "buildId": "1.1.0:CAP-EC1DA83D",
       "level": 1,
       "experience": 0,
-      "totalBattles": 0,
+      "totalBattles": 1,
       "wins": 0,
       "kills": 0,
       "assists": 0,
-      "deaths": 0,
+      "deaths": 1,
       "nextBattleHalfHp": false,
       "nextBattleRevive": false,
       "nextBattleRandomSpawn": false,

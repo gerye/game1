@@ -183,7 +183,12 @@ async function init() {
 
 function bindEvents() {
   dom.photoInput.addEventListener("change", handlePhotoInput);
-  dom.analyzeBtn.addEventListener("click", saveCurrentUpload);
+  dom.analyzeBtn.addEventListener("click", () => {
+    saveCurrentUpload().catch((error) => {
+      console.error(error);
+      window.alert(`保存并生成属性失败：${error?.message || "请打开控制台查看详情。"}`);
+    });
+  });
   dom.resetAllLevelsBtn.addEventListener("click", resetAllLevels);
   dom.seedCapsBtn.addEventListener("click", seedDemoCaps);
   dom.toggleUploadPanelBtn?.addEventListener("click", toggleUploadPanel);

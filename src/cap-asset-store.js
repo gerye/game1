@@ -1,6 +1,10 @@
 import { META_KEYS } from "./config.js";
 
-export const CAP_ASSET_RELATIVE_DIR = "assets/caps";
+export const CAP_SAVE_ROOT_RELATIVE_DIR = "saves";
+export const CAP_ASSET_SUBDIR = "caps";
+export const CAP_ASSET_RELATIVE_DIR = `${CAP_SAVE_ROOT_RELATIVE_DIR}/${CAP_ASSET_SUBDIR}`;
+
+let cachedCapAssetDirectoryHandle = null;
 
 export function getCapAvatarFilename(code) {
   return `${code}-avatar.png`;
@@ -19,16 +23,16 @@ export function getCapPhotoPath(code) {
 }
 
 export function getBaseAvatarSrc(base) {
-  return base?.avatarPath || base?.avatarDataUrl || "";
+  return normalizeCapAssetPath(base?.avatarPath || base?.avatarDataUrl || "");
 }
 
 export function getBasePhotoSrc(base) {
-  return base?.photoPath || base?.photoDataUrl || getBaseAvatarSrc(base);
+  return normalizeCapAssetPath(base?.photoPath || base?.photoDataUrl || getBaseAvatarSrc(base));
 }
 
 export function stripEmbeddedBaseImages(base) {
-  const avatarPath = base?.avatarPath || (base?.code ? getCapAvatarPath(base.code) : "");
-  const photoPath = base?.photoPath || (base?.code ? getCapPhotoPath(base.code) : "");
+  const avatarPath = normalizeCapAssetPath(base?.avatarPath || (base?.code ? getCapAvatarPath(base.code) : ""));
+  const photoPath = normalizeCapAssetPath(base?.photoPath || (base?.code ? getCapPhotoPath(base.code) : ""));
   return {
     ...base,
     imageId: base?.imageId || base?.code || "",
@@ -40,9 +44,16 @@ export function stripEmbeddedBaseImages(base) {
 }
 
 export async function ensureCapAssetDirectory(storage, { interactive = false } = {}) {
+  const activeCachedHandle = await ensureDirectoryPermission(cachedCapAssetDirectoryHandle);
+  if (activeCachedHandle) return activeCachedHandle;
+  cachedCapAssetDirectoryHandle = null;
+
   const storedHandle = await storage.getMeta(META_KEYS.CAP_ASSET_DIR_HANDLE);
   const activeStoredHandle = await ensureDirectoryPermission(storedHandle);
-  if (activeStoredHandle) return activeStoredHandle;
+  if (activeStoredHandle) {
+    cachedCapAssetDirectoryHandle = activeStoredHandle;
+    return activeStoredHandle;
+  }
   if (storedHandle) {
     await storage.saveMeta(META_KEYS.CAP_ASSET_DIR_HANDLE, null);
   }
@@ -55,7 +66,13 @@ export async function ensureCapAssetDirectory(storage, { interactive = false } =
   if (permission !== "granted") {
     throw new Error("没有获得图片资源目录的读写权限。");
   }
-  await storage.saveMeta(META_KEYS.CAP_ASSET_DIR_HANDLE, handle);
+  cachedCapAssetDirectoryHandle = handle;
+  try {
+    await storage.saveMeta(META_KEYS.CAP_ASSET_DIR_HANDLE, handle);
+  } catch (_error) {
+    // Some browsers cannot persist directory handles in IndexedDB.
+    // Keep the handle in memory for this session and continue.
+  }
   return handle;
 }
 
@@ -77,7 +94,7 @@ export async function persistBaseImageAssets(storage, base, { interactive = fals
 
   let directoryHandle = await ensureCapAssetDirectory(storage, { interactive });
   if (!directoryHandle) {
-    throw new Error("请先选择用于保存瓶盖图片的 assets/caps 目录。");
+    throw new Error("请先选择用于保存角色存档的 saves 目录。");
   }
 
   try {
@@ -85,14 +102,16 @@ export async function persistBaseImageAssets(storage, base, { interactive = fals
     await writeAssetFile(directoryHandle, getCapPhotoFilename(base.code), base.photoDataUrl || base.avatarDataUrl);
   } catch (error) {
     if (!isStaleHandleError(error)) throw error;
+    cachedCapAssetDirectoryHandle = null;
     await storage.saveMeta(META_KEYS.CAP_ASSET_DIR_HANDLE, null);
     directoryHandle = await ensureCapAssetDirectory(storage, { interactive: true });
     if (!directoryHandle) {
-      throw new Error("图片资源目录句柄已失效，请重新选择 assets/caps 目录。");
+      throw new Error("图片资源目录句柄已失效，请重新选择 saves 目录。");
     }
     await writeAssetFile(directoryHandle, getCapAvatarFilename(base.code), base.avatarDataUrl || base.photoDataUrl);
     await writeAssetFile(directoryHandle, getCapPhotoFilename(base.code), base.photoDataUrl || base.avatarDataUrl);
   }
+
   return stripEmbeddedBaseImages(nextBase);
 }
 
@@ -113,7 +132,8 @@ async function writeAssetFile(directoryHandle, fileName, dataUrl) {
   if (!isDataUrl(dataUrl)) {
     throw new Error(`图片资源 ${fileName} 缺少可写入的数据。`);
   }
-  const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+  const capsDirectoryHandle = await directoryHandle.getDirectoryHandle(CAP_ASSET_SUBDIR, { create: true });
+  const fileHandle = await capsDirectoryHandle.getFileHandle(fileName, { create: true });
   const writable = await fileHandle.createWritable();
   const response = await fetch(dataUrl);
   const blob = await response.blob();
@@ -127,5 +147,20 @@ function isDataUrl(value) {
 
 function isStaleHandleError(error) {
   const message = String(error?.message || "");
-  return message.includes("state cached in an interface object") || message.includes("state had changed since it was read from disk");
+  return (
+    message.includes("state cached in an interface object") ||
+    message.includes("state had changed since it was read from disk") ||
+    message.includes("could not be found") ||
+    message.includes("A requested file or directory could not be found")
+  );
 }
+
+function normalizeCapAssetPath(path) {
+  if (typeof path !== "string" || !path) return "";
+  if (path.startsWith("assets/caps/")) {
+    return path.replace(/^assets\/caps\//, `${CAP_ASSET_RELATIVE_DIR}/`);
+  }
+  return path;
+}
+
+export { normalizeCapAssetPath };
