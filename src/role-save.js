@@ -1,11 +1,11 @@
 import { META_KEYS } from "./config.js";
+import { stripEmbeddedBaseImages } from "./cap-asset-store.js";
 import { buildStorageSnapshot } from "./storage.js";
 
 export async function createRoleSaveSnapshot(storage, {
   bases = [],
   builds = [],
   progress = [],
-  equipment = [],
   winSummary = { totalWins: 0, byFaction: {} },
   tournamentMeta = { byFaction: {}, byCap: {} },
   rankingMeta = { byFaction: {}, byCap: {} },
@@ -21,13 +21,11 @@ export async function createRoleSaveSnapshot(storage, {
   const latestRankingHistory = await storage.getMeta(META_KEYS.RANKING_HISTORY) || rankingHistory || [];
   const latestFastSimMeta = await storage.getMeta(META_KEYS.FAST_SIM_META) || fastSimMeta || null;
   const latestBloodlineTaskState = await storage.getMeta(META_KEYS.BLOODLINE_TASK_STATE) || bloodlineTaskState || null;
-  const latestEquipment = equipment.length > 0 ? equipment : await storage.getEquipmentRaw();
 
   return buildStorageSnapshot({
-    capBases: bases,
+    capBases: (bases || []).map((base) => stripEmbeddedBaseImages(base)),
     capBuilds: builds,
     capProgress: progress,
-    equipment: latestEquipment,
     meta: {
       [META_KEYS.BATTLE_WIN_SUMMARY]:   latestWinSummary,
       [META_KEYS.TOURNAMENT_HALL]:      latestTournamentMeta,

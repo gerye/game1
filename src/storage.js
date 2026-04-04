@@ -59,14 +59,22 @@ export async function createStorage() {
     async exportRoleSave(snapshot) {
       const directoryHandle = await pickSaveDirectory();
       const fileHandle = await directoryHandle.getFileHandle(FILE_NAME, { create: true });
-      await writeFileState(fileHandle, buildStorageSnapshot(snapshot));
+      const fileState = buildStorageSnapshot(snapshot);
+      if (!validateFileStateShape(fileState)) {
+        throw new Error("角色存档数据结构无效，导出已取消。");
+      }
+      await writeFileState(fileHandle, fileState);
+      const { data: writtenData, invalid } = await readFileState(fileHandle);
+      if (invalid || !validateFileStateShape(writtenData)) {
+        throw new Error("角色存档写入校验失败，请重新导出。");
+      }
       return { mode: "manual", label: "\u624b\u52a8\u89d2\u8272\u5b58\u6863", filename: FILE_NAME };
     },
     async importRoleSave() {
       const directoryHandle = await pickSaveDirectory();
       const fileHandle = await directoryHandle.getFileHandle(FILE_NAME, { create: false });
       const { data, invalid } = await readFileState(fileHandle);
-      if (invalid) {
+      if (invalid || !validateFileStateShape(data)) {
         throw new Error("\u89d2\u8272\u5b58\u6863\u6587\u4ef6\u5df2\u635f\u574f\uff0c\u65e0\u6cd5\u5bfc\u5165\u3002");
       }
       await overwriteIndexedDbFromState(storeApi, data);
@@ -182,13 +190,11 @@ async function overwriteIndexedDbFromState(storeApi, state) {
   await clearIndexedStore(storeApi.db, STORES.capBases);
   await clearIndexedStore(storeApi.db, STORES.capBuilds);
   await clearIndexedStore(storeApi.db, STORES.capProgress);
-  await clearIndexedStore(storeApi.db, STORES.equipment);
   await clearIndexedStore(storeApi.db, STORES.meta, PRESERVED_META_KEYS);
 
   for (const base of state.capBases) await storeApi.putCapBase(base);
   for (const build of state.capBuilds) await storeApi.putBuild(build);
   for (const progress of state.capProgress) await storeApi.putProgress(progress);
-  for (const item of state.equipment || []) await storeApi.putEquipment(item);
   for (const [key, value] of Object.entries(state.meta || {})) {
     await storeApi.saveMeta(key, value);
   }
@@ -200,7 +206,6 @@ function createEmptyFileState() {
     capBases: [],
     capBuilds: [],
     capProgress: [],
-    equipment: [],
     meta: {}
   };
 }
@@ -209,7 +214,6 @@ export function buildStorageSnapshot({
   capBases = [],
   capBuilds = [],
   capProgress = [],
-  equipment = [],
   meta = {}
 } = {}) {
   return normalizeFileState({
@@ -217,7 +221,6 @@ export function buildStorageSnapshot({
     capBases,
     capBuilds,
     capProgress,
-    equipment,
     meta
   });
 }
@@ -230,9 +233,17 @@ function normalizeFileState(raw = {}) {
     capProgress: Array.isArray(raw.capProgress)
       ? raw.capProgress.map((progress) => normalizeProgressRecord(progress, progress?.buildId))
       : [],
-    equipment: Array.isArray(raw.equipment) ? raw.equipment : [],
     meta: raw.meta && typeof raw.meta === "object" ? raw.meta : {}
   };
+}
+
+function validateFileStateShape(state) {
+  if (!state || typeof state !== "object") return false;
+  if (!Array.isArray(state.capBases)) return false;
+  if (!Array.isArray(state.capBuilds)) return false;
+  if (!Array.isArray(state.capProgress)) return false;
+  if (!state.meta || typeof state.meta !== "object" || Array.isArray(state.meta)) return false;
+  return true;
 }
 
 async function writeFileState(fileHandle, data) {

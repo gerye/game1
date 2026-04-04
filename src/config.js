@@ -19,7 +19,8 @@ export const META_KEYS = Object.freeze({
   JIANGHU_CHRONICLE:    "jianghuChronicle",
   RANKING_HISTORY:      "rankingHistory",
   FAST_SIM_META:        "fastSimMeta",
-  BLOODLINE_TASK_STATE: "bloodlineTaskState"
+  BLOODLINE_TASK_STATE: "bloodlineTaskState",
+  CAP_ASSET_DIR_HANDLE: "capAssetDirHandle"
 });
 
 export const CRIT_CHANCE = 0.05;

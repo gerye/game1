@@ -1,4 +1,5 @@
 import { AVATAR_SIZE, FACTIONS } from "./config.js";
+import { getBasePhotoSrc } from "./cap-asset-store.js";
 import { average, clamp, hashString, rgbToHex, rgbToHsl, round1 } from "./utils.js";
 
 const WORKING_MAX = 640;
@@ -6,9 +7,14 @@ const FOREGROUND_BLACK_THRESHOLD = 24;
 const MIN_COMPONENT_AREA = 300;
 
 export async function refreshBaseColorProfile(base) {
-  const dataUrl = base.photoDataUrl || base.avatarDataUrl;
+  const dataUrl = getBasePhotoSrc(base);
   if (!dataUrl) return base;
-  const image = await loadImage(dataUrl);
+  let image = null;
+  try {
+    image = await loadImage(dataUrl);
+  } catch (_error) {
+    return base;
+  }
   const canvas = imageToCanvas(image);
   const sample = sampleImage(canvas, 32);
   const autoMetrics = computePatternMetrics(sample.pixels, sample.size, sample.size);

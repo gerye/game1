@@ -1,6 +1,6 @@
 import { createRoleSaveSnapshot } from "./role-save.js";
 
-const DEFAULT_ROLE_SAVE_LABEL = "角色存档";
+const DEFAULT_ROLE_SAVE_LABEL = "手动角色存档";
 const DEFAULT_ROLE_SAVE_FILENAME = "bottle-cap-save.json";
 
 export async function renderRoleSaveStatus(storage, target) {

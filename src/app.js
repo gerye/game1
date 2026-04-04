@@ -5,6 +5,7 @@ import { getFactionSections, renderBuildGrid as renderBuildGridView, renderCapDe
 import { renderBloodlineDatabase as renderBloodlineDatabaseView, renderCharacterDatabase as renderCharacterDatabaseView, renderEquipmentDatabase as renderEquipmentDatabaseView, renderEventDatabase as renderEventDatabaseView, renderSkillDatabase as renderSkillDatabaseView, renderStatusDatabase as renderStatusDatabaseView } from "./database-ui.js";
 import { appendChronicleEntry as appendChronicleStateEntry, buildBloodlineBiographyEntry, buildBloodlineChronicleEntry, buildExplorationBiographyEntry, buildExplorationChronicleEntry, buildFactionVictoryMilestoneEntry, buildFateChangeChronicleEntry, buildLegendaryEquipmentRecord, buildLegendarySkillRecord, buildRankingBiographyEntry, buildRankingChronicleEntry, buildTournamentBiographyEntry, buildTournamentChronicleEntry, buildTournamentPlacementMap, createChronicleState, normalizeChronicleState, recordKillMilestones, recordLevelMilestones, renderChroniclePanel as renderChronicleHtml } from "./chronicle.js";
 import { getSelectedRankingHistorySnapshot, renderChronicleStageHtml } from "./chronicle-ui.js";
+import { persistBaseImageAssets } from "./cap-asset-store.js";
 import { getBloodlineById, getBuiltinBloodlines, syncBloodlineLibrary } from "./bloodlines.js";
 import {
   BLOODLINE_TASKS,
@@ -941,8 +942,9 @@ async function saveCurrentUpload() {
         ...buildManualMetricsFromInputs()
       }
     };
-    await state.storage.putCapBase(base);
-    const build = rebuildBuildFromBase(base);
+    const persistedBase = await persistBaseImageAssets(state.storage, base, { interactive: true });
+    await state.storage.putCapBase(persistedBase);
+    const build = rebuildBuildFromBase(persistedBase);
     await state.storage.putBuild(build);
     await state.storage.putProgress(createDefaultProgress(build.buildId));
   }
