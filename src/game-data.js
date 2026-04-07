@@ -757,7 +757,19 @@ export function getEffectiveSheet(build, level, allSkills = [], allEquipment = [
     });
     cooldownExtraReductionRatio += Math.max(0, Number(status?.cooldownExtraReductionRatio || 0));
   });
-  const totalDerivedBonus = mergeStatLayers(mergeStatLayers(greenDerived, equipmentBonuses.greenDerived), statusDerivedBonuses);
+  // 血脉之石：衍生属性比例加成（独立层，基于 whiteDerived）
+  const stoneDerivedBonuses = createDerivedZeroes();
+  const stoneRatios = equipmentBonuses.stoneDerivedRatioBonuses || {};
+  Object.keys(stoneDerivedBonuses).forEach((key) => {
+    const ratio = Number(stoneRatios[key] || 0);
+    if (ratio) stoneDerivedBonuses[key] = (whiteDerived[key] || 0) * ratio;
+  });
+  // 血脉之石：CD 缩减
+  cooldownExtraReductionRatio += Math.max(0, equipmentBonuses.stoneCdReductionRatio || 0);
+  const totalDerivedBonus = mergeStatLayers(
+    mergeStatLayers(mergeStatLayers(greenDerived, equipmentBonuses.greenDerived), statusDerivedBonuses),
+    stoneDerivedBonuses
+  );
   const derived = mergeStatLayers(
       whiteDerived,
       totalDerivedBonus
@@ -772,7 +784,9 @@ export function getEffectiveSheet(build, level, allSkills = [], allEquipment = [
       derived: {
         ...derived,
         cooldownReduction: cooldownFinalReduction,
-        cooldownDurationMultiplierPct: cooldownFinalMultiplier
+        cooldownDurationMultiplierPct: cooldownFinalMultiplier,
+        stoneHpRegenMaxRatioPerSecond: equipmentBonuses.stoneHpRegenMaxRatioPerSecond || 0,
+        stoneReviveHpPct: equipmentBonuses.stoneReviveHpPct || 0
       },
       whitePrimary,
       greenPrimary: totalPrimaryBonus,

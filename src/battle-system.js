@@ -446,6 +446,10 @@ function tickEntityResources(entity, battle, dt) {
   if (hpMaxRegenRatio > 0) {
     entity.hp = Math.min(entity.maxHp, entity.hp + entity.maxHp * hpMaxRegenRatio * dt);
   }
+  const stoneRegenPct = entity.derived?.stoneHpRegenMaxRatioPerSecond || 0;
+  if (stoneRegenPct > 0) {
+    entity.hp = Math.min(entity.maxHp, entity.hp + entity.maxHp * stoneRegenPct * dt);
+  }
   if (entity.hp > previousHp) {
     entity.healingDone += entity.hp - previousHp;
   }
@@ -1107,21 +1111,37 @@ function finalizeDeath(attacker, defender, battle, occupancy) {
 
 function tryReviveOnDeath(entity, battle, occupancy, reason = "") {
   const reviveStatus = findStatusWithFlag(entity, "reviveOnDeath");
-  if (!reviveStatus || !occupancy) return false;
+  const stoneRevivePct = entity.derived?.stoneReviveHpPct || 0;
+  if (!reviveStatus && !stoneRevivePct) return false;
+  if (!occupancy) return false;
   entity.deaths += 1;
   entity.reviveTriggers += 1;
-  removeStatus(entity, reviveStatus.id);
-  reviveEntity(entity, battle, occupancy, {
-    fullHp: reviveStatus.reviveOnDeath === "full-spawn",
-    useSpawn: reviveStatus.reviveOnDeath === "full-spawn"
-  });
-  pushFloatingText(battle, entity.q, entity.r, "死里逃生", "#f97316", {
-    kind: "kill",
-    ttl: 1.2,
-    fontSize: 20
-  });
-  pushBattleLog(battle, `${entity.name} 触发了死里逃生。${reason ? `（${reason}）` : ""}`);
-  setHudStatusMessage(entity, "触发死里逃生，满血复苏");
+  if (reviveStatus) {
+    // 血脉死里逃生优先触发，石头效果本次不消耗，保留给下次死亡
+    removeStatus(entity, reviveStatus.id);
+    reviveEntity(entity, battle, occupancy, {
+      fullHp: reviveStatus.reviveOnDeath === "full-spawn",
+      useSpawn: reviveStatus.reviveOnDeath === "full-spawn"
+    });
+    pushFloatingText(battle, entity.q, entity.r, "死里逃生", "#f97316", {
+      kind: "kill",
+      ttl: 1.2,
+      fontSize: 20
+    });
+    pushBattleLog(battle, `${entity.name} 触发了死里逃生。${reason ? `（${reason}）` : ""}`);
+    setHudStatusMessage(entity, "触发死里逃生，满血复苏");
+  } else {
+    // 血脉之石复活（部分血量，单次）
+    entity.derived = { ...entity.derived, stoneReviveHpPct: 0 };
+    reviveEntity(entity, battle, occupancy, { reviveHpPct: stoneRevivePct, useSpawn: true });
+    pushFloatingText(battle, entity.q, entity.r, "石魂护体", "#f59e0b", {
+      kind: "kill",
+      ttl: 1.2,
+      fontSize: 20
+    });
+    pushBattleLog(battle, `${entity.name} 触发了石魂护体，以 ${Math.round(stoneRevivePct * 100)}% HP 复活。${reason ? `（${reason}）` : ""}`);
+    setHudStatusMessage(entity, `石魂护体，${Math.round(stoneRevivePct * 100)}% HP 复苏`);
+  }
   return true;
 }
 
@@ -1158,15 +1178,20 @@ function reviveEntity(entity, battle, occupancy, options = {}) {
   const spawn = preferredSpawn && !preferredSpawn.blocked && !occupancy.has(preferredSpawn.key)
     ? preferredSpawn
     : shuffleArray(battle.terrain.cells.filter((cell) => !cell.blocked && !occupancy.has(cell.key)))[0];
+  const reviveHp = options.fullHp
+    ? entity.maxHp
+    : options.reviveHpPct
+      ? Math.max(1, Math.round(entity.maxHp * options.reviveHpPct))
+      : Math.max(1, Math.round(entity.maxHp * 0.35));
   if (!spawn) {
-    entity.hp = options.fullHp ? entity.maxHp : Math.max(1, Math.round(entity.maxHp * 0.35));
+    entity.hp = reviveHp;
     entity.hpDamageAnchor = entity.hp;
     entity.alive = true;
     occupancy.set(entity.cellKey, entity.id);
     return;
   }
   entity.alive = true;
-  entity.hp = options.fullHp ? entity.maxHp : Math.max(1, Math.round(entity.maxHp * 0.35));
+  entity.hp = reviveHp;
   entity.hpDamageAnchor = entity.hp;
   entity.aiState = "seek";
   entity.lockedTargetId = null;

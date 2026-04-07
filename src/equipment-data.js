@@ -67,6 +67,87 @@ const ROLE_ITEM_NAMES = {
   }
 };
 
+const BLOODLINE_STONE_TABLE = [
+  // SSS 系列（S / SS / SSS）
+  {
+    id: "white-tiger",
+    name: "白虎之石",
+    stoneType: "white-tiger",
+    grades: {
+      SSS: { derivedRatioBonuses: { physicalAttack: 0.33, magicAttack: 0.33 } },
+      SS:  { derivedRatioBonuses: { physicalAttack: 0.20, magicAttack: 0.20 } },
+      S:   { derivedRatioBonuses: { physicalAttack: 0.10, magicAttack: 0.10 } }
+    }
+  },
+  {
+    id: "black-tortoise",
+    name: "玄武之石",
+    stoneType: "black-tortoise",
+    grades: {
+      SSS: { derivedRatioBonuses: { physicalDefense: 0.33, magicDefense: 0.33 } },
+      SS:  { derivedRatioBonuses: { physicalDefense: 0.20, magicDefense: 0.20 } },
+      S:   { derivedRatioBonuses: { physicalDefense: 0.10, magicDefense: 0.10 } }
+    }
+  },
+  {
+    id: "azure-dragon",
+    name: "青龙之石",
+    stoneType: "azure-dragon",
+    grades: {
+      SSS: { hpRegenMaxRatioPerSecond: 0.0017 },
+      SS:  { hpRegenMaxRatioPerSecond: 0.0010 },
+      S:   { hpRegenMaxRatioPerSecond: 0.0005 }
+    }
+  },
+  {
+    id: "vermilion-bird",
+    name: "朱雀之石",
+    stoneType: "vermilion-bird",
+    grades: {
+      SSS: { reviveHpPct: 0.33 },
+      SS:  { reviveHpPct: 0.20 },
+      S:   { reviveHpPct: 0.10 }
+    }
+  },
+  // SS 系列（S / SS）
+  {
+    id: "blazing-sun",
+    name: "烈阳之石",
+    stoneType: "blazing-sun",
+    grades: {
+      SS: { derivedRatioBonuses: { physicalAttack: 0.05, magicAttack: 0.05 } },
+      S:  { derivedRatioBonuses: { physicalAttack: 0.025, magicAttack: 0.025 } }
+    }
+  },
+  {
+    id: "cold-ice",
+    name: "寒冰之石",
+    stoneType: "cold-ice",
+    grades: {
+      SS: { derivedRatioBonuses: { physicalDefense: 0.06, magicDefense: 0.06 } },
+      S:  { derivedRatioBonuses: { physicalDefense: 0.03, magicDefense: 0.03 } }
+    }
+  },
+  {
+    id: "demon",
+    name: "恶魔之石",
+    stoneType: "demon",
+    grades: {
+      SS: { hpRegenMaxRatioPerSecond: 0.0004 },
+      S:  { hpRegenMaxRatioPerSecond: 0.0002 }
+    }
+  },
+  {
+    id: "angel",
+    name: "天使之石",
+    stoneType: "angel",
+    grades: {
+      SS: { cdReductionRatio: 0.02 },
+      S:  { cdReductionRatio: 0.01 }
+    }
+  }
+];
+
 export async function syncEquipmentLibrary(storage) {
   const current = await storage.getEquipmentRaw();
   const currentMap = new Map(current.map((item) => [item.id, item]));
@@ -162,6 +243,10 @@ export function applyEquipmentBonuses(build, whitePrimary, whiteDerived, allEqui
     attackInterval: 0,
     chantTime: 0
   };
+  const stoneDerivedRatioBonuses = {};
+  let stoneCdReductionRatio = 0;
+  let stoneHpRegenMaxRatioPerSecond = 0;
+  let stoneReviveHpPct = 0;
 
   const equipmentStars = build.equipmentStars || {};
   const equipped = getEquippedItems(build, allEquipment);
@@ -182,9 +267,20 @@ export function applyEquipmentBonuses(build, whitePrimary, whiteDerived, allEqui
         : effect.value;
       greenDerived[effect.key] += base * starMultiplier;
     });
+    if (item.stoneEffects) {
+      const se = item.stoneEffects;
+      if (se.derivedRatioBonuses) {
+        Object.entries(se.derivedRatioBonuses).forEach(([k, v]) => {
+          stoneDerivedRatioBonuses[k] = (stoneDerivedRatioBonuses[k] || 0) + v * starMultiplier;
+        });
+      }
+      if (se.hpRegenMaxRatioPerSecond) stoneHpRegenMaxRatioPerSecond += se.hpRegenMaxRatioPerSecond * starMultiplier;
+      if (se.cdReductionRatio) stoneCdReductionRatio += se.cdReductionRatio * starMultiplier;
+      if (se.reviveHpPct) stoneReviveHpPct = Math.max(stoneReviveHpPct, se.reviveHpPct * starMultiplier);
+    }
   });
 
-  return { greenPrimary, greenDerived };
+  return { greenPrimary, greenDerived, stoneDerivedRatioBonuses, stoneCdReductionRatio, stoneHpRegenMaxRatioPerSecond, stoneReviveHpPct };
 }
 
 function getMaxStarsForGrade(grade) {
@@ -364,16 +460,14 @@ function buildEquipmentSeeds() {
 
   const advanced = GRADE_SCALE.filter((grade) => grade !== "E").flatMap((grade) => ([
     createRoleEquipment(grade, "melee", "weapon"),
-    createRoleEquipment(grade, "melee", "accessory"),
     createRoleEquipment(grade, "ranged", "weapon"),
-    createRoleEquipment(grade, "ranged", "accessory"),
     createRoleEquipment(grade, "caster", "weapon"),
-    createRoleEquipment(grade, "caster", "accessory"),
-    createRoleEquipment(grade, "all", "armor"),
-    createRoleEquipment(grade, "all", "accessory")
+    createRoleEquipment(grade, "all", "armor")
   ]));
 
-  return [...starter, ...advanced];
+  const bloodstones = buildBloodlineStones();
+
+  return [...starter, ...advanced, ...bloodstones];
 }
 
 function createRoleEquipment(grade, role, slot) {
@@ -514,3 +608,114 @@ const DERIVED_LABELS = {
   attackInterval: "攻击间隔",
   chantTime: "吟唱时间"
 };
+
+function buildBloodlineStones() {
+  return BLOODLINE_STONE_TABLE.flatMap(({ id, name, stoneType, grades }) =>
+    Object.entries(grades).map(([grade, stoneEffects]) => ({
+      id: `stone-${id}-${grade.toLowerCase()}`,
+      grade,
+      slot: "accessory",
+      role: "all",
+      allowedRoles: ["melee", "ranged", "caster"],
+      stoneType,
+      name: `${name}·${grade}`,
+      effects: [],
+      stoneEffects,
+      desc: buildStoneDesc(stoneEffects),
+      iconDataUrl: buildStoneIconDataUrl(stoneType, grade, name),
+      templateVersion: GAME_VERSION,
+      source: "system"
+    }))
+  );
+}
+
+function buildStoneDesc(stoneEffects) {
+  const parts = [];
+  if (stoneEffects.derivedRatioBonuses) {
+    Object.entries(stoneEffects.derivedRatioBonuses).forEach(([k, v]) => {
+      parts.push(`${DERIVED_LABELS[k] || k} +${Math.round(v * 100)}%`);
+    });
+  }
+  if (stoneEffects.hpRegenMaxRatioPerSecond) {
+    parts.push(`每秒回复最大HP的 ${(stoneEffects.hpRegenMaxRatioPerSecond * 100).toFixed(2)}%`);
+  }
+  if (stoneEffects.cdReductionRatio) {
+    parts.push(`技能CD缩减 ${Math.round(stoneEffects.cdReductionRatio * 100)}%`);
+  }
+  if (stoneEffects.reviveHpPct) {
+    parts.push(`阵亡后以 ${Math.round(stoneEffects.reviveHpPct * 100)}% HP复活一次`);
+  }
+  return parts.join("，") + "。血脉残影，力量犹在。";
+}
+
+function buildStoneIconDataUrl(stoneType, grade, stoneName) {
+  const color = GRADE_COLORS[grade] || "#999999";
+  const glow = gradeIndex(grade) >= 5 ? 0.48 : gradeIndex(grade) >= 3 ? 0.28 : 0.16;
+  const stdDev = 2 + gradeIndex(grade) * 0.7;
+
+  const shapes = {
+    "white-tiger": `
+      <path d="M28 30 Q56 18 84 34" fill="none" stroke="${color}" stroke-width="5.5" stroke-linecap="round"/>
+      <path d="M24 48 Q56 36 88 50" fill="none" stroke="${color}" stroke-width="5.5" stroke-linecap="round"/>
+      <path d="M28 66 Q56 54 84 68" fill="none" stroke="${color}" stroke-width="5.5" stroke-linecap="round"/>`,
+    "black-tortoise": `
+      <polygon points="56,16 82,30 82,60 56,74 30,60 30,30" fill="none" stroke="${color}" stroke-width="5" stroke-linejoin="round"/>
+      <polygon points="56,30 70,38 70,54 56,62 42,54 42,38" fill="${color}" opacity="0.45"/>
+      <line x1="56" y1="16" x2="56" y2="74" stroke="${color}" stroke-width="2" opacity="0.55"/>
+      <line x1="30" y1="30" x2="82" y2="60" stroke="${color}" stroke-width="2" opacity="0.55"/>
+      <line x1="82" y1="30" x2="30" y2="60" stroke="${color}" stroke-width="2" opacity="0.55"/>`,
+    "azure-dragon": `
+      <path d="M38 68 Q26 50 40 34 Q54 18 72 32 Q88 46 78 66" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round"/>
+      <path d="M48 62 Q40 48 50 38 Q60 28 70 38 Q80 48 72 60" fill="${color}" opacity="0.35" stroke="${color}" stroke-width="3"/>
+      <path d="M56 28 Q62 18 72 16 Q66 26 60 30 Z" fill="${color}" opacity="0.9"/>`,
+    "vermilion-bird": `
+      <path d="M56 26 L30 16 Q26 34 36 44 L56 38 L76 44 Q86 34 82 16 Z" fill="${color}" opacity="0.75" stroke="${color}" stroke-width="1.5"/>
+      <path d="M44 42 L36 60 Q40 65 50 60 L56 52 L62 60 Q72 65 76 60 L68 42" fill="${color}" opacity="0.5" stroke="${color}" stroke-width="1.5"/>
+      <path d="M51 52 L47 72 L56 66 L65 72 L61 52 Z" fill="${color}" opacity="0.9"/>`,
+    "blazing-sun": `
+      <circle cx="56" cy="46" r="14" fill="${color}" opacity="0.8"/>
+      <line x1="56" y1="14" x2="56" y2="26" stroke="${color}" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="56" y1="66" x2="56" y2="78" stroke="${color}" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="24" y1="46" x2="36" y2="46" stroke="${color}" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="76" y1="46" x2="88" y2="46" stroke="${color}" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="33" y1="25" x2="41" y2="33" stroke="${color}" stroke-width="4" stroke-linecap="round"/>
+      <line x1="71" y1="59" x2="79" y2="67" stroke="${color}" stroke-width="4" stroke-linecap="round"/>
+      <line x1="79" y1="25" x2="71" y2="33" stroke="${color}" stroke-width="4" stroke-linecap="round"/>
+      <line x1="41" y1="59" x2="33" y2="67" stroke="${color}" stroke-width="4" stroke-linecap="round"/>`,
+    "cold-ice": `
+      <line x1="56" y1="12" x2="56" y2="80" stroke="${color}" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="20" y1="34" x2="92" y2="58" stroke="${color}" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="20" y1="58" x2="92" y2="34" stroke="${color}" stroke-width="4.5" stroke-linecap="round"/>
+      <line x1="56" y1="12" x2="46" y2="22" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+      <line x1="56" y1="12" x2="66" y2="22" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+      <line x1="56" y1="80" x2="46" y2="70" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+      <line x1="56" y1="80" x2="66" y2="70" stroke="${color}" stroke-width="3" stroke-linecap="round"/>`,
+    "demon": `
+      <path d="M36 72 Q24 52 28 28 Q34 14 46 18 Q50 34 56 40 Q62 34 66 18 Q78 14 84 28 Q88 52 76 72" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="56" cy="48" r="9" fill="${color}" opacity="0.75"/>`,
+    "angel": `
+      <circle cx="56" cy="44" r="21" fill="none" stroke="${color}" stroke-width="6"/>
+      <line x1="56" y1="12" x2="56" y2="80" stroke="${color}" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="22" y1="44" x2="90" y2="44" stroke="${color}" stroke-width="3.5" stroke-linecap="round"/>`
+  };
+
+  const shape = shapes[stoneType] || shapes["angel"];
+  const label = `${stoneName}·${grade}`;
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 96">
+      <defs>
+        <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0%" stop-color="#fffaf0"/>
+          <stop offset="100%" stop-color="#efe2c5"/>
+        </linearGradient>
+        <filter id="glow">
+          <feDropShadow dx="0" dy="0" stdDeviation="${stdDev}" flood-color="${color}" flood-opacity="${glow}"/>
+        </filter>
+      </defs>
+      <rect width="112" height="96" rx="24" fill="url(#bg)"/>
+      <rect x="6" y="6" width="100" height="84" rx="20" fill="rgba(255,255,255,0.36)" stroke="rgba(31,43,36,0.08)"/>
+      <g filter="url(#glow)">${shape}</g>
+      <text x="56" y="90" text-anchor="middle" font-size="9" font-family="Avenir Next, PingFang SC, Microsoft YaHei, sans-serif" fill="#5e4939">${escapeXml(label)}</text>
+    </svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
