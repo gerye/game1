@@ -29,10 +29,33 @@
 
     <main class="layout" id="main-content">
 
+      <section class="panel world-panel-section" aria-labelledby="world-heading">
+        <div class="panel-title-row">
+          <div class="panel-heading">
+            <h2 id="world-heading">1. 江湖世界地图</h2>
+            <p class="panel-note">六派鼎立，声望决定城池扩张，仲裁者可随时插入大事件干预格局。</p>
+          </div>
+          <div class="battle-controls">
+            <button id="advanceSeasonBtn" class="ghost-btn">推进时节</button>
+            <button id="triggerJianghuBtn" class="ghost-btn">触发江湖争霸</button>
+            <button id="triggerTournamentBtn" class="ghost-btn">触发武道会</button>
+          </div>
+        </div>
+        <div class="world-map-layout">
+          <div class="world-canvas-wrap" style="position:relative; display:inline-block;">
+            <canvas id="world-map-canvas" width="860" height="680" style="border:1px solid #444; background:#1a1a2e; display:block;"></canvas>
+            <div id="world-battle-overlay" class="world-battle-overlay" hidden>
+              <div class="world-battle-overlay-text">⚔ 战斗进行中<br><small>请前往战场区域观看</small></div>
+            </div>
+          </div>
+          <div id="world-arbiter-panel" style="min-width:280px; padding:12px;"></div>
+        </div>
+      </section>
+
       <section class="panel upload-panel" aria-labelledby="upload-heading">
         <div class="panel-title-row">
           <div class="panel-heading">
-            <h2 id="upload-heading">1. 识别与建档</h2>
+            <h2 id="upload-heading">2. 识别与建档</h2>
             <p class="panel-note">上传并识别瓶盖，生成稳定头像、唯一编码和当前版本构筑。</p>
           </div>
           <div class="battle-controls">
@@ -104,7 +127,7 @@
       <section class="panel codex-panel" aria-labelledby="codex-heading">
         <div class="panel-title-row">
           <div class="panel-heading">
-            <h2 id="codex-heading">2. 角色操作区</h2>
+            <h2 id="codex-heading">3. 角色操作区</h2>
             <p class="panel-note">按势力浏览角色卡，点击后查看当前属性、装备、技能和人物小传。</p>
           </div>
           <div class="battle-controls">
@@ -123,7 +146,7 @@
       <section class="panel battlefield-panel" aria-labelledby="battle-heading">
         <div class="panel-title-row">
           <div class="panel-heading">
-            <h2 id="battle-heading">3. 自动战场</h2>
+            <h2 id="battle-heading">4. 自动战场</h2>
             <p class="panel-note">江湖争霸、武道会、排位赛与大事记共用同一块战场区域。</p>
           </div>
           <div class="battle-toolbar" role="toolbar" aria-label="战场控制">
@@ -196,23 +219,6 @@
         </div>
       </section>
 
-      <section class="panel world-panel-section" aria-labelledby="world-heading">
-        <div class="panel-title-row">
-          <div class="panel-heading">
-            <h2 id="world-heading">4. 江湖世界地图</h2>
-            <p class="panel-note">六派鼎立，声望决定城池扩张，仲裁者可随时插入大事件干预格局。</p>
-          </div>
-          <div class="battle-controls">
-            <button id="advanceSeasonBtn" class="ghost-btn">推进时节</button>
-            <button id="triggerJianghuBtn" class="ghost-btn">触发江湖争霸</button>
-            <button id="triggerTournamentBtn" class="ghost-btn">触发武道会</button>
-          </div>
-        </div>
-        <div class="world-map-layout">
-          <canvas id="world-map-canvas" width="860" height="680" style="border:1px solid #444; background:#1a1a2e; display:block;"></canvas>
-          <div id="world-arbiter-panel" style="min-width:280px; padding:12px;"></div>
-        </div>
-      </section>
 
     </main>
   </div>

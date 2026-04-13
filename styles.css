@@ -2281,3 +2281,32 @@ tbody tr:last-child td { border-bottom: none; }
 
 .world-panel { color: inherit; }
 .world-panel h3 { margin: 0 0 8px; font-size: 14px; }
+
+/* ── 世界地图战斗蒙层 ───────────────────────── */
+.world-battle-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.62);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  border: 2px solid rgba(255, 180, 50, 0.5);
+}
+
+.world-battle-overlay-text {
+  color: #f5c842;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.6;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+.world-battle-overlay-text small {
+  font-size: 13px;
+  color: #ccc;
+  font-weight: normal;
+}

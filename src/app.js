@@ -99,6 +99,7 @@ const dom = {
   closeRankingBoardBtn: document.getElementById("closeRankingBoardBtn"),
   worldMapCanvas: document.getElementById("world-map-canvas"),
   worldArbiterPanel: document.getElementById("world-arbiter-panel"),
+  worldBattleOverlay: document.getElementById("world-battle-overlay"),
   advanceSeasonBtn: document.getElementById("advanceSeasonBtn"),
   triggerJianghuBtn: document.getElementById("triggerJianghuBtn"),
   triggerTournamentBtn: document.getElementById("triggerTournamentBtn"),
@@ -201,6 +202,11 @@ async function init() {
   renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
 
   startRenderLoop();
+}
+
+function setWorldBattleOverlay(visible) {
+  if (!dom.worldBattleOverlay) return;
+  dom.worldBattleOverlay.hidden = !visible;
 }
 
 function bindEvents() {
@@ -358,6 +364,9 @@ function bindEvents() {
     };
     renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
   }, { passive: false });
+  dom.worldBattleOverlay?.addEventListener("click", () => {
+    document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 }
 
 function getSelectedBattleProxyButton() {
@@ -1750,6 +1759,7 @@ function resetChronicleViewState() {
 
 async function startChaosBattle() {
   state.activeBattleMode = "chaos";
+  setWorldBattleOverlay(true);
   state.rankingBoardOpen = false;
   renderRankingBoardOverlay();
   if (dom.cameraSelect && dom.cameraSelect.value !== "top") {
@@ -1931,6 +1941,9 @@ async function applyBattleRewards() {
     dom.pauseBattleBtn.disabled = true;
   } finally {
     state.rewardProcessing = false;
+    setWorldBattleOverlay(false);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
   }
 }
 
@@ -2716,6 +2729,7 @@ function renderRankingPanels() {
 }
 
 async function startTournamentFlow() {
+  setWorldBattleOverlay(true);
   state.activeBattleMode = "tournament";
   state.rankingBoardOpen = false;
   renderRankingBoardOverlay();
@@ -2753,6 +2767,7 @@ async function startTournamentFlow() {
 }
 
 async function startRankingFlow() {
+  setWorldBattleOverlay(true);
   state.activeBattleMode = "ranking";
   state.pendingBattle = null;
   state.pendingBattleRendered = false;
@@ -3130,6 +3145,7 @@ async function finishRanking() {
   });
   state.rankingViewDirty = true;
   renderRankingShell();
+  setWorldBattleOverlay(false);
 }
 
 async function createTournament() {
@@ -3390,6 +3406,7 @@ async function finishTournament() {
   renderTournamentPrizeSummary();
   state.tournamentViewDirty = true;
   renderTournamentShell();
+  setWorldBattleOverlay(false);
 }
 
 async function awardTournamentPrize(code, rewardSpec, title) {
