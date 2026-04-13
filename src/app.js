@@ -1851,6 +1851,7 @@ function togglePauseBattle() {
 }
 
 function resetBattle() {
+  setWorldBattleOverlay(false);
   if (state.activeBattleMode === "tournament") {
     resetTournament();
     return;
@@ -2745,22 +2746,25 @@ async function startTournamentFlow() {
   if (!state.tournament) {
     if (state.tournamentSetupOpen) {
       await createTournament();
+      setWorldBattleOverlay(false);
       return;
     }
     state.tournamentSetupOpen = true;
     setBattleControlState({
       chaosDisabled: true,
       explorationDisabled: true,
-      tournamentLabel: "锁定奖池并生成赛程",
+      tournamentLabel: “锁定奖池并生成赛程”,
       resetDisabled: false
     });
     renderTournamentPrizeSummary();
     renderTournamentShell();
+    setWorldBattleOverlay(false);
     return;
   }
-  if (state.tournamentBattle) return;
+  if (state.tournamentBattle) { setWorldBattleOverlay(false); return; }
   if (state.tournament.championCode) {
-    window.alert("本届武道会已经结束。点击“重置”后可以重新生成赛程。");
+    window.alert(“本届武道会已经结束。点击”重置”后可以重新生成赛程。”);
+    setWorldBattleOverlay(false);
     return;
   }
   await startNextTournamentMatch();
@@ -2780,16 +2784,18 @@ async function startRankingFlow() {
       chaosDisabled: true,
       tournamentDisabled: true,
       explorationDisabled: true,
-      rankingLabel: "锁定奖池并生成第1轮",
+      rankingLabel: “锁定奖池并生成第1轮”,
       resetDisabled: false
     });
     renderTournamentPrizeSummary();
     renderRankingShell();
+    setWorldBattleOverlay(false);
     return;
   }
-  if (state.rankingBattle) return;
+  if (state.rankingBattle) { setWorldBattleOverlay(false); return; }
   if (state.ranking.championCode) {
-    window.alert("本届江湖排位已经结束。点击“重置”后可以重新生成赛程。");
+    window.alert(“本届江湖排位已经结束。点击”重置”后可以重新生成赛程。”);
+    setWorldBattleOverlay(false);
     return;
   }
   const nextMatch = getNextRankingMatch(state.ranking);
@@ -2944,6 +2950,7 @@ function toggleRankingBattle() {
 }
 
 function resetRanking() {
+  setWorldBattleOverlay(false);
   state.ranking = null;
   state.rankingBattle = null;
   state.rankingAutoCompleteRound = null;
@@ -3235,6 +3242,7 @@ function togglePauseTournament() {
 }
 
 function resetTournament() {
+  setWorldBattleOverlay(false);
   state.tournament = null;
   state.tournamentBattle = null;
   state.tournamentSetupOpen = false;
