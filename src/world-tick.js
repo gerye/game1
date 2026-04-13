@@ -5,6 +5,33 @@ import { WORLD_CHARACTER_STATES } from "./config.js";
 import { createInitialFactionStats, FACTION_IDS, tickGoldProduction, addPrestige } from "./faction-state.js";
 import { createInitialCityStates } from "./world-map.js";
 
+// ── 24节气 ────────────────────────────────────
+
+// 从小雪开始（游戏开篇为隆冬），每年24节气循环
+const SOLAR_TERMS = [
+  "小雪", "大雪", "冬至", "小寒", "大寒",
+  "立春", "雨水", "惊蛰", "春分", "清明", "谷雨",
+  "立夏", "小满", "芒种", "夏至", "小暑", "大暑",
+  "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬",
+];
+
+const YEAR_LABELS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
+  "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十"];
+
+/**
+ * 将数字时节（从1开始）转换为节气标签
+ * season 1  → "第一年·小雪"
+ * season 24 → "第一年·立冬"
+ * season 25 → "第二年·小雪"
+ */
+export function getSeasonLabel(season) {
+  const s = Math.max(1, season);
+  const yearIndex = Math.ceil(s / 24) - 1;
+  const termIndex = (s - 1) % 24;
+  const yearLabel = yearIndex < YEAR_LABELS.length ? YEAR_LABELS[yearIndex] : `${yearIndex + 1}`;
+  return `第${yearLabel}年·${SOLAR_TERMS[termIndex]}`;
+}
+
 // ── 世界状态结构说明 ────────────────────────────
 //
 // worldState = {
@@ -37,7 +64,7 @@ export function createWorldState() {
     factionStats: createInitialFactionStats(),
     cities: createInitialCityStates(),
     characterStates: {},
-    log: ["江湖初开，六派鼎立。"],
+    log: [`${getSeasonLabel(1)}，江湖初开，六派鼎立。`],
   };
 }
 
@@ -106,7 +133,7 @@ export function advanceSeason(worldState, builds) {
   // 4. 漫游小事件
   ws = triggerRoamingEvents(ws, builds);
 
-  ws = addWorldLog(ws, `第 ${ws.season} 时节：各派积蓄力量。`);
+  ws = addWorldLog(ws, `${getSeasonLabel(ws.season)}：各派积蓄力量。`);
   return ws;
 }
 
