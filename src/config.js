@@ -1,7 +1,7 @@
 export const GAME_VERSION = "1.1.0";
 export const CHARACTER_ARCH_VERSION = 4;
 export const DB_NAME = "BottleCapBattleDB";
-export const DB_VERSION = 10;
+export const DB_VERSION = 11;
 
 export const HEX_RADIUS = 13;
 export const BATTLE_LOG_LIMIT = 20;
@@ -20,7 +20,7 @@ export const META_KEYS = Object.freeze({
   RANKING_HISTORY:      "rankingHistory",
   FAST_SIM_META:        "fastSimMeta",
   BLOODLINE_TASK_STATE: "bloodlineTaskState",
-  CAP_ASSET_DIR_HANDLE: "capAssetDirHandle"
+  WORLD_STATE:          "worldState"
 });
 
 export const CRIT_CHANCE = 0.05;
@@ -172,3 +172,40 @@ export const TERRAIN_TYPES = {
     blocked: true
   }
 };
+
+// ──────────────────────────────────────────────
+// 世界地图常量
+// ──────────────────────────────────────────────
+
+export const WORLD_MAP_RADIUS = 40;
+
+export const WORLD_PRESTIGE_COSTS = {
+  captureNeutral:   500,
+  attackSmallCity:  1000,
+  attackLargeCity:  2500,
+};
+
+export const WORLD_PRESTIGE_REWARDS = {
+  jianghuWin:      100,
+  tournament: [800, 480, 250, 250, 100, 100, 100, 100],
+  ranking:   [1000, 600, 300, 300, 150, 150, 150, 150, 50, 50, 50, 50],
+};
+
+export const WORLD_GOLD_TICK = {
+  smallCity:   20,
+  largeCity:   60,
+  hq:          100,
+  borderBonus: 0.5,
+};
+
+export const WORLD_CHARACTER_STATES = Object.freeze({
+  GARRISON:  "garrison",
+  ROAMING:   "roaming",
+  CAMPAIGN:  "campaign",
+});
+
+export const WORLD_CITY_TIERS = Object.freeze({
+  HQ:    "hq",
+  LARGE: "large",
+  SMALL: "small",
+});

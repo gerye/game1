@@ -46,3 +46,6 @@ export async function normalizeStoredCharacterData({
     await storage.ensureProgress(build.buildId);
   }
 }
+
+// DB v11: 新增 worldState store 用于江湖世界地图持久化状态
+// Store 在 openDb() onupgradeneeded 中由 ensureStore 自动创建
