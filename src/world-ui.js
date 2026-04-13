@@ -48,6 +48,38 @@ function hexCorners(cx, cy, size) {
 // ── Canvas 渲染 ──────────────────────────────────
 
 /**
+ * 预计算 Voronoi 领土：每个格子归属最近的有主城池
+ * 返回 Map<"q,r", factionId>
+ * @param {Object[]} cityStates  worldState.cities
+ */
+function buildTerritoryMap(cityStates) {
+  const activeCities = cityStates
+    .filter((c) => c.faction)
+    .map((c) => {
+      const template = ALL_CITIES.find((t) => t.id === c.id);
+      return template ? { q: template.q, r: template.r, faction: c.faction } : null;
+    })
+    .filter(Boolean);
+
+  const map = new Map();
+  if (!activeCities.length) return map;
+
+  for (let q = -WORLD_MAP_RADIUS; q <= WORLD_MAP_RADIUS; q++) {
+    for (let r = -WORLD_MAP_RADIUS; r <= WORLD_MAP_RADIUS; r++) {
+      if (!inBounds(q, r)) continue;
+      let nearestFaction = null;
+      let nearestDist = Infinity;
+      for (const city of activeCities) {
+        const d = hexDistance(q, r, city.q, city.r);
+        if (d < nearestDist) { nearestDist = d; nearestFaction = city.faction; }
+      }
+      if (nearestFaction) map.set(`${q},${r}`, nearestFaction);
+    }
+  }
+  return map;
+}
+
+/**
  * 渲染完整世界地图到 Canvas
  * @param {HTMLCanvasElement} canvas
  * @param {Object} worldState
@@ -62,6 +94,7 @@ export function renderWorldMap(canvas, worldState, viewState = {}) {
   ctx.translate(canvas.width / 2 + offsetX, canvas.height / 2 + offsetY);
   ctx.scale(zoom, zoom);
 
+  const territoryMap = buildTerritoryMap(worldState.cities || []);
   const cityOwnership = Object.fromEntries(
     (worldState.cities || []).map((c) => [c.id, c.faction])
   );
@@ -70,7 +103,7 @@ export function renderWorldMap(canvas, worldState, viewState = {}) {
   for (let q = -WORLD_MAP_RADIUS; q <= WORLD_MAP_RADIUS; q++) {
     for (let r = -WORLD_MAP_RADIUS; r <= WORLD_MAP_RADIUS; r++) {
       if (!inBounds(q, r)) continue;
-      drawHex(ctx, q, r, cityOwnership);
+      drawHex(ctx, q, r, territoryMap);
     }
   }
 
@@ -83,7 +116,7 @@ export function renderWorldMap(canvas, worldState, viewState = {}) {
   ctx.restore();
 }
 
-function drawHex(ctx, q, r, cityOwnership) {
+function drawHex(ctx, q, r, territoryMap) {
   const { x, y } = hexToPixel(q, r);
   const corners = hexCorners(x, y, HEX_SIZE - 0.5);
 
@@ -94,34 +127,23 @@ function drawHex(ctx, q, r, cityOwnership) {
 
   const terrain = getTerrainAt(q, r);
   const terrainColor = TERRAIN_COLORS[terrain] || "#cccccc";
+  const faction = territoryMap?.get(`${q},${r}`);
 
-  // 查找是否在某门派控制范围内
-  let factionColor = null;
-  for (const city of ALL_CITIES) {
-    const owner = cityOwnership[city.id] ?? city.faction;
-    if (!owner) continue;
-    const dist = hexDistance(q, r, city.q, city.r);
-    const range = city.tier === WORLD_CITY_TIERS.HQ ? 4
-      : city.tier === WORLD_CITY_TIERS.LARGE ? 3 : 2;
-    if (dist <= range) {
-      factionColor = FACTION_COLORS[owner];
-      break;
-    }
-  }
-
-  if (factionColor) {
-    ctx.fillStyle = terrainColor;
+  if (faction) {
+    // 门派色主导（实色填充），极细地形边框作为纹理提示
+    ctx.fillStyle = FACTION_COLORS[faction];
     ctx.fill();
-    ctx.fillStyle = factionColor + "55";
-    ctx.fill();
+    ctx.strokeStyle = terrainColor + "44";
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
   } else {
+    // 中立格：地形色
     ctx.fillStyle = terrainColor;
     ctx.fill();
+    ctx.strokeStyle = "#33333344";
+    ctx.lineWidth = 0.3;
+    ctx.stroke();
   }
-
-  ctx.strokeStyle = "#00000022";
-  ctx.lineWidth = 0.3;
-  ctx.stroke();
 }
 
 function drawCityMarker(ctx, city, owner) {
