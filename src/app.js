@@ -37,6 +37,9 @@ import { normalizeStoredCharacterData } from "./storage-normalizer.js";
 import { getTournamentMatchState, renderTournamentBracket, renderTournamentFullTree, renderTournamentPanelsHtml, renderTournamentPreludeHtml } from "./tournament-ui.js";
 import { advanceTournamentWinner, buildTournamentState, getNextTournamentMatch } from "./tournament-utils.js";
 import { clamp, escapeHtml, gradeColor, gradeIndex, signedPct } from "./utils.js";
+import { createWorldState, syncCharacterStates, advanceSeason } from "./world-tick.js";
+import { renderWorldMap, renderArbiterPanel } from "./world-ui.js";
+import { applyJianghuPrestige, applyRankedEventPrestige } from "./world-events.js";
 
 const dom = {
   photoInput: document.getElementById("photoInput"),
@@ -93,7 +96,12 @@ const dom = {
   closeTournamentTreeBtn: document.getElementById("closeTournamentTreeBtn"),
   rankingBoardOverlay: document.getElementById("rankingBoardOverlay"),
   rankingBoardContent: document.getElementById("rankingBoardContent"),
-  closeRankingBoardBtn: document.getElementById("closeRankingBoardBtn")
+  closeRankingBoardBtn: document.getElementById("closeRankingBoardBtn"),
+  worldMapCanvas: document.getElementById("world-map-canvas"),
+  worldArbiterPanel: document.getElementById("world-arbiter-panel"),
+  advanceSeasonBtn: document.getElementById("advanceSeasonBtn"),
+  triggerJianghuBtn: document.getElementById("triggerJianghuBtn"),
+  triggerTournamentBtn: document.getElementById("triggerTournamentBtn"),
 };
 
 const previewCtx = dom.previewCanvas.getContext("2d");
@@ -156,7 +164,9 @@ const state = {
     completedStages: [],
     finalWinnerCode: ""
   },
-  rewardProcessing: false
+  rewardProcessing: false,
+  worldState: null,
+  worldViewState: { offsetX: 0, offsetY: 0, zoom: 1 },
 };
 
 const EMPTY_BATTLE_SUMMARY_HTML = `<div class="summary-row"><span>状态</span><strong>等待开始</strong></div>`;
@@ -178,6 +188,18 @@ async function init() {
   syncFastSimButton();
   syncCombinedActionControls();
   await refreshAll();
+
+  // ── 世界地图初始化 ──
+  state.worldState = await state.storage.getWorldState();
+  if (!state.worldState) {
+    state.worldState = createWorldState();
+  }
+  const allBuildsForWorld = await state.storage.getAllBuilds();
+  state.worldState = syncCharacterStates(state.worldState, allBuildsForWorld);
+  await state.storage.putWorldState(state.worldState);
+  renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+  renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+
   startRenderLoop();
 }
 
@@ -277,6 +299,65 @@ function bindEvents() {
       renderRankingBoardOverlay();
     }
   });
+
+  // 世界地图仲裁者操作
+  dom.advanceSeasonBtn?.addEventListener("click", async () => {
+    const builds = await state.storage.getAllBuilds();
+    state.worldState = advanceSeason(state.worldState, builds);
+    await state.storage.putWorldState(state.worldState);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+  });
+
+  dom.triggerJianghuBtn?.addEventListener("click", async () => {
+    const factionIds = ["qingyun", "shaolin", "mojiao", "jiaoting", "xiandao", "hundian"];
+    const winner = factionIds[Math.floor(Math.random() * factionIds.length)];
+    state.worldState = applyJianghuPrestige(state.worldState, winner);
+    await state.storage.putWorldState(state.worldState);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+  });
+
+  dom.triggerTournamentBtn?.addEventListener("click", async () => {
+    const { computePowerScore, FACTION_IDS } = await import("./faction-state.js");
+    const factionRanks = [...FACTION_IDS].sort((a, b) =>
+      computePowerScore(b, state.worldState.factionStats, state.worldState.cities) -
+      computePowerScore(a, state.worldState.factionStats, state.worldState.cities)
+    );
+    state.worldState = applyRankedEventPrestige(state.worldState, "tournament", factionRanks);
+    await state.storage.putWorldState(state.worldState);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+  });
+
+  // 世界地图平移/缩放
+  dom.worldMapCanvas?.addEventListener("mousedown", (e) => {
+    state._worldDragging = true;
+    state._worldDragStart = {
+      x: e.clientX - state.worldViewState.offsetX,
+      y: e.clientY - state.worldViewState.offsetY,
+    };
+  });
+  dom.worldMapCanvas?.addEventListener("mousemove", (e) => {
+    if (!state._worldDragging) return;
+    state.worldViewState = {
+      ...state.worldViewState,
+      offsetX: e.clientX - state._worldDragStart.x,
+      offsetY: e.clientY - state._worldDragStart.y,
+    };
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+  });
+  dom.worldMapCanvas?.addEventListener("mouseup", () => { state._worldDragging = false; });
+  dom.worldMapCanvas?.addEventListener("mouseleave", () => { state._worldDragging = false; });
+  dom.worldMapCanvas?.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.1 : 0.91;
+    state.worldViewState = {
+      ...state.worldViewState,
+      zoom: Math.max(0.3, Math.min(5, state.worldViewState.zoom * factor)),
+    };
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+  }, { passive: false });
 }
 
 function getSelectedBattleProxyButton() {
