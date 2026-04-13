@@ -1917,6 +1917,12 @@ async function applyBattleRewards() {
         await appendChronicleEntry(buildFactionVictoryMilestoneEntry(state.battle.winner, factionWins));
       }
     }
+    // 世界地图声望：江湖争霸
+    if (state.battle.winner && state.worldState) {
+      state.worldState = applyJianghuPrestige(state.worldState, state.battle.winner.key);
+      await state.storage.putWorldState(state.worldState);
+      renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+    }
     await resolveChaosBloodlineTasks(state.battle.entities, latestBuildByBuildId, latestProgressByBuildId);
     if (state.fastSim.enabled && state.fastSimMeta.finalWinnerCode) {
       await saveFastSimMeta(advanceEndlessFastSimMeta(state.fastSimMeta));
@@ -3036,6 +3042,16 @@ async function finishRanking() {
     ? await awardTournamentPrize(runnerUpCode, state.ranking.rewards?.runnerUpSpec, "排位亚军")
     : null;
   const placementMap = getRankingFinalPlacementMap(state.ranking);
+  // 世界地图声望：排位赛
+  if (state.worldState) {
+    const rankingFactionRanks = buildFactionRankFromCodes(
+      state.ranking.participantCodes || [],
+      placementMap
+    );
+    state.worldState = applyRankedEventPrestige(state.worldState, "ranking", rankingFactionRanks);
+    await state.storage.putWorldState(state.worldState);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+  }
   const topFourCodes = Object.entries(placementMap)
     .filter(([, placement]) => placement === 3 || placement === 4)
     .map(([code]) => code);
@@ -3307,6 +3323,16 @@ async function finishTournament() {
   await refreshAll();
   syncTournamentParticipants();
   const placementMap = buildTournamentPlacementMap(state.tournament);
+  // 世界地图声望：武道会
+  if (state.worldState) {
+    const tourneyFactionRanks = buildFactionRankFromCodes(
+      state.tournament.participantCodes || [],
+      placementMap
+    );
+    state.worldState = applyRankedEventPrestige(state.worldState, "tournament", tourneyFactionRanks);
+    await state.storage.putWorldState(state.worldState);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+  }
   for (const code of state.tournament.participantCodes || []) {
     const entry = getEntryByCode(code);
     if (!entry) continue;
@@ -3956,6 +3982,29 @@ function getExplorationActiveEntries() {
   return getExplorationCodesByTier(state.exploration, state.exploration.currentTier)
     .map((code) => getEntryByCode(code))
     .filter(Boolean);
+}
+
+/**
+ * 将参赛者 code 列表按名次排序，去重后返回对应门派 ID 数组
+ * @param {string[]} participantCodes
+ * @param {Object} placementMap  { code: placementNumber } — 数字越小名次越高
+ * @returns {string[]}  门派 ID 数组，按名次排序（冠军在前）
+ */
+function buildFactionRankFromCodes(participantCodes, placementMap) {
+  const sorted = [...participantCodes]
+    .filter((code) => placementMap[code] != null)
+    .sort((a, b) => (placementMap[a] || 999) - (placementMap[b] || 999));
+  const seen = new Set();
+  const factionOrder = [];
+  sorted.forEach((code) => {
+    const entry = getEntryByCode(code);
+    const fkey = entry?.build?.faction?.key;
+    if (fkey && !seen.has(fkey)) {
+      seen.add(fkey);
+      factionOrder.push(fkey);
+    }
+  });
+  return factionOrder;
 }
 
 function getEntryByCode(code) {
