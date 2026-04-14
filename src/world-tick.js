@@ -3,7 +3,7 @@
 
 import { WORLD_CHARACTER_STATES } from "./config.js";
 import { createInitialFactionStats, FACTION_IDS, tickGoldProduction, addPrestige } from "./faction-state.js";
-import { createInitialCityStates } from "./world-map.js";
+import { createInitialCityStates, buildCityTerritories } from "./world-map.js";
 
 // ── 24节气 ────────────────────────────────────
 
@@ -63,6 +63,7 @@ export function createWorldState() {
     season: 1,
     factionStats: createInitialFactionStats(),
     cities: createInitialCityStates(),
+    cityTerritories: buildCityTerritories(),
     characterStates: {},
     log: [`${getSeasonLabel(1)}，江湖初开，六派鼎立。`],
   };

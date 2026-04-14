@@ -38,6 +38,7 @@ import { getTournamentMatchState, renderTournamentBracket, renderTournamentFullT
 import { advanceTournamentWinner, buildTournamentState, getNextTournamentMatch } from "./tournament-utils.js";
 import { clamp, escapeHtml, gradeColor, gradeIndex, signedPct } from "./utils.js";
 import { createWorldState, syncCharacterStates, advanceSeason } from "./world-tick.js";
+import { buildCityTerritories } from "./world-map.js";
 import { renderWorldMap, renderArbiterPanel } from "./world-ui.js";
 import { applyJianghuPrestige, applyRankedEventPrestige } from "./world-events.js";
 
@@ -194,6 +195,9 @@ async function init() {
   state.worldState = await state.storage.getWorldState();
   if (!state.worldState) {
     state.worldState = createWorldState();
+  }
+  if (!state.worldState.cityTerritories) {
+    state.worldState = { ...state.worldState, cityTerritories: buildCityTerritories() };
   }
   const allBuildsForWorld = await state.storage.getAllBuilds();
   state.worldState = syncCharacterStates(state.worldState, allBuildsForWorld);
