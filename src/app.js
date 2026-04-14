@@ -2749,7 +2749,7 @@ async function startTournamentFlow() {
     setBattleControlState({
       chaosDisabled: true,
       explorationDisabled: true,
-      tournamentLabel: “锁定奖池并生成赛程”,
+      tournamentLabel: "锁定奖池并生成赛程",
       resetDisabled: false
     });
     renderTournamentPrizeSummary();
@@ -2759,7 +2759,7 @@ async function startTournamentFlow() {
   }
   if (state.tournamentBattle) { setWorldBattleOverlay(false); return; }
   if (state.tournament.championCode) {
-    window.alert(“本届武道会已经结束。点击”重置”后可以重新生成赛程。”);
+    window.alert("本届武道会已经结束。点击"重置"后可以重新生成赛程。");
     setWorldBattleOverlay(false);
     return;
   }
@@ -2780,7 +2780,7 @@ async function startRankingFlow() {
       chaosDisabled: true,
       tournamentDisabled: true,
       explorationDisabled: true,
-      rankingLabel: “锁定奖池并生成第1轮”,
+      rankingLabel: "锁定奖池并生成第1轮",
       resetDisabled: false
     });
     renderTournamentPrizeSummary();
@@ -2790,7 +2790,7 @@ async function startRankingFlow() {
   }
   if (state.rankingBattle) { setWorldBattleOverlay(false); return; }
   if (state.ranking.championCode) {
-    window.alert(“本届江湖排位已经结束。点击”重置”后可以重新生成赛程。”);
+    window.alert("本届江湖排位已经结束。点击"重置"后可以重新生成赛程。");
     setWorldBattleOverlay(false);
     return;
   }

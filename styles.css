@@ -2295,6 +2295,7 @@ tbody tr:last-child td { border-bottom: none; }
   z-index: 10;
   border: 2px solid rgba(255, 180, 50, 0.5);
 }
+.world-battle-overlay[hidden] { display: none; }
 
 .world-battle-overlay-text {
   color: #f5c842;
