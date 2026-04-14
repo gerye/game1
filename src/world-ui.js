@@ -107,10 +107,21 @@ export function renderWorldMap(canvas, worldState, viewState = {}) {
     }
   }
 
-  // 绘制城池标记
-  ALL_CITIES.forEach((city) => {
+  // 绘制城池建筑（从大到小，保证小城不被大城覆盖）
+  const sortedCities = [...ALL_CITIES].sort((a, b) => {
+    const tierOrder = { hq: 0, large: 1, small: 2 };
+    return (tierOrder[a.tier] ?? 3) - (tierOrder[b.tier] ?? 3);
+  });
+  sortedCities.forEach((city) => {
     const owner = cityOwnership[city.id] ?? city.faction;
-    drawCityMarker(ctx, city, owner);
+    const color = owner ? FACTION_COLORS[owner] : "#666666";
+    if (city.tier === WORLD_CITY_TIERS.HQ) {
+      drawHQBuilding(ctx, city, color);
+    } else if (city.tier === WORLD_CITY_TIERS.LARGE) {
+      drawLargeCityBuilding(ctx, city, color);
+    } else {
+      drawSmallCityBuilding(ctx, city, color);
+    }
   });
 
   ctx.restore();
@@ -146,41 +157,219 @@ function drawHex(ctx, q, r, territoryMap) {
   }
 }
 
-function drawCityMarker(ctx, city, owner) {
-  const { x, y } = hexToPixel(city.q, city.r);
-  const color = owner ? FACTION_COLORS[owner] : "#888888";
+// 辅助：计算某颜色的暗化版本（简单混合黑色）
+function darkenColor(hexColor, amount = 0.4) {
+  const r = parseInt(hexColor.slice(1, 3), 16);
+  const g = parseInt(hexColor.slice(3, 5), 16);
+  const b = parseInt(hexColor.slice(5, 7), 16);
+  const dr = Math.round(r * (1 - amount));
+  const dg = Math.round(g * (1 - amount));
+  const db = Math.round(b * (1 - amount));
+  return `rgb(${dr},${dg},${db})`;
+}
 
+// 填充指定 (q,r) 格子为深色（城池格子使用）
+function fillHexDark(ctx, q, r, color) {
+  if (!inBounds(q, r)) return;
+  const { x, y } = hexToPixel(q, r);
+  const corners = hexCorners(x, y, HEX_SIZE - 0.5);
   ctx.beginPath();
-  if (city.tier === WORLD_CITY_TIERS.HQ) {
-    drawStar(ctx, x, y, 6, 3, 5);
-  } else if (city.tier === WORLD_CITY_TIERS.LARGE) {
-    ctx.moveTo(x, y - 5);
-    ctx.lineTo(x + 4, y);
-    ctx.lineTo(x, y + 5);
-    ctx.lineTo(x - 4, y);
-    ctx.closePath();
-  } else {
-    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
-  }
+  ctx.moveTo(corners[0].x, corners[0].y);
+  for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
+  ctx.closePath();
   ctx.fillStyle = color;
   ctx.fill();
-  ctx.strokeStyle = "#000000aa";
-  ctx.lineWidth = 0.5;
+  ctx.strokeStyle = "rgba(0,0,0,0.4)";
+  ctx.lineWidth = 0.8;
   ctx.stroke();
 }
 
-function drawStar(ctx, cx, cy, outerR, innerR, points) {
-  const step = Math.PI / points;
-  ctx.moveTo(cx, cy - outerR);
-  for (let i = 0; i < points * 2; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const angle = i * step - Math.PI / 2;
-    ctx.lineTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+// 六邻格坐标（axial 坐标系）
+const HEX_NEIGHBOR_DIRS = [
+  [1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]
+];
+
+/**
+ * 小城：3格（中心 + 东 + 西）填充暗色，绘制驿站图标
+ * 图标：两个小塔楼夹一个城门洞
+ */
+function drawSmallCityBuilding(ctx, city, factionColor) {
+  const dark = darkenColor(factionColor, 0.35);
+  const { q, r } = city;
+
+  // 填充3格（中心、右邻、左邻）
+  fillHexDark(ctx, q, r, dark);
+  fillHexDark(ctx, q + 1, r, dark);
+  fillHexDark(ctx, q - 1, r, dark);
+
+  // 绘制图标（以中心像素为原点）
+  const { x, y } = hexToPixel(q, r);
+  const ic = "rgba(255,255,255,0.92)";
+
+  ctx.fillStyle = ic;
+
+  // 左塔
+  ctx.fillRect(x - 9, y - 6, 5, 9);
+  // 左塔垛口
+  ctx.fillRect(x - 10, y - 8, 2, 3);
+  ctx.fillRect(x - 7, y - 8, 2, 3);
+
+  // 右塔
+  ctx.fillRect(x + 4, y - 6, 5, 9);
+  // 右塔垛口
+  ctx.fillRect(x + 3, y - 8, 2, 3);
+  ctx.fillRect(x + 6, y - 8, 2, 3);
+
+  // 中间城墙（连接两塔）
+  ctx.fillRect(x - 3, y - 3, 6, 6);
+
+  // 城门拱洞
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.arc(x, y + 1, 2, Math.PI, 0);
+  ctx.rect(x - 2, y + 1, 4, 3);
+  ctx.fill();
+}
+
+/**
+ * 大城：7格（中心+6邻格）填充暗色，绘制城池图标
+ * 图标：六边形城墙轮廓 + 内部三角屋顶建筑
+ */
+function drawLargeCityBuilding(ctx, city, factionColor) {
+  const dark = darkenColor(factionColor, 0.3);
+  const { q, r } = city;
+
+  // 填充7格
+  fillHexDark(ctx, q, r, dark);
+  for (const [dq, dr] of HEX_NEIGHBOR_DIRS) {
+    fillHexDark(ctx, q + dq, r + dr, dark);
+  }
+
+  // 绘制图标
+  const { x, y } = hexToPixel(q, r);
+  const ic = "rgba(255,255,255,0.90)";
+  ctx.strokeStyle = ic;
+  ctx.lineWidth = 1.2;
+
+  // 城墙六边形轮廓（稍小于格子）
+  const wallR = HEX_SIZE * 1.6;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i - Math.PI / 6;
+    const wx = x + wallR * Math.cos(angle);
+    const wy = y + wallR * Math.sin(angle);
+    if (i === 0) ctx.moveTo(wx, wy); else ctx.lineTo(wx, wy);
   }
   ctx.closePath();
+  ctx.stroke();
+
+  // 城墙四角哨楼（小方块）
+  ctx.fillStyle = ic;
+  for (let i = 0; i < 6; i += 2) {
+    const angle = (Math.PI / 3) * i - Math.PI / 6;
+    const wx = x + wallR * Math.cos(angle);
+    const wy = y + wallR * Math.sin(angle);
+    ctx.fillRect(wx - 1.5, wy - 1.5, 3, 3);
+  }
+
+  // 内部主建筑（宝塔形：三角+矩形叠层）
+  ctx.fillStyle = ic;
+  // 底层
+  ctx.fillRect(x - 5, y + 1, 10, 5);
+  // 中层
+  ctx.fillRect(x - 3, y - 3, 6, 5);
+  // 屋顶
+  ctx.beginPath();
+  ctx.moveTo(x - 5, y - 3);
+  ctx.lineTo(x, y - 8);
+  ctx.lineTo(x + 5, y - 3);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/**
+ * 总部：7格填充，绘制宫殿图标
+ * 图标：双层城墙 + 中央高塔（区别于大城的高度和装饰）
+ */
+function drawHQBuilding(ctx, city, factionColor) {
+  const dark = darkenColor(factionColor, 0.25);
+  const { q, r } = city;
+
+  // 填充7格（更亮一点，HQ比大城显眼）
+  const darkHQ = darkenColor(factionColor, 0.2);
+  fillHexDark(ctx, q, r, darkHQ);
+  for (const [dq, dr] of HEX_NEIGHBOR_DIRS) {
+    fillHexDark(ctx, q + dq, r + dr, dark);
+  }
+
+  const { x, y } = hexToPixel(q, r);
+  const ic = "rgba(255,245,200,0.95)";  // 金白色，区别于大城的纯白
+  ctx.strokeStyle = ic;
+
+  // 外城墙
+  ctx.lineWidth = 1.4;
+  const outerR = HEX_SIZE * 1.7;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i - Math.PI / 6;
+    const wx = x + outerR * Math.cos(angle);
+    const wy = y + outerR * Math.sin(angle);
+    if (i === 0) ctx.moveTo(wx, wy); else ctx.lineTo(wx, wy);
+  }
+  ctx.closePath();
+  ctx.stroke();
+
+  // 内城墙（小一圈）
+  ctx.lineWidth = 0.8;
+  const innerR = HEX_SIZE * 1.0;
+  ctx.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i - Math.PI / 6;
+    const wx = x + innerR * Math.cos(angle);
+    const wy = y + innerR * Math.sin(angle);
+    if (i === 0) ctx.moveTo(wx, wy); else ctx.lineTo(wx, wy);
+  }
+  ctx.closePath();
+  ctx.stroke();
+
+  // 六角全填充（城楼）
+  ctx.fillStyle = ic;
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i - Math.PI / 6;
+    const wx = x + outerR * Math.cos(angle);
+    const wy = y + outerR * Math.sin(angle);
+    ctx.beginPath();
+    ctx.arc(wx, wy, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 中央高塔（比大城高出约1.5倍）
+  ctx.fillStyle = ic;
+  // 底座
+  ctx.fillRect(x - 4, y + 2, 8, 4);
+  // 中层
+  ctx.fillRect(x - 3, y - 2, 6, 5);
+  // 高层
+  ctx.fillRect(x - 2, y - 6, 4, 5);
+  // 尖顶
+  ctx.beginPath();
+  ctx.moveTo(x - 3, y - 6);
+  ctx.lineTo(x, y - 11);
+  ctx.lineTo(x + 3, y - 6);
+  ctx.closePath();
+  ctx.fill();
+  // 顶部旗帜（小三角形）
+  ctx.beginPath();
+  ctx.moveTo(x, y - 11);
+  ctx.lineTo(x + 4, y - 9);
+  ctx.lineTo(x, y - 7);
+  ctx.closePath();
+  ctx.fillStyle = factionColor;
+  ctx.fill();
 }
 
 // ── 仲裁者信息面板 ──────────────────────────────
+
 
 /**
  * 渲染门派三维状态表格到 DOM 容器
