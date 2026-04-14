@@ -6,6 +6,7 @@ import {
   getTerrainAt, TERRAIN_COLORS, ALL_CITIES, hexDistance, inBounds
 } from "./world-map.js";
 import { FACTION_IDS, computePowerScore } from "./faction-state.js";
+import { getSeasonLabel } from "./world-tick.js";
 
 // ── 门派颜色与名称 ────────────────────────────────
 export const FACTION_COLORS = {
@@ -484,7 +485,7 @@ export function renderArbiterPanel(container, worldState) {
 
   container.innerHTML = `
     <div class="world-panel">
-      <h3>第 ${worldState.season || 1} 时节 · 江湖格局</h3>
+      <h3>${getSeasonLabel(worldState.season || 1)} · 江湖格局</h3>
       <table class="world-stats-table">
         <thead>
           <tr><th>门派</th><th>实力</th><th>声望</th><th>金币</th><th>城池</th></tr>
