@@ -3,7 +3,7 @@
 
 import { WORLD_CHARACTER_STATES } from "./config.js";
 import { createInitialFactionStats, FACTION_IDS, tickGoldProduction, addPrestige } from "./faction-state.js";
-import { createInitialCityStates, buildCityTerritories } from "./world-map.js";
+import { createInitialCityStates, buildCityTerritories, ALL_CITIES, hexDistance } from "./world-map.js";
 
 // ── 24节气 ────────────────────────────────────
 
@@ -103,15 +103,64 @@ export function addWorldLog(worldState, message) {
 // ── 时节推进 ────────────────────────────────────
 
 /**
- * 推进一个时节：
- * 1. season + 1
- * 2. 结算金币产出
- * 3. 解除到期重伤状态
- * 4. AI 调整角色状态（驻守/漫游）
- * 5. 触发漫游小事件
- * 6. 记录日志
+ * 检测大地图上相邻的敌对角色，返回可能发生单挑的配对
+ * @returns {{ buildA: Object, buildB: Object }[]}
  */
-export function advanceSeason(worldState, builds) {
+export function detectAdjacentDuels(worldState, builds) {
+  const charStates = worldState.characterStates || {};
+  const cityMap = Object.fromEntries(
+    ALL_CITIES.map((c) => [c.id, { q: c.q, r: c.r }])
+  );
+
+  function getCharPos(build) {
+    const cs = charStates[build.buildId];
+    if (!cs) return null;
+    if (cs.state === WORLD_CHARACTER_STATES.GARRISON && cs.cityId) {
+      return cityMap[cs.cityId] || null;
+    }
+    if (cs.q != null && cs.r != null) return { q: cs.q, r: cs.r };
+    return null;
+  }
+
+  const activePairs = [];
+  const paired = new Set();
+
+  for (let i = 0; i < builds.length; i++) {
+    for (let j = i + 1; j < builds.length; j++) {
+      const a = builds[i];
+      const b = builds[j];
+      const aKey = a.faction?.key || a.faction;
+      const bKey = b.faction?.key || b.faction;
+      if (aKey === bKey) continue;
+      const csA = charStates[a.buildId];
+      const csB = charStates[b.buildId];
+      if (csA?.injured || csB?.injured) continue;
+      if (paired.has(a.buildId) || paired.has(b.buildId)) continue;
+
+      const posA = getCharPos(a);
+      const posB = getCharPos(b);
+      if (!posA || !posB) continue;
+
+      const dist = hexDistance(posA.q, posA.r, posB.q, posB.r);
+      if (dist <= 3) {
+        activePairs.push({ buildA: a, buildB: b });
+        paired.add(a.buildId);
+        paired.add(b.buildId);
+      }
+    }
+  }
+
+  return activePairs;
+}
+
+/**
+ * 推进一个时节
+ * @param {Object} worldState
+ * @param {Object[]} builds
+ * @param {Function|null} fastSimFn  (buildA, buildB) => {winnerBuildId, loserBuildId}
+ * @returns {{ worldState: Object, duelResults: Object[] }}
+ */
+export function advanceSeason(worldState, builds, fastSimFn = null) {
   let ws = { ...worldState, season: worldState.season + 1 };
 
   // 1. 金币产出
@@ -134,8 +183,29 @@ export function advanceSeason(worldState, builds) {
   // 4. 漫游小事件
   ws = triggerRoamingEvents(ws, builds);
 
+  // 5. 相邻单挑（仅当 fastSimFn 传入时执行）
+  const duelResults = [];
+  if (fastSimFn) {
+    const duels = detectAdjacentDuels(ws, builds);
+    for (const { buildA, buildB } of duels) {
+      try {
+        const result = fastSimFn(buildA, buildB);
+        duelResults.push(result);
+        if (result.winnerBuildId) {
+          const winnerName = result.winnerBuildId === buildA.buildId
+            ? (buildA.name || buildA.buildId)
+            : (buildB.name || buildB.buildId);
+          ws = addWorldLog(ws, `单挑：${buildA.name || buildA.buildId} vs ${buildB.name || buildB.buildId}，${winnerName} 胜。`);
+        }
+      } catch (_) { /* 忽略单挑错误 */ }
+    }
+  }
+
+  // 6. 攻城 AI（inline，避免循环依赖）
+  // (no-op for now — siege AI runs via world-events.js from app.js)
+
   ws = addWorldLog(ws, `${getSeasonLabel(ws.season)}：各派积蓄力量。`);
-  return ws;
+  return { worldState: ws, duelResults };
 }
 
 // ── AI 角色状态切换 ──────────────────────────────

@@ -313,7 +313,18 @@ function bindEvents() {
   // 世界地图仲裁者操作
   dom.advanceSeasonBtn?.addEventListener("click", async () => {
     const builds = await state.storage.getAllBuilds();
-    state.worldState = advanceSeason(state.worldState, builds);
+    const fastSim = (buildA, buildB) => {
+      const scoreA = (buildA.physicalAttack || 0) + (buildA.magicAttack || 0);
+      const scoreB = (buildB.physicalAttack || 0) + (buildB.magicAttack || 0);
+      const rand = Math.random();
+      const aWins = rand < (scoreA + 1) / (scoreA + scoreB + 2);
+      return {
+        winnerBuildId: aWins ? buildA.buildId : buildB.buildId,
+        loserBuildId: aWins ? buildB.buildId : buildA.buildId,
+      };
+    };
+    const { worldState } = advanceSeason(state.worldState, builds, fastSim);
+    state.worldState = worldState;
     await state.storage.putWorldState(state.worldState);
     renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
     renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
