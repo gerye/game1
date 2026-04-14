@@ -87,25 +87,25 @@ export const INITIAL_CITIES = [
   { id: "shaolin-l2",   faction: "shaolin",  tier: WORLD_CITY_TIERS.LARGE, q:  4, r:  16, name: "金刚城" },
   { id: "shaolin-l3",   faction: "shaolin",  tier: WORLD_CITY_TIERS.LARGE, q: -2, r:  12, name: "达摩城" },
   // 魔教（西北）
-  { id: "mojiao-hq",    faction: "mojiao",   tier: WORLD_CITY_TIERS.HQ,    q: -18, r:  -8, name: "魔教总部" },
-  { id: "mojiao-l1",    faction: "mojiao",   tier: WORLD_CITY_TIERS.LARGE, q: -14, r:  -6, name: "焰窟城" },
-  { id: "mojiao-l2",    faction: "mojiao",   tier: WORLD_CITY_TIERS.LARGE, q: -16, r:  -2, name: "血月城" },
-  { id: "mojiao-l3",    faction: "mojiao",   tier: WORLD_CITY_TIERS.LARGE, q: -12, r: -10, name: "暗渊城" },
+  { id: "demon-hq",    faction: "demon",   tier: WORLD_CITY_TIERS.HQ,    q: -18, r:  -8, name: "魔教总部" },
+  { id: "demon-l1",    faction: "demon",   tier: WORLD_CITY_TIERS.LARGE, q: -14, r:  -6, name: "焰窟城" },
+  { id: "demon-l2",    faction: "demon",   tier: WORLD_CITY_TIERS.LARGE, q: -16, r:  -2, name: "血月城" },
+  { id: "demon-l3",    faction: "demon",   tier: WORLD_CITY_TIERS.LARGE, q: -12, r: -10, name: "暗渊城" },
   // 教廷（正西）
-  { id: "jiaoting-hq",  faction: "jiaoting", tier: WORLD_CITY_TIERS.HQ,    q: -20, r:   6, name: "教廷总部" },
-  { id: "jiaoting-l1",  faction: "jiaoting", tier: WORLD_CITY_TIERS.LARGE, q: -16, r:   6, name: "圣城" },
-  { id: "jiaoting-l2",  faction: "jiaoting", tier: WORLD_CITY_TIERS.LARGE, q: -14, r:  10, name: "光辉城" },
-  { id: "jiaoting-l3",  faction: "jiaoting", tier: WORLD_CITY_TIERS.LARGE, q: -18, r:   2, name: "裁判城" },
+  { id: "palace-hq",  faction: "palace", tier: WORLD_CITY_TIERS.HQ,    q: -20, r:   6, name: "教廷总部" },
+  { id: "palace-l1",  faction: "palace", tier: WORLD_CITY_TIERS.LARGE, q: -16, r:   6, name: "圣城" },
+  { id: "palace-l2",  faction: "palace", tier: WORLD_CITY_TIERS.LARGE, q: -14, r:  10, name: "光辉城" },
+  { id: "palace-l3",  faction: "palace", tier: WORLD_CITY_TIERS.LARGE, q: -18, r:   2, name: "裁判城" },
   // 仙岛（东偏北，临海）
-  { id: "xiandao-hq",   faction: "xiandao",  tier: WORLD_CITY_TIERS.HQ,    q:  20, r: -10, name: "仙岛总部" },
-  { id: "xiandao-l1",   faction: "xiandao",  tier: WORLD_CITY_TIERS.LARGE, q:  16, r:  -8, name: "灵虚城" },
-  { id: "xiandao-l2",   faction: "xiandao",  tier: WORLD_CITY_TIERS.LARGE, q:  18, r:  -4, name: "蓬莱城" },
-  { id: "xiandao-l3",   faction: "xiandao",  tier: WORLD_CITY_TIERS.LARGE, q:  14, r: -12, name: "云海城" },
+  { id: "isle-hq",   faction: "isle",  tier: WORLD_CITY_TIERS.HQ,    q:  20, r: -10, name: "仙岛总部" },
+  { id: "isle-l1",   faction: "isle",  tier: WORLD_CITY_TIERS.LARGE, q:  16, r:  -8, name: "灵虚城" },
+  { id: "isle-l2",   faction: "isle",  tier: WORLD_CITY_TIERS.LARGE, q:  18, r:  -4, name: "蓬莱城" },
+  { id: "isle-l3",   faction: "isle",  tier: WORLD_CITY_TIERS.LARGE, q:  14, r: -12, name: "云海城" },
   // 魂殿（西偏南）
-  { id: "hundian-hq",   faction: "hundian",  tier: WORLD_CITY_TIERS.HQ,    q: -16, r:  18, name: "魂殿总部" },
-  { id: "hundian-l1",   faction: "hundian",  tier: WORLD_CITY_TIERS.LARGE, q: -12, r:  16, name: "幽冥城" },
-  { id: "hundian-l2",   faction: "hundian",  tier: WORLD_CITY_TIERS.LARGE, q: -14, r:  14, name: "冥府城" },
-  { id: "hundian-l3",   faction: "hundian",  tier: WORLD_CITY_TIERS.LARGE, q: -10, r:  12, name: "鬼域城" },
+  { id: "soul-hq",   faction: "soul",  tier: WORLD_CITY_TIERS.HQ,    q: -16, r:  18, name: "魂殿总部" },
+  { id: "soul-l1",   faction: "soul",  tier: WORLD_CITY_TIERS.LARGE, q: -12, r:  16, name: "幽冥城" },
+  { id: "soul-l2",   faction: "soul",  tier: WORLD_CITY_TIERS.LARGE, q: -14, r:  14, name: "冥府城" },
+  { id: "soul-l3",   faction: "soul",  tier: WORLD_CITY_TIERS.LARGE, q: -10, r:  12, name: "鬼域城" },
 ];
 
 export const NEUTRAL_SMALL_CITIES = [

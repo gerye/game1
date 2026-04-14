@@ -79,7 +79,7 @@ export function syncCharacterStates(worldState, builds) {
     if (!updated.characterStates[build.buildId]) {
       updated.characterStates[build.buildId] = {
         state: WORLD_CHARACTER_STATES.GARRISON,
-        cityId: `${build.faction}-hq`,
+        cityId: `${build.faction?.key || build.faction}-hq`,
         q: 0,
         r: 0,
         injured: false,
@@ -151,7 +151,7 @@ function aiUpdateCharacterStates(worldState, builds) {
       updated[build.buildId] = {
         ...cs,
         state: WORLD_CHARACTER_STATES.GARRISON,
-        cityId: `${build.faction}-hq`,
+        cityId: `${build.faction?.key || build.faction}-hq`,
       };
       return;
     }
@@ -161,10 +161,11 @@ function aiUpdateCharacterStates(worldState, builds) {
     if (roll < 0.4) {
       updated[build.buildId] = { ...cs, state: WORLD_CHARACTER_STATES.ROAMING };
     } else {
-      const ownedCities = worldState.cities.filter((c) => c.faction === build.faction);
+      const factionKey = build.faction?.key || build.faction;
+      const ownedCities = worldState.cities.filter((c) => c.faction === factionKey);
       const target = ownedCities.length
         ? ownedCities[Math.floor(roll * ownedCities.length)]
-        : { id: `${build.faction}-hq` };
+        : { id: `${build.faction?.key || build.faction}-hq` };
       updated[build.buildId] = {
         ...cs,
         state: WORLD_CHARACTER_STATES.GARRISON,

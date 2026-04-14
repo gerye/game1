@@ -5,7 +5,7 @@ import { WORLD_GOLD_TICK, WORLD_CITY_TIERS } from "./config.js";
 import { ALL_CITIES, citiesOwnedBy, INITIAL_CITIES } from "./world-map.js";
 
 // ── 六大门派 ID ────────────────────────────────
-export const FACTION_IDS = ["qingyun", "shaolin", "mojiao", "jiaoting", "xiandao", "hundian"];
+export const FACTION_IDS = ["palace", "demon", "shaolin", "qingyun", "isle", "soul"];
 
 /**
  * 创建初始门派状态

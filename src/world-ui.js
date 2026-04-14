@@ -12,19 +12,19 @@ import { getSeasonLabel } from "./world-tick.js";
 export const FACTION_COLORS = {
   qingyun:  "#1a7f5e",
   shaolin:  "#c8960c",
-  mojiao:   "#b32c2c",
-  jiaoting: "#e8e0d0",
-  xiandao:  "#4a8fcf",
-  hundian:  "#6b3fa0",
+  demon:    "#b32c2c",
+  palace:   "#c8a028",
+  isle:     "#4a8fcf",
+  soul:     "#6b3fa0",
 };
 
 export const FACTION_NAMES = {
   qingyun:  "青云门",
   shaolin:  "少林",
-  mojiao:   "魔教",
-  jiaoting: "教廷",
-  xiandao:  "仙岛",
-  hundian:  "魂殿",
+  demon:    "魔教",
+  palace:   "教廷",
+  isle:     "仙岛",
+  soul:     "魂殿",
 };
 
 // ── 六边形坐标到像素 ─────────────────────────────
