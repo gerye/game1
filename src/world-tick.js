@@ -165,7 +165,7 @@ function aiUpdateCharacterStates(worldState, builds) {
       const ownedCities = worldState.cities.filter((c) => c.faction === factionKey);
       const target = ownedCities.length
         ? ownedCities[Math.floor(roll * ownedCities.length)]
-        : { id: `${build.faction?.key || build.faction}-hq` };
+        : { id: `${factionKey}-hq` };
       updated[build.buildId] = {
         ...cs,
         state: WORLD_CHARACTER_STATES.GARRISON,
