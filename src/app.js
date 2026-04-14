@@ -40,7 +40,7 @@ import { clamp, escapeHtml, gradeColor, gradeIndex, signedPct } from "./utils.js
 import { createWorldState, syncCharacterStates, advanceSeason } from "./world-tick.js";
 import { buildCityTerritories } from "./world-map.js";
 import { renderWorldMap, renderArbiterPanel } from "./world-ui.js";
-import { applyJianghuPrestige, applyRankedEventPrestige } from "./world-events.js";
+import { applyJianghuPrestige, applyRankedEventPrestige, runSiegeAI, applySiegeResult } from "./world-events.js";
 
 const dom = {
   photoInput: document.getElementById("photoInput"),
@@ -323,7 +323,20 @@ function bindEvents() {
         loserBuildId: aWins ? buildB.buildId : buildA.buildId,
       };
     };
-    const { worldState } = advanceSeason(state.worldState, builds, fastSim);
+    let { worldState } = advanceSeason(state.worldState, builds, fastSim);
+    // 攻城 AI（在 app.js 中调用，避免 world-tick ↔ world-events 循环依赖）
+    const { worldState: wsAfterSiege, siegeEvents } = runSiegeAI(worldState);
+    worldState = wsAfterSiege;
+    for (const evt of siegeEvents) {
+      const currentOwner = worldState.cities.find((c) => c.id === evt.cityId)?.faction;
+      if (!currentOwner) {
+        worldState = applySiegeResult(worldState, evt.cityId, evt.factionId, evt.factionId);
+      } else {
+        const rand = Math.random();
+        const winner = rand > 0.45 ? evt.factionId : currentOwner;
+        worldState = applySiegeResult(worldState, evt.cityId, winner, evt.factionId);
+      }
+    }
     state.worldState = worldState;
     await state.storage.putWorldState(state.worldState);
     renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
