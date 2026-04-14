@@ -315,25 +315,21 @@ function bindEvents() {
     renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
   });
 
-  dom.triggerJianghuBtn?.addEventListener("click", async () => {
-    const factionIds = ["qingyun", "shaolin", "mojiao", "jiaoting", "xiandao", "hundian"];
-    const winner = factionIds[Math.floor(Math.random() * factionIds.length)];
-    state.worldState = applyJianghuPrestige(state.worldState, winner);
-    await state.storage.putWorldState(state.worldState);
-    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+  dom.triggerJianghuBtn?.addEventListener("click", () => {
+    // 触发真实江湖争霸战斗；声望在 applyBattleRewards 结束时自动发放
+    startChaosBattle().catch((error) => {
+      console.error("触发江湖争霸失败：", error);
+    });
+    // 滚动到战场
+    document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
-  dom.triggerTournamentBtn?.addEventListener("click", async () => {
-    const { computePowerScore, FACTION_IDS } = await import("./faction-state.js");
-    const factionRanks = [...FACTION_IDS].sort((a, b) =>
-      computePowerScore(b, state.worldState.factionStats, state.worldState.cities) -
-      computePowerScore(a, state.worldState.factionStats, state.worldState.cities)
-    );
-    state.worldState = applyRankedEventPrestige(state.worldState, "tournament", factionRanks);
-    await state.storage.putWorldState(state.worldState);
-    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+  dom.triggerTournamentBtn?.addEventListener("click", () => {
+    // 触发真实武道会；声望在 finishTournament 结束时自动发放
+    startTournamentFlow().catch((error) => {
+      console.error("触发武道会失败：", error);
+    });
+    document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
   // 世界地图平移/缩放
