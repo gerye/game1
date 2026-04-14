@@ -194,6 +194,7 @@ const HEX_NEIGHBOR_DIRS = [
  * 图标：两个小塔楼夹一个城门洞
  */
 function drawSmallCityBuilding(ctx, city, factionColor) {
+  ctx.save();
   const dark = darkenColor(factionColor, 0.35);
   const { q, r } = city;
 
@@ -229,6 +230,7 @@ function drawSmallCityBuilding(ctx, city, factionColor) {
   ctx.arc(x, y + 1, 2, Math.PI, 0);
   ctx.rect(x - 2, y + 1, 4, 3);
   ctx.fill();
+  ctx.restore();
 }
 
 /**
@@ -236,6 +238,7 @@ function drawSmallCityBuilding(ctx, city, factionColor) {
  * 图标：六边形城墙轮廓 + 内部三角屋顶建筑
  */
 function drawLargeCityBuilding(ctx, city, factionColor) {
+  ctx.save();
   const dark = darkenColor(factionColor, 0.3);
   const { q, r } = city;
 
@@ -285,6 +288,7 @@ function drawLargeCityBuilding(ctx, city, factionColor) {
   ctx.lineTo(x + 5, y - 3);
   ctx.closePath();
   ctx.fill();
+  ctx.restore();
 }
 
 /**
@@ -292,6 +296,7 @@ function drawLargeCityBuilding(ctx, city, factionColor) {
  * 图标：双层城墙 + 中央高塔（区别于大城的高度和装饰）
  */
 function drawHQBuilding(ctx, city, factionColor) {
+  ctx.save();
   const dark = darkenColor(factionColor, 0.25);
   const { q, r } = city;
 
@@ -366,6 +371,7 @@ function drawHQBuilding(ctx, city, factionColor) {
   ctx.closePath();
   ctx.fillStyle = factionColor;
   ctx.fill();
+  ctx.restore();
 }
 
 // ── 仲裁者信息面板 ──────────────────────────────
