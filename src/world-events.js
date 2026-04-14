@@ -7,7 +7,7 @@ import {
 import {
   addPrestige, spendPrestige, transferCity, FACTION_IDS
 } from "./faction-state.js";
-import { isHQSurrounded, ALL_CITIES } from "./world-map.js";
+import { isHQSurrounded, ALL_CITIES, hexDistance } from "./world-map.js";
 import { addWorldLog } from "./world-tick.js";
 
 // ── 声望分配 ─────────────────────────────────────
@@ -130,6 +130,94 @@ export function checkAndTriggerLastStand(worldState, faction) {
     { ...worldState, pendingLastStand: { faction, triggeredSeason: worldState.season } },
     `危急！${faction} 三座大城尽失，全员决战即将爆发！`
   );
+}
+
+/**
+ * 为单个门派选择最优攻城目标
+ * @returns {string|null} cityId or null
+ */
+function chooseSiegeTarget(factionId, worldState) {
+  const ownCityIds = new Set(
+    worldState.cities.filter((c) => c.faction === factionId).map((c) => c.id)
+  );
+
+  // HQ 坐标 map（用于计算防御价值）
+  const hqPositions = {};
+  for (const city of ALL_CITIES) {
+    if (city.tier === WORLD_CITY_TIERS.HQ) {
+      hqPositions[city.id.replace(/-hq$/, "")] = { q: city.q, r: city.r };
+    }
+  }
+
+  // 候选：未被本门派控制，且与本门派任意已控制城市距离 <= 14
+  const candidates = ALL_CITIES.filter((template) => {
+    const currentState = worldState.cities.find((c) => c.id === template.id);
+    if (!currentState) return false;
+    if (currentState.faction === factionId) return false;
+    for (const ownedId of ownCityIds) {
+      const ownedTemplate = ALL_CITIES.find((c) => c.id === ownedId);
+      if (!ownedTemplate) continue;
+      if (hexDistance(template.q, template.r, ownedTemplate.q, ownedTemplate.r) <= 14) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  if (!candidates.length) return null;
+
+  let bestCity = null;
+  let bestScore = -Infinity;
+
+  for (const candidate of candidates) {
+    const currentState = worldState.cities.find((c) => c.id === candidate.id);
+    const isNeutral = !currentState?.faction;
+
+    // 只在声望充足时攻打有主城市（声望 >= 200）
+    if (!isNeutral) {
+      const prestige = worldState.factionStats[factionId]?.prestige || 0;
+      if (prestige < 200) continue;
+    }
+
+    // 防御价值 = 到最近敌方 HQ 的距离（越大越好）
+    let minEnemyHQDist = Infinity;
+    for (const [hqFaction, pos] of Object.entries(hqPositions)) {
+      if (hqFaction === factionId) continue;
+      const d = hexDistance(candidate.q, candidate.r, pos.q, pos.r);
+      if (d < minEnemyHQDist) minEnemyHQDist = d;
+    }
+
+    const score = (isNeutral ? 50 : 0) + minEnemyHQDist;
+    if (score > bestScore) {
+      bestScore = score;
+      bestCity = candidate.id;
+    }
+  }
+
+  return bestCity;
+}
+
+/**
+ * 运行所有门派的攻城 AI，返回 { worldState, siegeEvents }
+ * siegeEvents: [ { factionId, cityId, cityName } ]
+ */
+export function runSiegeAI(worldState) {
+  let ws = worldState;
+  const siegeEvents = [];
+
+  for (const factionId of FACTION_IDS) {
+    const targetCityId = chooseSiegeTarget(factionId, ws);
+    if (!targetCityId) continue;
+
+    const { worldState: newWs, launched } = tryLaunchSiege(ws, factionId, targetCityId);
+    if (launched) {
+      ws = newWs;
+      const template = ALL_CITIES.find((c) => c.id === targetCityId);
+      siegeEvents.push({ factionId, cityId: targetCityId, cityName: template?.name || targetCityId });
+    }
+  }
+
+  return { worldState: ws, siegeEvents };
 }
 
 /**
