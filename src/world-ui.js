@@ -85,7 +85,7 @@ function buildTerritoryMap(cityStates) {
  * @param {Object} worldState
  * @param {{ offsetX?: number, offsetY?: number, zoom?: number }} viewState
  */
-export function renderWorldMap(canvas, worldState, viewState = {}) {
+export function renderWorldMap(canvas, worldState, viewState = {}, entries = []) {
   const ctx = canvas.getContext("2d");
   const { offsetX = 0, offsetY = 0, zoom = 1 } = viewState;
 
@@ -123,6 +123,102 @@ export function renderWorldMap(canvas, worldState, viewState = {}) {
       drawSmallCityBuilding(ctx, city, color);
     }
   });
+
+  // 绘制角色图标
+  if (entries.length) {
+    drawCharacterIcons(ctx, worldState, entries);
+  }
+
+  ctx.restore();
+}
+
+// 图片缓存（避免重复创建 Image 对象）
+const _avatarImageCache = new Map();
+
+function getAvatarImage(dataUrl) {
+  if (!dataUrl) return null;
+  if (_avatarImageCache.has(dataUrl)) return _avatarImageCache.get(dataUrl);
+  const img = new Image();
+  img.src = dataUrl;
+  _avatarImageCache.set(dataUrl, img);
+  return img;
+}
+
+/**
+ * 在地图上绘制角色图标
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Object} worldState
+ * @param {Object[]} entries  getEntries() 返回的角色数组（含 base.avatarDataUrl, build.buildId, build.faction.key）
+ */
+function drawCharacterIcons(ctx, worldState, entries) {
+  const charStates = worldState.characterStates || {};
+  const cityTemplates = Object.fromEntries(
+    (worldState.cities || []).map((c) => {
+      const t = ALL_CITIES.find((a) => a.id === c.id);
+      return [c.id, t];
+    })
+  );
+
+  // 按城池聚合驻守角色（错开偏移）
+  const cityGroups = {};
+
+  entries.forEach((entry) => {
+    const cs = charStates[entry.build?.buildId];
+    if (!cs) return;
+
+    let drawQ, drawR;
+    if (cs.state === "garrison" && cs.cityId) {
+      const t = cityTemplates[cs.cityId];
+      if (!t) return;
+      drawQ = t.q; drawR = t.r;
+      const key = cs.cityId;
+      if (!cityGroups[key]) cityGroups[key] = [];
+      cityGroups[key].push({ entry, q: drawQ, r: drawR });
+    } else if (cs.q != null && cs.r != null) {
+      drawSingleCharIcon(ctx, cs.q, cs.r, 0, 0, entry);
+    }
+  });
+
+  // 驻守角色错开排列（最多显示8个，超出省略）
+  Object.values(cityGroups).forEach((group) => {
+    group.slice(0, 8).forEach((item, idx) => {
+      const offsetX = (idx % 4 - 1.5) * 5;
+      const offsetY = Math.floor(idx / 4) * 6 - 3;
+      drawSingleCharIcon(ctx, item.q, item.r, offsetX, offsetY, item.entry);
+    });
+  });
+}
+
+function drawSingleCharIcon(ctx, q, r, offsetX, offsetY, entry) {
+  const { x, y } = hexToPixel(q, r);
+  const cx = x + offsetX;
+  const cy = y + offsetY;
+  const radius = 4;
+  const factionColor = FACTION_COLORS[entry.build?.faction?.key] || "#888";
+
+  ctx.save();
+
+  // 外圈（派系色）
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius + 1, 0, Math.PI * 2);
+  ctx.fillStyle = factionColor;
+  ctx.fill();
+
+  // 头像（clip 到圆形）
+  const avatarUrl = entry.base?.avatarDataUrl;
+  const img = avatarUrl ? getAvatarImage(avatarUrl) : null;
+  if (img && img.complete && img.naturalWidth > 0) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(img, cx - radius, cy - radius, radius * 2, radius * 2);
+  } else {
+    // 无头像：用派系色深色填充
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = factionColor + "cc";
+    ctx.fill();
+  }
 
   ctx.restore();
 }

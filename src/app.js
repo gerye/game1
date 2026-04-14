@@ -198,7 +198,7 @@ async function init() {
   const allBuildsForWorld = await state.storage.getAllBuilds();
   state.worldState = syncCharacterStates(state.worldState, allBuildsForWorld);
   await state.storage.putWorldState(state.worldState);
-  renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+  renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
   renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
 
   startRenderLoop();
@@ -311,7 +311,7 @@ function bindEvents() {
     const builds = await state.storage.getAllBuilds();
     state.worldState = advanceSeason(state.worldState, builds);
     await state.storage.putWorldState(state.worldState);
-    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
     renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
   });
 
@@ -320,7 +320,7 @@ function bindEvents() {
     const winner = factionIds[Math.floor(Math.random() * factionIds.length)];
     state.worldState = applyJianghuPrestige(state.worldState, winner);
     await state.storage.putWorldState(state.worldState);
-    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
     renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
   });
 
@@ -332,7 +332,7 @@ function bindEvents() {
     );
     state.worldState = applyRankedEventPrestige(state.worldState, "tournament", factionRanks);
     await state.storage.putWorldState(state.worldState);
-    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
     renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
   });
 
@@ -351,7 +351,7 @@ function bindEvents() {
       offsetX: e.clientX - state._worldDragStart.x,
       offsetY: e.clientY - state._worldDragStart.y,
     };
-    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
   });
   dom.worldMapCanvas?.addEventListener("mouseup", () => { state._worldDragging = false; });
   dom.worldMapCanvas?.addEventListener("mouseleave", () => { state._worldDragging = false; });
@@ -362,7 +362,7 @@ function bindEvents() {
       ...state.worldViewState,
       zoom: Math.max(0.3, Math.min(5, state.worldViewState.zoom * factor)),
     };
-    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
   }, { passive: false });
   dom.worldBattleOverlay?.addEventListener("click", () => {
     document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1943,7 +1943,7 @@ async function applyBattleRewards() {
   } finally {
     state.rewardProcessing = false;
     setWorldBattleOverlay(false);
-    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
     renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
   }
 }
