@@ -3,7 +3,7 @@
 
 import { WORLD_MAP_RADIUS, WORLD_CITY_TIERS } from "./config.js";
 import {
-  getTerrainAt, TERRAIN_COLORS, ALL_CITIES, hexDistance, inBounds
+  ALL_CITIES, hexDistance, inBounds
 } from "./world-map.js";
 import { FACTION_IDS, computePowerScore } from "./faction-state.js";
 import { getSeasonLabel } from "./world-tick.js";
@@ -210,25 +210,16 @@ function drawHex(ctx, q, r, hexFactionMap) {
   for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
   ctx.closePath();
 
-  const terrain = getTerrainAt(q, r);
-  const terrainColor = TERRAIN_COLORS[terrain] || "#cccccc";
   const faction = hexFactionMap?.get(`${q},${r}`);
-
   if (faction) {
-    // 门派色主导（实色填充），极细地形边框作为纹理提示
     ctx.fillStyle = FACTION_COLORS[faction];
-    ctx.fill();
-    ctx.strokeStyle = terrainColor + "44";
-    ctx.lineWidth = 0.6;
-    ctx.stroke();
   } else {
-    // 中立格：地形色
-    ctx.fillStyle = terrainColor;
-    ctx.fill();
-    ctx.strokeStyle = "#33333344";
-    ctx.lineWidth = 0.3;
-    ctx.stroke();
+    ctx.fillStyle = "#f0eed8";
   }
+  ctx.fill();
+  ctx.strokeStyle = "#00000018";
+  ctx.lineWidth = 0.3;
+  ctx.stroke();
 }
 
 // 辅助：计算某颜色的暗化版本（简单混合黑色）
