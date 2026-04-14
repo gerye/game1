@@ -104,6 +104,7 @@ const dom = {
   advanceSeasonBtn: document.getElementById("advanceSeasonBtn"),
   triggerJianghuBtn: document.getElementById("triggerJianghuBtn"),
   triggerTournamentBtn: document.getElementById("triggerTournamentBtn"),
+  worldFastSimBtn: document.getElementById("worldFastSimBtn"),
 };
 
 const previewCtx = dom.previewCanvas.getContext("2d");
@@ -167,6 +168,7 @@ const state = {
     finalWinnerCode: ""
   },
   rewardProcessing: false,
+  fastSimRunning: false,
   worldState: null,
   worldViewState: { offsetX: 0, offsetY: 0, zoom: 1 },
 };
@@ -211,6 +213,22 @@ async function init() {
 function setWorldBattleOverlay(visible) {
   if (!dom.worldBattleOverlay) return;
   dom.worldBattleOverlay.hidden = !visible;
+}
+
+function fastPickChaosWinner(entries) {
+  const ready = entries.filter((e) => e.build && e.progress);
+  if (!ready.length) return null;
+  const factionScores = {};
+  for (const e of ready) {
+    const key = e.build.faction?.key || e.build.faction;
+    if (!key) continue;
+    const score = (e.progress.level || 1) + Math.random() * 5;
+    factionScores[key] = (factionScores[key] || 0) + score;
+  }
+  const factionEntries = Object.entries(factionScores);
+  if (!factionEntries.length) return null;
+  factionEntries.sort((a, b) => b[1] - a[1]);
+  return factionEntries[0][0];
 }
 
 function bindEvents() {
@@ -358,6 +376,53 @@ function bindEvents() {
       console.error("触发武道会失败：", error);
     });
     document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  dom.worldFastSimBtn?.addEventListener("click", async () => {
+    if (state.fastSimRunning) return;
+    state.fastSimRunning = true;
+    dom.worldFastSimBtn.textContent = "推演中...";
+    dom.worldFastSimBtn.disabled = true;
+
+    const SEASONS_PER_BATTLE = 2;
+    const MAX_SEASONS = 12;
+    let seasonCount = 0;
+    const builds = await state.storage.getAllBuilds();
+
+    while (seasonCount < MAX_SEASONS) {
+      let { worldState } = advanceSeason(state.worldState, builds, null);
+      // 攻城 AI
+      const { worldState: wsS, siegeEvents } = runSiegeAI(worldState);
+      worldState = wsS;
+      for (const evt of siegeEvents) {
+        const currentOwner = worldState.cities.find((c) => c.id === evt.cityId)?.faction;
+        if (!currentOwner) {
+          worldState = applySiegeResult(worldState, evt.cityId, evt.factionId, evt.factionId);
+        } else {
+          const rand = Math.random();
+          const winner = rand > 0.45 ? evt.factionId : currentOwner;
+          worldState = applySiegeResult(worldState, evt.cityId, winner, evt.factionId);
+        }
+      }
+      state.worldState = worldState;
+      seasonCount++;
+
+      if (seasonCount % SEASONS_PER_BATTLE === 0) {
+        const winner = fastPickChaosWinner(getEntries());
+        if (winner) {
+          state.worldState = applyJianghuPrestige(state.worldState, winner);
+        }
+      }
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    await state.storage.putWorldState(state.worldState);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+
+    state.fastSimRunning = false;
+    dom.worldFastSimBtn.textContent = "快速推演";
+    dom.worldFastSimBtn.disabled = false;
   });
 
   // 世界地图平移/缩放

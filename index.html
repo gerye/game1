@@ -39,6 +39,7 @@
             <button id="advanceSeasonBtn" class="ghost-btn">推进时节</button>
             <button id="triggerJianghuBtn" class="ghost-btn">触发江湖争霸</button>
             <button id="triggerTournamentBtn" class="ghost-btn">触发武道会</button>
+            <button id="worldFastSimBtn" class="ghost-btn">快速推演</button>
           </div>
         </div>
         <div class="world-map-layout">
@@ -52,101 +53,10 @@
         </div>
       </section>
 
-      <section class="panel upload-panel" aria-labelledby="upload-heading">
-        <div class="panel-title-row">
-          <div class="panel-heading">
-            <h2 id="upload-heading">2. 识别与建档</h2>
-            <p class="panel-note">上传并识别瓶盖，生成稳定头像、唯一编码和当前版本构筑。</p>
-          </div>
-          <div class="battle-controls">
-            <button id="seedCapsBtn" class="ghost-btn" title="自动生成一批测试用角色数据">生成测试瓶盖</button>
-            <button id="toggleUploadPanelBtn" class="drawer-section-toggle compact-toggle" type="button"
-                    aria-expanded="false" aria-controls="uploadPanelBody">展开识别与建档</button>
-          </div>
-        </div>
-        <div id="uploadPanelBody" class="upload-panel-body" hidden>
-          <form class="cap-form" autocomplete="off">
-            <label class="upload-box" for="photoInput">
-              <input id="photoInput" type="file" accept="image/*" aria-label="上传瓶盖照片">
-              <span>点击或拖拽上传瓶盖照片</span>
-              <small>建议上传单瓶盖图片，保留黑底或纯净背景，以生成稳定头像与唯一编码。</small>
-            </label>
-            <div class="form-grid">
-              <label>
-                名称
-                <input id="capNameInput" type="text" placeholder="例如：可乐蓝盖" maxlength="30">
-              </label>
-              <label>
-                备注
-                <input id="capNoteInput" type="text" placeholder="例如：便利店回收箱拾取" maxlength="60">
-              </label>
-              <label>
-                颜色数
-                <select id="colorCountInput" aria-label="颜色数量">
-                  <option value="1">1 色</option>
-                  <option value="1.5">1.5 色</option>
-                  <option value="2" selected>2 色</option>
-                  <option value="2.5">2.5 色</option>
-                  <option value="3">3 色</option>
-                  <option value="3.5">3+ 色</option>
-                </select>
-              </label>
-              <label>
-                复杂度
-                <select id="complexityInput" aria-label="图案复杂度">
-                  <option value="0">简易</option>
-                  <option value="1" selected>基础</option>
-                  <option value="2">复杂</option>
-                  <option value="3">繁复</option>
-                </select>
-              </label>
-              <label>
-                对称度
-                <select id="symmetryInput" aria-label="图案对称度">
-                  <option value="0">无对称</option>
-                  <option value="1" selected>规整</option>
-                  <option value="2">基础对称</option>
-                  <option value="3">华丽对称</option>
-                </select>
-              </label>
-            </div>
-          </form>
-          <div class="analysis-area">
-            <div class="preview-card">
-              <canvas id="previewCanvas" width="240" height="240" aria-label="瓶盖预览图像" role="img"></canvas>
-              <button id="analyzeBtn" class="primary-btn" disabled>保存并生成属性</button>
-            </div>
-            <div class="analysis-card" id="analysisCard" role="region" aria-label="识别结果">
-              <h3>识别结果</h3>
-              <p class="muted">上传瓶盖照片后，这里会展示基础编码、派系、潜力和属性预览。</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="panel codex-panel" aria-labelledby="codex-heading">
-        <div class="panel-title-row">
-          <div class="panel-heading">
-            <h2 id="codex-heading">3. 角色操作区</h2>
-            <p class="panel-note">按势力浏览角色卡，点击后查看当前属性、装备、技能和人物小传。</p>
-          </div>
-          <div class="battle-controls">
-            <button id="resetAllLevelsBtn" class="ghost-btn" title="清零所有角色等级与进度（保留基础资料）">初始化全部角色</button>
-          </div>
-        </div>
-        <div class="codex-layout">
-          <div id="capGrid" class="cap-grid" role="list" aria-label="角色列表"></div>
-          <div id="capDetail" class="detail-card" role="region" aria-label="角色详情" aria-live="polite">
-            <h3>角色详情</h3>
-            <p class="muted">点击左侧角色卡查看基础信息、生成属性和当前状态。</p>
-          </div>
-        </div>
-      </section>
-
       <section class="panel battlefield-panel" aria-labelledby="battle-heading">
         <div class="panel-title-row">
           <div class="panel-heading">
-            <h2 id="battle-heading">4. 自动战场</h2>
+            <h2 id="battle-heading">2. 自动战场</h2>
             <p class="panel-note">江湖争霸、武道会、排位赛与大事记共用同一块战场区域。</p>
           </div>
           <div class="battle-toolbar" role="toolbar" aria-label="战场控制">
@@ -216,6 +126,97 @@
               <div id="battleLog" class="battle-log" role="log" aria-live="polite" aria-label="实时战斗日志"></div>
             </div>
           </aside>
+        </div>
+      </section>
+
+      <section class="panel codex-panel" aria-labelledby="codex-heading">
+        <div class="panel-title-row">
+          <div class="panel-heading">
+            <h2 id="codex-heading">3. 角色操作区</h2>
+            <p class="panel-note">按势力浏览角色卡，点击后查看当前属性、装备、技能和人物小传。</p>
+          </div>
+          <div class="battle-controls">
+            <button id="resetAllLevelsBtn" class="ghost-btn" title="清零所有角色等级与进度（保留基础资料）">初始化全部角色</button>
+          </div>
+        </div>
+        <div class="codex-layout">
+          <div id="capGrid" class="cap-grid" role="list" aria-label="角色列表"></div>
+          <div id="capDetail" class="detail-card" role="region" aria-label="角色详情" aria-live="polite">
+            <h3>角色详情</h3>
+            <p class="muted">点击左侧角色卡查看基础信息、生成属性和当前状态。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel upload-panel" aria-labelledby="upload-heading">
+        <div class="panel-title-row">
+          <div class="panel-heading">
+            <h2 id="upload-heading">4. 识别与建档</h2>
+            <p class="panel-note">上传并识别瓶盖，生成稳定头像、唯一编码和当前版本构筑。</p>
+          </div>
+          <div class="battle-controls">
+            <button id="seedCapsBtn" class="ghost-btn" title="自动生成一批测试用角色数据">生成测试瓶盖</button>
+            <button id="toggleUploadPanelBtn" class="drawer-section-toggle compact-toggle" type="button"
+                    aria-expanded="false" aria-controls="uploadPanelBody">展开识别与建档</button>
+          </div>
+        </div>
+        <div id="uploadPanelBody" class="upload-panel-body" hidden>
+          <form class="cap-form" autocomplete="off">
+            <label class="upload-box" for="photoInput">
+              <input id="photoInput" type="file" accept="image/*" aria-label="上传瓶盖照片">
+              <span>点击或拖拽上传瓶盖照片</span>
+              <small>建议上传单瓶盖图片，保留黑底或纯净背景，以生成稳定头像与唯一编码。</small>
+            </label>
+            <div class="form-grid">
+              <label>
+                名称
+                <input id="capNameInput" type="text" placeholder="例如：可乐蓝盖" maxlength="30">
+              </label>
+              <label>
+                备注
+                <input id="capNoteInput" type="text" placeholder="例如：便利店回收箱拾取" maxlength="60">
+              </label>
+              <label>
+                颜色数
+                <select id="colorCountInput" aria-label="颜色数量">
+                  <option value="1">1 色</option>
+                  <option value="1.5">1.5 色</option>
+                  <option value="2" selected>2 色</option>
+                  <option value="2.5">2.5 色</option>
+                  <option value="3">3 色</option>
+                  <option value="3.5">3+ 色</option>
+                </select>
+              </label>
+              <label>
+                复杂度
+                <select id="complexityInput" aria-label="图案复杂度">
+                  <option value="0">简易</option>
+                  <option value="1" selected>基础</option>
+                  <option value="2">复杂</option>
+                  <option value="3">繁复</option>
+                </select>
+              </label>
+              <label>
+                对称度
+                <select id="symmetryInput" aria-label="图案对称度">
+                  <option value="0">无对称</option>
+                  <option value="1" selected>规整</option>
+                  <option value="2">基础对称</option>
+                  <option value="3">华丽对称</option>
+                </select>
+              </label>
+            </div>
+          </form>
+          <div class="analysis-area">
+            <div class="preview-card">
+              <canvas id="previewCanvas" width="240" height="240" aria-label="瓶盖预览图像" role="img"></canvas>
+              <button id="analyzeBtn" class="primary-btn" disabled>保存并生成属性</button>
+            </div>
+            <div class="analysis-card" id="analysisCard" role="region" aria-label="识别结果">
+              <h3>识别结果</h3>
+              <p class="muted">上传瓶盖照片后，这里会展示基础编码、派系、潜力和属性预览。</p>
+            </div>
+          </div>
         </div>
       </section>
 
