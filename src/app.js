@@ -104,6 +104,7 @@ const dom = {
   advanceSeasonBtn: document.getElementById("advanceSeasonBtn"),
   triggerJianghuBtn: document.getElementById("triggerJianghuBtn"),
   triggerTournamentBtn: document.getElementById("triggerTournamentBtn"),
+  triggerRankingBtn: document.getElementById("triggerRankingBtn"),
   worldFastSimBtn: document.getElementById("worldFastSimBtn"),
 };
 
@@ -422,6 +423,13 @@ function bindEvents() {
     // 触发真实武道会；声望在 finishTournament 结束时自动发放
     startTournamentFlow().catch((error) => {
       console.error("触发武道会失败：", error);
+    });
+    document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  dom.triggerRankingBtn?.addEventListener("click", () => {
+    startRankingFlow().catch((error) => {
+      console.error("触发排位赛失败：", error);
     });
     document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
