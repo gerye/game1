@@ -169,6 +169,8 @@ const state = {
   fastSimRunning: false,
   seasonDuelQueue: [],
   seasonSiegePending: false,
+  siegeBattleQueue: [],
+  currentSiege: null,
   worldState: null,
   worldViewState: { offsetX: 0, offsetY: 0, zoom: 1 },
 };
@@ -372,47 +374,8 @@ function bindEvents() {
 
   // 世界地图仲裁者操作
   dom.advanceSeasonBtn?.addEventListener("click", async () => {
-    if (state.seasonDuelQueue?.length > 0 || state.seasonSiegePending) return; // 防止重复触发
-
-    const builds = await state.storage.getAllBuilds();
-    // 1. 推进时节（只更新 AI 状态，不做事件）
-    const { worldState } = advanceSeason(state.worldState, builds);
-    state.worldState = worldState;
-
-    // 2. 结算驻守经验
-    const garrisonResults = [];
-    for (const build of builds) {
-      const cs = worldState.characterStates[build.buildId];
-      if (!cs || cs.state !== "garrison") continue;
-      const prog = state.progress.find((p) => p.buildId === build.buildId);
-      if (!prog) continue;
-      const xpGain = Math.round(expToNextLevel(prog.level || 1) * 0.1);
-      const updatedProg = { ...prog };
-      grantExp(updatedProg, xpGain);
-      await state.storage.putProgress(updatedProg);
-      const entry = getEntries().find((e) => e.build?.buildId === build.buildId);
-      garrisonResults.push({ name: entry?.displayName || build.buildId, xpGain, avatarDataUrl: entry?.base?.avatarDataUrl || "" });
-    }
-
-    // 3. 游历奇遇事件
-    await refreshAll();
-    const currentEntries = getEntries();
-    const roamingEntries = currentEntries.filter((e) => {
-      const cs = worldState.characterStates[e.build?.buildId];
-      return cs?.state === "roaming" && e.build && e.progress;
-    });
-    const eventResults = roamingEntries.length > 0
-      ? await applyPreBattleEvents(roamingEntries)
-      : { logs: [], details: [] };
-    await refreshAll();
-
-    // 4. 检测相邻单挑
-    const duelPairs = detectAdjacentDuels(worldState, builds);
-
-    // 5. 保存世界状态
-    await state.storage.putWorldState(state.worldState);
-
-    // 6. 渲染时节事件面板
+    if (state.seasonDuelQueue?.length > 0 || state.seasonSiegePending) return;
+    const { garrisonResults, eventResults, duelPairs } = await runSeasonAdvance();
     state.pendingBattle = null;
     state.battle = null;
     setBattleSurfaceState({ showPrelude: true, showCanvas: false });
@@ -564,37 +527,23 @@ async function runFastSimulationStep() {
     // 无尽推演：[season×2 + chaos] ×3 → 武道会/秘境探索/排位赛（循环）
     const action = getEndlessFastSimAction(state.fastSimMeta);
     if (action?.type === "season") {
-      const builds = await state.storage.getAllBuilds();
-      let { worldState } = advanceSeason(state.worldState, builds, null);
-      worldState = ensurePrecomputed(worldState);
-      const { worldState: wsS, siegeEvents } = runSiegeAI(worldState, builds);
-      worldState = wsS;
-      for (const evt of siegeEvents) {
-        worldState = runOrdinarySiege(worldState, builds, evt.factionId, evt.cityId);
+      const { garrisonResults, eventResults, duelPairs } = await runSeasonAdvance();
+      // 渲染时节结算面板（快速展示结果）
+      state.pendingBattle = null;
+      state.battle = null;
+      setBattleSurfaceState({ showPrelude: true, showCanvas: false });
+      renderSeasonPrelude(garrisonResults, eventResults, duelPairs);
+      setWorldBattleOverlay(true);
+      // 立刻自动触发 onConfirm（不等用户点击）
+      if (duelPairs.length > 0) {
+        state.seasonDuelQueue = [...duelPairs];
+        state.seasonSiegePending = true;
+        const next = state.seasonDuelQueue.shift();
+        startSeasonDuel(next);
+      } else {
+        state.seasonSiegePending = false;
+        runSeasonSiege();
       }
-      worldState = checkConnectivity(worldState, builds);
-      const extWar = checkExtinctionWar(worldState);
-      if (extWar) {
-        const { worldState: wsExt, factionChanges } = runExtinctionWar(worldState, builds, extWar.targetFaction, extWar.attackers);
-        worldState = wsExt;
-        await applyFactionChanges(factionChanges, builds);
-      }
-      state.worldState = worldState;
-      await state.storage.putWorldState(state.worldState);
-
-      // 游历奇遇事件（fast sim 静默应用，不渲染面板）
-      await refreshAll();
-      const fastSimRoamingEntries = getEntries().filter((e) => {
-        const cs = worldState.characterStates[e.build?.buildId];
-        return cs?.state === "roaming" && e.build && e.progress;
-      });
-      if (fastSimRoamingEntries.length > 0) {
-        await applyPreBattleEvents(fastSimRoamingEntries);
-      }
-
-      await saveFastSimMeta(advanceEndlessFastSimMeta(state.fastSimMeta));
-      renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-      renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
       return;
     }
     if (action?.type === "tournament") {
@@ -2335,6 +2284,53 @@ function renderBattle() {
   if (state.battle) {
     renderBattlePanels();
   }
+}
+
+async function runSeasonAdvance() {
+  const builds = await state.storage.getAllBuilds();
+
+  // 1. 推进时节
+  const { worldState } = advanceSeason(state.worldState, builds);
+  state.worldState = worldState;
+
+  // 2. 结算驻守经验
+  const garrisonResults = [];
+  for (const build of builds) {
+    const cs = worldState.characterStates[build.buildId];
+    if (!cs || cs.state !== "garrison") continue;
+    const prog = state.progress.find((p) => p.buildId === build.buildId);
+    if (!prog) continue;
+    const xpGain = Math.round(expToNextLevel(prog.level || 1) * 0.1);
+    const updatedProg = { ...prog };
+    grantExp(updatedProg, xpGain);
+    await state.storage.putProgress(updatedProg);
+    const entry = getEntries().find((e) => e.build?.buildId === build.buildId);
+    garrisonResults.push({
+      name: entry?.displayName || build.buildId,
+      xpGain,
+      avatarDataUrl: entry?.base?.avatarDataUrl || "",
+    });
+  }
+
+  // 3. 游历奇遇事件
+  await refreshAll();
+  const currentEntries = getEntries();
+  const roamingEntries = currentEntries.filter((e) => {
+    const cs = worldState.characterStates[e.build?.buildId];
+    return cs?.state === "roaming" && e.build && e.progress;
+  });
+  const eventResults = roamingEntries.length > 0
+    ? await applyPreBattleEvents(roamingEntries)
+    : { logs: [], details: [] };
+  await refreshAll();
+
+  // 4. 检测相邻单挑
+  const duelPairs = detectAdjacentDuels(worldState, builds);
+
+  // 5. 保存世界状态
+  await state.storage.putWorldState(state.worldState);
+
+  return { garrisonResults, eventResults, duelPairs };
 }
 
 function renderSeasonPrelude(garrisonResults, eventResults, duelPairs) {
