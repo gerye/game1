@@ -11,21 +11,11 @@ const FAST_SIM_STAGES = [
 
 const FAST_SIM_EXPLORATION_STAGES = [5, 15, 25, 35, 45];
 const FAST_SIM_REWARD_SLOTS = Object.keys(EQUIPMENT_SLOT_LABELS);
-// 半年单元：6组 [season, season, chaos]（12个时节）
-const _half = [
-  { type: "season" }, { type: "season" }, { type: "chaos" },
-  { type: "season" }, { type: "season" }, { type: "chaos" },
-  { type: "season" }, { type: "season" }, { type: "chaos" },
-  { type: "season" }, { type: "season" }, { type: "chaos" },
-  { type: "season" }, { type: "season" }, { type: "chaos" },
-  { type: "season" }, { type: "season" }, { type: "chaos" },
-];
-// 大循环（3年，114步）：
-//   前半年×6 → 秘境探索 → 后半年×6 → 武道会（年1、年2）/ 排位赛（年3）
 const ENDLESS_FAST_SIM_CYCLE = [
-  ..._half, { type: "exploration" }, ..._half, { type: "tournament" }, // 年1
-  ..._half, { type: "exploration" }, ..._half, { type: "tournament" }, // 年2
-  ..._half, { type: "exploration" }, ..._half, { type: "ranking" },    // 年3
+  ...Array.from({ length: 10 }, () => ({ type: "chaos" })),
+  { type: "exploration" },
+  ...Array.from({ length: 10 }, () => ({ type: "chaos" })),
+  { type: "tournament" }
 ];
 
 export function normalizeFastSimMeta(meta = {}) {
@@ -100,16 +90,7 @@ export function advanceEndlessFastSimMeta(meta = {}) {
   });
 }
 
-// 武道会奖励：冠军 SS，亚军 S
 export function buildEndlessTournamentRewardSpec(pickSlot = pickRandomFastSimSlot) {
-  return {
-    champion: { grade: "SS", slot: pickSlot() },
-    runnerUp: { grade: "S", slot: pickSlot() }
-  };
-}
-
-// 排位赛奖励：冠军 SSS，亚军 SS
-export function buildEndlessRankingRewardSpec(pickSlot = pickRandomFastSimSlot) {
   return {
     champion: { grade: "SSS", slot: pickSlot() },
     runnerUp: { grade: "SS", slot: pickSlot() }

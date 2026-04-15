@@ -171,12 +171,9 @@ export function getCityOwner(cityId, cities) {
   return city ? city.faction : null;
 }
 
-/** 创建初始 worldState.cities 数组：只有 HQ 归属各门派，其余全部中立 */
+/** 创建初始 worldState.cities 数组 */
 export function createInitialCityStates() {
-  return ALL_CITIES.map((c) => ({
-    id: c.id,
-    faction: c.tier === WORLD_CITY_TIERS.HQ ? c.faction : null,
-  }));
+  return ALL_CITIES.map((c) => ({ id: c.id, faction: c.faction }));
 }
 
 /**

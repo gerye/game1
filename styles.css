@@ -2277,9 +2277,6 @@ tbody tr:last-child td { border-bottom: none; }
 .log-line {
   padding: 2px 0;
   border-bottom: 1px solid #333;
-  word-break: break-all;
-  overflow-wrap: break-word;
-  white-space: normal;
 }
 
 .world-panel { color: inherit; }
