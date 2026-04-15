@@ -1,5 +1,5 @@
 ﻿
-import { BATTLE_LOG_LIMIT, FACTIONS, GAME_VERSION, GRADE_SCALE, META_KEYS, ROLE_LABELS, TERRAIN_TYPES, WORLD_CHARACTER_STATES } from "./config.js";
+import { BATTLE_LOG_LIMIT, FACTIONS, GAME_VERSION, GRADE_SCALE, META_KEYS, ROLE_LABELS, TERRAIN_TYPES, WORLD_CHARACTER_STATES, WORLD_CITY_TIERS } from "./config.js";
 import { createBattleState as createBattleRuntime, renderBattleScene, updateBattleState } from "./battle-system.js";
 import { getFactionSections, renderBuildGrid as renderBuildGridView, renderCapDetail as renderCapDetailView, renderHeroStats as renderHeroStatsView } from "./character-ui.js";
 import { renderBloodlineDatabase as renderBloodlineDatabaseView, renderCharacterDatabase as renderCharacterDatabaseView, renderEquipmentDatabase as renderEquipmentDatabaseView, renderEventDatabase as renderEventDatabaseView, renderSkillDatabase as renderSkillDatabaseView, renderStatusDatabase as renderStatusDatabaseView } from "./database-ui.js";
@@ -37,11 +37,12 @@ import { normalizeStoredCharacterData } from "./storage-normalizer.js";
 import { getTournamentMatchState, renderTournamentBracket, renderTournamentFullTree, renderTournamentPanelsHtml, renderTournamentPreludeHtml } from "./tournament-ui.js";
 import { advanceTournamentWinner, buildTournamentState, getNextTournamentMatch } from "./tournament-utils.js";
 import { clamp, escapeHtml, gradeColor, gradeIndex, signedPct } from "./utils.js";
-import { createWorldState, syncCharacterStates, advanceSeason, detectAdjacentDuels } from "./world-tick.js";
-import { buildCityTerritories } from "./world-map.js";
+import { createWorldState, syncCharacterStates, advanceSeason, detectAdjacentDuels, addWorldLog } from "./world-tick.js";
+import { buildCityTerritories, INITIAL_CITIES } from "./world-map.js";
 import { renderWorldMap, renderArbiterPanel } from "./world-ui.js";
 import { applyJianghuPrestige, applyRankedEventPrestige, runSiegeAI } from "./world-events.js";
-import { runOrdinarySiege, checkExtinctionWar, runExtinctionWar } from "./world-siege.js";
+import { runOrdinarySiege, checkExtinctionWar, runExtinctionWar, selectCombatants, injureCombatants, injureGarrisonedAt } from "./world-siege.js";
+import { transferCity, FACTION_IDS } from "./faction-state.js";
 import { checkConnectivity, ensurePrecomputed } from "./world-connectivity.js";
 
 const dom = {
@@ -521,6 +522,9 @@ async function runFastSimulationStep() {
       }
       return;
     }
+
+    // 攻城战队列进行中：等待 applyBattleRewards 触发 startNextSiegeBattle
+    if (state.currentSiege || state.siegeBattleQueue.length > 0) return;
 
     if (state.tournamentBattle) return;
 
@@ -1998,9 +2002,10 @@ async function applyBattleRewards() {
         await appendChronicleEntry(buildFactionVictoryMilestoneEntry(state.battle.winner, factionWins));
       }
     }
-    // 世界地图声望：仅江湖争霸获得（单挑不获声望）
+    // 世界地图声望：仅江湖争霸获得（单挑不获声望，攻城战不获声望）
     const isSeasonDuel = state.seasonSiegePending;
-    if (state.battle.winner && state.worldState && !isSeasonDuel) {
+    const isSiegeBattle = state.currentSiege !== null;
+    if (state.battle.winner && state.worldState && !isSeasonDuel && !isSiegeBattle) {
       state.worldState = applyJianghuPrestige(state.worldState, state.battle.winner.key);
       await state.storage.putWorldState(state.worldState);
       renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
@@ -2033,7 +2038,7 @@ async function applyBattleRewards() {
       }
     }
     await resolveChaosBloodlineTasks(state.battle.entities, latestBuildByBuildId, latestProgressByBuildId);
-    if (state.fastSim.enabled && state.fastSim.mode === "endless" && !isSeasonDuel) {
+    if (state.fastSim.enabled && state.fastSim.mode === "endless" && !isSeasonDuel && !isSiegeBattle) {
       await saveFastSimMeta(advanceEndlessFastSimMeta(state.fastSimMeta));
     }
     await refreshAll();
@@ -2049,6 +2054,92 @@ async function applyBattleRewards() {
     if (state.seasonSiegePending) {
       state.seasonSiegePending = false;
       runSeasonSiege();
+      return;
+    }
+    // 攻城战队列：结算当前攻城结果
+    if (state.currentSiege) {
+      const siege = state.currentSiege;
+      state.currentSiege = null;
+      const winnerKey = state.battle?.winner?.key;
+      const builds = await state.storage.getAllBuilds();
+
+      if (siege.type === "ordinary") {
+        if (winnerKey === siege.attackerFaction) {
+          if (siege.defenderFaction) {
+            state.worldState = injureGarrisonedAt(state.worldState, siege.cityId, siege.defenderFaction);
+            state.worldState = injureCombatants(state.worldState, siege.defenderBuilds, siege.defenderFaction);
+          }
+          state.worldState = {
+            ...state.worldState,
+            cities: transferCity(state.worldState.cities, siege.cityId, siege.attackerFaction),
+          };
+          state.worldState = addWorldLog(state.worldState, `攻城战：${siege.attackerFaction} 占领城池！`);
+        } else {
+          state.worldState = injureCombatants(state.worldState, siege.attackerBuilds, siege.attackerFaction);
+          state.worldState = addWorldLog(state.worldState, `攻城战：${siege.attackerFaction} 攻城失败！`);
+        }
+      } else if (siege.type === "extinction") {
+        // 防守方参战弟子全员重伤（无论胜负）
+        state.worldState = injureCombatants(state.worldState, siege.defenderBuilds, siege.targetFaction);
+
+        if (winnerKey === siege.targetFaction) {
+          // 防守方守住：三大城归防守方，进攻方弟子重伤
+          const largeCityIds = INITIAL_CITIES
+            .filter((c) => c.faction === siege.targetFaction && c.tier === WORLD_CITY_TIERS.LARGE)
+            .map((c) => c.id);
+          let cities = [...state.worldState.cities];
+          for (const cid of largeCityIds) cities = transferCity(cities, cid, siege.targetFaction);
+          state.worldState = { ...state.worldState, cities };
+          for (const { factionId } of siege.attackers) {
+            const atkBuilds = siege.attackerBuilds.filter(
+              (b) => (b.faction?.key || b.faction) === factionId
+            );
+            state.worldState = injureCombatants(state.worldState, atkBuilds, factionId);
+          }
+          state.worldState = addWorldLog(state.worldState, `灭门战：${siege.targetFaction} 守住门派！`);
+        } else {
+          // 进攻方胜：winner 取 HQ，失败进攻方重伤，防守方弟子分配
+          const hqId = `${siege.targetFaction}-hq`;
+          state.worldState = {
+            ...state.worldState,
+            cities: transferCity(state.worldState.cities, hqId, winnerKey),
+          };
+          const loserFactions = siege.attackers
+            .map((a) => a.factionId)
+            .filter((f) => f !== winnerKey);
+          for (const fid of loserFactions) {
+            const fBuilds = siege.attackerBuilds.filter(
+              (b) => (b.faction?.key || b.faction) === fid
+            );
+            state.worldState = injureCombatants(state.worldState, fBuilds, fid);
+          }
+          const defBuilds = siege.defenderBuilds;
+          const half = Math.floor(defBuilds.length / 2);
+          const joinWinner = defBuilds.slice(0, half);
+          const joinOthers = defBuilds.slice(half);
+          const otherFactions = FACTION_IDS.filter(
+            (f) => f !== siege.targetFaction && f !== winnerKey
+          );
+          const factionChanges = [];
+          for (const b of joinWinner) {
+            factionChanges.push({ buildId: b.buildId, newFaction: winnerKey });
+          }
+          for (let i = 0; i < joinOthers.length; i++) {
+            const targetOther = otherFactions.length > 0
+              ? otherFactions[i % otherFactions.length]
+              : winnerKey;
+            factionChanges.push({ buildId: joinOthers[i].buildId, newFaction: targetOther });
+          }
+          await applyFactionChanges(factionChanges, builds);
+          state.worldState = addWorldLog(
+            state.worldState,
+            `灭门战结束：${winnerKey} 胜出，${siege.targetFaction} 覆灭！`
+          );
+        }
+      }
+
+      await state.storage.putWorldState(state.worldState);
+      startNextSiegeBattle();
       return;
     }
     setWorldBattleOverlay(false);
@@ -2390,23 +2481,133 @@ async function applyFactionChanges(factionChanges, builds) {
 async function runSeasonSiege() {
   const builds = await state.storage.getAllBuilds();
   let ws = ensurePrecomputed(state.worldState);
+
+  // 门派 AI 决定攻城事件
   const { worldState: wsS, siegeEvents } = runSiegeAI(ws, builds);
   ws = wsS;
+
+  // 构建攻城战队列
+  state.siegeBattleQueue = [];
   for (const evt of siegeEvents) {
-    ws = runOrdinarySiege(ws, builds, evt.factionId, evt.cityId);
+    const attackerFaction = evt.factionId;
+    const cityId = evt.cityId;
+    const defenderFaction = ws.cities.find((c) => c.id === cityId)?.faction || null;
+
+    const atkBuilds = builds.filter((b) => (b.faction?.key || b.faction) === attackerFaction);
+    const defBuilds = defenderFaction
+      ? builds.filter((b) => (b.faction?.key || b.faction) === defenderFaction)
+      : [];
+
+    const attackerBuilds = selectCombatants(atkBuilds, ws.characterStates, 3, 1 / 3);
+    const defenderBuilds = selectCombatants(defBuilds, ws.characterStates, 5, 1 / 3);
+
+    state.siegeBattleQueue.push({
+      type: "ordinary",
+      attackerFaction,
+      defenderFaction,
+      cityId,
+      attackerBuilds,
+      defenderBuilds,
+    });
   }
-  ws = checkConnectivity(ws, builds);
+
+  // 检测灭门战
   const extWar = checkExtinctionWar(ws);
   if (extWar) {
-    const { worldState: wsExt, factionChanges } = runExtinctionWar(ws, builds, extWar.targetFaction, extWar.attackers);
-    ws = wsExt;
-    await applyFactionChanges(factionChanges, builds);
+    const defBuilds = builds.filter((b) => (b.faction?.key || b.faction) === extWar.targetFaction);
+    const allAttackerBuilds = [];
+    for (const { factionId, citiesHeld } of extWar.attackers) {
+      const fBuilds = builds.filter((b) => (b.faction?.key || b.faction) === factionId);
+      const ratio = citiesHeld.length >= 3 ? 1.0 : citiesHeld.length === 2 ? 2 / 3 : 1 / 3;
+      const selected = selectCombatants(fBuilds, ws.characterStates, 3, ratio);
+      allAttackerBuilds.push(...selected);
+    }
+    // 进攻方声望清零（预处理）
+    const newFactionStats = { ...ws.factionStats };
+    for (const { factionId } of extWar.attackers) {
+      newFactionStats[factionId] = { ...newFactionStats[factionId], prestige: 0 };
+    }
+    ws = { ...ws, factionStats: newFactionStats };
+
+    state.siegeBattleQueue.push({
+      type: "extinction",
+      targetFaction: extWar.targetFaction,
+      attackers: extWar.attackers,
+      attackerBuilds: allAttackerBuilds,
+      defenderBuilds: [...defBuilds],
+    });
   }
+
   state.worldState = ws;
   await state.storage.putWorldState(state.worldState);
-  setWorldBattleOverlay(false);
-  renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-  renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
+  startNextSiegeBattle();
+}
+
+async function startNextSiegeBattle() {
+  if (state.siegeBattleQueue.length === 0) {
+    // 所有攻城战结束：连通性检查，刷新地图
+    const builds = await state.storage.getAllBuilds();
+    state.worldState = checkConnectivity(state.worldState, builds);
+    await state.storage.putWorldState(state.worldState);
+    setWorldBattleOverlay(false);
+    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
+    // 无尽推演：队列清空时统一推进 fastSimMeta
+    if (state.fastSim.enabled && state.fastSim.mode === "endless") {
+      await saveFastSimMeta(advanceEndlessFastSimMeta(state.fastSimMeta));
+    }
+    return;
+  }
+
+  const siege = state.siegeBattleQueue.shift();
+  state.currentSiege = siege;
+
+  const allEntries = getEntries();
+  const participants = [...siege.attackerBuilds, ...siege.defenderBuilds];
+  const entries = participants
+    .map((b) => allEntries.find((e) => e.build?.buildId === b.buildId))
+    .filter(Boolean);
+
+  if (entries.length < 2) {
+    // 参战弟子不足，随机结算兜底
+    state.currentSiege = null;
+    if (siege.type === "ordinary") {
+      const builds = await state.storage.getAllBuilds();
+      state.worldState = runOrdinarySiege(
+        state.worldState, builds, siege.attackerFaction, siege.cityId
+      );
+      await state.storage.putWorldState(state.worldState);
+    }
+    startNextSiegeBattle();
+    return;
+  }
+
+  setWorldBattleOverlay(true);
+
+  const competitionType = siege.type === "extinction" ? "extinction" : "siege";
+  state.battle = createBattleRuntime({
+    entries,
+    skills: state.skills,
+    equipment: state.equipment,
+    statuses: state.statuses,
+    factionWins: state.winSummary?.byFaction || {},
+    speed: Number(dom.speedSelect.value),
+    cameraMode: dom.cameraSelect.value,
+    competitionType,
+    defenderFactionKey: siege.type === "extinction" ? siege.targetFaction : null,
+  });
+
+  state.activeBattleMode = "chaos";
+  state.pendingBattle = null;
+  setBattleSurfaceState({ showPrelude: false, showCanvas: true });
+  setBattleControlState({
+    chaosDisabled: true,
+    tournamentDisabled: true,
+    explorationDisabled: true,
+    pauseDisabled: false,
+    resetDisabled: false,
+  });
+  await refreshAll();
 }
 
 function renderBattlePrelude() {

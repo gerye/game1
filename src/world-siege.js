@@ -67,7 +67,7 @@ function resolveBattle(attackers, defenders, seed) {
 
 // ── 重伤工具 ─────────────────────────────────────
 
-function injureCombatants(worldState, combatants, factionKey) {
+export function injureCombatants(worldState, combatants, factionKey) {
   if (combatants.length === 0) return worldState;
   const hqId = `${factionKey}-hq`;
   const newCs = { ...worldState.characterStates };
@@ -86,7 +86,7 @@ function injureCombatants(worldState, combatants, factionKey) {
 }
 
 /** 将驻守在某城市的指定门派弟子全部重伤回 HQ */
-function injureGarrisonedAt(worldState, cityId, factionKey) {
+export function injureGarrisonedAt(worldState, cityId, factionKey) {
   const hqId = `${factionKey}-hq`;
   const newCs = { ...worldState.characterStates };
   for (const [buildId, cs] of Object.entries(worldState.characterStates)) {
