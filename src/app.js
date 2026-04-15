@@ -201,6 +201,33 @@ async function init() {
   if (!state.worldState.cityTerritories) {
     state.worldState = { ...state.worldState, cityTerritories: buildCityTerritories() };
   }
+  // 迁移旧 city ID（jiaoting→palace, mojiao→demon, xiandao→isle, hundian→soul）
+  {
+    const _cityIdPrefixMap = { "jiaoting": "palace", "mojiao": "demon", "xiandao": "isle", "hundian": "soul" };
+    const _oldCharStates = state.worldState.characterStates || {};
+    let _needsCityMigration = false;
+    for (const cs of Object.values(_oldCharStates)) {
+      if (cs.cityId) {
+        for (const old of Object.keys(_cityIdPrefixMap)) {
+          if (cs.cityId.startsWith(old + "-")) { _needsCityMigration = true; break; }
+        }
+      }
+      if (_needsCityMigration) break;
+    }
+    if (_needsCityMigration) {
+      const _migratedStates = {};
+      for (const [bid, cs] of Object.entries(_oldCharStates)) {
+        let cityId = cs.cityId;
+        if (cityId) {
+          for (const [old, newId] of Object.entries(_cityIdPrefixMap)) {
+            cityId = cityId.replace(old + "-", newId + "-");
+          }
+        }
+        _migratedStates[bid] = { ...cs, cityId };
+      }
+      state.worldState = { ...state.worldState, characterStates: _migratedStates };
+    }
+  }
   const allBuildsForWorld = await state.storage.getAllBuilds();
   state.worldState = syncCharacterStates(state.worldState, allBuildsForWorld);
   await state.storage.putWorldState(state.worldState);
