@@ -157,3 +157,112 @@ export function renderBattlePrelude({
 
   container.querySelector("#preludeStartBtn")?.addEventListener("click", onStart, { once: true });
 }
+
+/**
+ * 渲染时节事件面板（驻守XP + 游历奇遇 + 单挑配对）
+ */
+export function renderSeasonPrelude({
+  container,
+  summaryContainer,
+  logContainer,
+  garrisonResults,
+  eventResults,
+  duelPairs,
+  allEntries,
+  escapeHtml,
+  onConfirm
+}) {
+  const duelEntries = duelPairs.map(({ buildA, buildB }) => {
+    const entryA = allEntries.find((e) => e.build?.buildId === buildA.buildId);
+    const entryB = allEntries.find((e) => e.build?.buildId === buildB.buildId);
+    return { nameA: entryA?.displayName || buildA.buildId, nameB: entryB?.displayName || buildB.buildId, buildA, buildB };
+  });
+
+  const totalEvents = garrisonResults.length + (eventResults?.details?.length || 0) + duelEntries.length;
+
+  summaryContainer.innerHTML = `
+    <div class="summary-row"><span>状态</span><strong>时节结算</strong></div>
+    <div class="summary-row"><span>驻守</span><strong>${garrisonResults.length} 人</strong></div>
+    <div class="summary-row"><span>游历</span><strong>${eventResults?.details?.length || 0} 人</strong></div>
+    <div class="summary-row"><span>单挑</span><strong>${duelEntries.length} 场</strong></div>
+  `;
+
+  const logs = [
+    ...garrisonResults.map((r) => `[驻守] ${r.name} 获得 ${r.xpGain} 经验`),
+    ...(eventResults?.logs || [])
+  ];
+  logContainer.innerHTML = logs
+    .slice()
+    .reverse()
+    .map((entry) => `<div class="battle-log-entry">${escapeHtml(entry)}</div>`)
+    .join("");
+
+  const garrisonHtml = garrisonResults.length
+    ? `<h4 style="margin:8px 0 4px;color:#888">驻守（获得经验）</h4>
+       <div class="prelude-grid">
+         ${garrisonResults.map((r) => `
+           <article class="prelude-card">
+             <div class="prelude-top">
+               ${r.avatarDataUrl ? `<img class="avatar" src="${r.avatarDataUrl}" alt="${escapeHtml(r.name)}">` : ""}
+               <div class="cell-stack">
+                 <div class="prelude-name">${escapeHtml(r.name)}</div>
+               </div>
+             </div>
+             <div class="prelude-event">驻守城市 +${r.xpGain} 经验</div>
+           </article>
+         `).join("")}
+       </div>`
+    : "";
+
+  const roamingHtml = (eventResults?.details?.length)
+    ? `<h4 style="margin:8px 0 4px;color:#888">游历（奇遇）</h4>
+       <div class="prelude-grid">
+         ${allEntries
+           .filter((e) => eventResults.details.find((d) => d.code === e.base?.code))
+           .map((entry) => {
+             const d = eventResults.details.find((di) => di.code === entry.base.code);
+             return `
+               <article class="prelude-card">
+                 <div class="prelude-top">
+                   ${entry.base?.avatarDataUrl ? `<img class="avatar" src="${entry.base.avatarDataUrl}" alt="${escapeHtml(entry.displayName)}">` : ""}
+                   <div class="cell-stack">
+                     <div class="prelude-name">${escapeHtml(entry.displayName)}</div>
+                   </div>
+                 </div>
+                 <div class="prelude-event">${escapeHtml(d?.detail || "无事发生")}</div>
+               </article>
+             `;
+           }).join("")}
+       </div>`
+    : "";
+
+  const duelHtml = duelEntries.length
+    ? `<h4 style="margin:8px 0 4px;color:#888">单挑（将逐场进行）</h4>
+       <div class="prelude-grid">
+         ${duelEntries.map((d) => `
+           <article class="prelude-card">
+             <div class="prelude-event" style="text-align:center;padding:12px">
+               ⚔️ ${escapeHtml(d.nameA)} vs ${escapeHtml(d.nameB)}
+             </div>
+           </article>
+         `).join("")}
+       </div>`
+    : "";
+
+  const confirmLabel = duelEntries.length > 0 ? `确认并开始单挑（${duelEntries.length} 场）` : "确认";
+
+  container.innerHTML = `
+    <div class="prelude-head">
+      <div>
+        <h3>时节结算</h3>
+        <p class="muted">${totalEvents > 0 ? "本时节各角色事件如下。" : "本时节风平浪静。"}</p>
+      </div>
+      <button class="primary-btn" type="button" id="seasonConfirmBtn">${escapeHtml(confirmLabel)}</button>
+    </div>
+    ${garrisonHtml}
+    ${roamingHtml}
+    ${duelHtml}
+  `;
+
+  container.querySelector("#seasonConfirmBtn")?.addEventListener("click", onConfirm, { once: true });
+}

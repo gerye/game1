@@ -25,7 +25,7 @@ import { buildExplorationState, EXPLORATION_GRADE_FLOW, EXPLORATION_QUESTION_BAN
 import { advanceEndlessFastSimMeta, advanceFastSimBracketMeta, buildEndlessTournamentRewardSpec, buildFastSimRewardSpec, getEligibleFastSimExplorationStage, getEligibleFastSimTournamentStage, getEndlessFastSimAction, getNextFastSimBracketMode, normalizeFastSimMeta } from "./fast-sim.js";
 import { addPendingStatus, addPrimaryBonus, appendBiographyEntry, buildCharacterProfile, buildSkillSeedForGrade, clearPendingBattleEffects, createDefaultProgress, expToNextLevel, getBaseSkillFamilies, getEffectiveSheet, grantExp, grantSkillToBuild, hasPendingBattleEffects, learnSkillForBuild, normalizeProgressRecord, rebuildLearnedSkillState, renderSkillChip, rollEvent, setNextBattleRandomSpawn, syncEventLibrary, syncSkillLibrary } from "./game-data.js";
 import { buildCapBaseRecords, isLikelySameCap, refreshBaseColorProfile } from "./image-tools.js";
-import { applyPreBattleEvents as runPreBattleEvents, renderBattlePrelude as renderBattlePreludeView } from "./prebattle.js";
+import { applyPreBattleEvents as runPreBattleEvents, renderBattlePrelude as renderBattlePreludeView, renderSeasonPrelude as renderSeasonPreludeView } from "./prebattle.js";
 import { buildRankingState, canEnterRankingKnockout, canGenerateNextRankingRound, enterRankingKnockout, finalizeRanking, generateNextRankingRound, getNextRankingMatch, getRankingFinalPlacementMap, getRankingKnockoutPreview, getRankingRoundRows, getRankingStandings, isRankingFinished, recordRankingBattleWinner } from "./ranking-utils.js";
 import { getDefaultRankingBoardTab, renderRankingBoardContent, renderRankingLastResult, renderRankingMatchPreview, renderRankingModeInfo } from "./ranking-ui.js";
 import { createRankingHistorySnapshot, getRankingHistoryEntryByCode, getRankingHistoryKnockoutPreview, getRankingHistoryRoundRows, getRankingHistoryStandings, normalizeRankingHistory } from "./ranking-history.js";
@@ -37,7 +37,7 @@ import { normalizeStoredCharacterData } from "./storage-normalizer.js";
 import { getTournamentMatchState, renderTournamentBracket, renderTournamentFullTree, renderTournamentPanelsHtml, renderTournamentPreludeHtml } from "./tournament-ui.js";
 import { advanceTournamentWinner, buildTournamentState, getNextTournamentMatch } from "./tournament-utils.js";
 import { clamp, escapeHtml, gradeColor, gradeIndex, signedPct } from "./utils.js";
-import { createWorldState, syncCharacterStates, advanceSeason } from "./world-tick.js";
+import { createWorldState, syncCharacterStates, advanceSeason, detectAdjacentDuels } from "./world-tick.js";
 import { buildCityTerritories } from "./world-map.js";
 import { renderWorldMap, renderArbiterPanel } from "./world-ui.js";
 import { applyJianghuPrestige, applyRankedEventPrestige, runSiegeAI, applySiegeResult } from "./world-events.js";
@@ -169,6 +169,8 @@ const state = {
   },
   rewardProcessing: false,
   fastSimRunning: false,
+  seasonDuelQueue: [],
+  seasonSiegePending: false,
   worldState: null,
   worldViewState: { offsetX: 0, offsetY: 0, zoom: 1 },
 };
@@ -357,35 +359,54 @@ function bindEvents() {
 
   // 世界地图仲裁者操作
   dom.advanceSeasonBtn?.addEventListener("click", async () => {
+    if (state.seasonDuelQueue?.length > 0 || state.seasonSiegePending) return; // 防止重复触发
+
     const builds = await state.storage.getAllBuilds();
-    const fastSim = (buildA, buildB) => {
-      const scoreA = (buildA.physicalAttack || 0) + (buildA.magicAttack || 0);
-      const scoreB = (buildB.physicalAttack || 0) + (buildB.magicAttack || 0);
-      const rand = Math.random();
-      const aWins = rand < (scoreA + 1) / (scoreA + scoreB + 2);
-      return {
-        winnerBuildId: aWins ? buildA.buildId : buildB.buildId,
-        loserBuildId: aWins ? buildB.buildId : buildA.buildId,
-      };
-    };
-    let { worldState } = advanceSeason(state.worldState, builds, fastSim);
-    // 攻城 AI（在 app.js 中调用，避免 world-tick ↔ world-events 循环依赖）
-    const { worldState: wsAfterSiege, siegeEvents } = runSiegeAI(worldState);
-    worldState = wsAfterSiege;
-    for (const evt of siegeEvents) {
-      const currentOwner = worldState.cities.find((c) => c.id === evt.cityId)?.faction;
-      if (!currentOwner) {
-        worldState = applySiegeResult(worldState, evt.cityId, evt.factionId, evt.factionId);
-      } else {
-        const rand = Math.random();
-        const winner = rand > 0.45 ? evt.factionId : currentOwner;
-        worldState = applySiegeResult(worldState, evt.cityId, winner, evt.factionId);
-      }
-    }
+    // 1. 推进时节（只更新 AI 状态，不做事件）
+    const { worldState } = advanceSeason(state.worldState, builds);
     state.worldState = worldState;
+
+    // 2. 结算驻守经验
+    const garrisonResults = [];
+    for (const build of builds) {
+      const cs = worldState.characterStates[build.buildId];
+      if (!cs || cs.state !== "garrison") continue;
+      const prog = state.progress.find((p) => p.buildId === build.buildId);
+      if (!prog) continue;
+      const xpGain = Math.round(expToNextLevel(prog.level || 1) * 0.1);
+      const updatedProg = { ...prog };
+      grantExp(updatedProg, xpGain);
+      await state.storage.putProgress(updatedProg);
+      const entry = getEntries().find((e) => e.build?.buildId === build.buildId);
+      garrisonResults.push({ name: entry?.displayName || build.buildId, xpGain, avatarDataUrl: entry?.base?.avatarDataUrl || "" });
+    }
+
+    // 3. 游历奇遇事件
+    await refreshAll();
+    const currentEntries = getEntries();
+    const roamingEntries = currentEntries.filter((e) => {
+      const cs = worldState.characterStates[e.build?.buildId];
+      return cs?.state === "roaming" && e.build && e.progress;
+    });
+    const eventResults = roamingEntries.length > 0
+      ? await applyPreBattleEvents(roamingEntries)
+      : { logs: [], details: [] };
+    await refreshAll();
+
+    // 4. 检测相邻单挑
+    const duelPairs = detectAdjacentDuels(worldState, builds);
+
+    // 5. 保存世界状态
     await state.storage.putWorldState(state.worldState);
-    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+
+    // 6. 渲染时节事件面板
+    state.pendingBattle = null;
+    state.battle = null;
+    setBattleSurfaceState({ showPrelude: true, showCanvas: false });
+    renderSeasonPrelude(garrisonResults, eventResults, duelPairs);
+    setBattleControlState({ pauseDisabled: true, resetDisabled: false });
+    document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setWorldBattleOverlay(true);
   });
 
   dom.triggerJianghuBtn?.addEventListener("click", () => {
@@ -1873,7 +1894,7 @@ function resetChronicleViewState() {
   }
 }
 
-async function startChaosBattle() {
+async function startChaosBattle(forcedEntries = null) {
   state.activeBattleMode = "chaos";
   setWorldBattleOverlay(true);
   state.rankingBoardOpen = false;
@@ -1921,34 +1942,42 @@ async function startChaosBattle() {
     return;
   }
 
-  let entries = getReadyEntries();
+  // 支持强制单挑模式（时节单挑队列）或正常江湖争霸
+  const entries = forcedEntries || getReadyEntries();
   if (entries.length < 2) {
-    window.alert("至少需要 2 个有生成属性的角色才能开始战斗。");
+    if (!forcedEntries) window.alert("至少需要 2 个有生成属性的角色才能开始战斗。");
+    setWorldBattleOverlay(false);
     return;
   }
-  const prelude = await applyPreBattleEvents(entries);
-  await refreshAll();
-  entries = getReadyEntries();
-  const previewItems = entries.map((entry) => ({
-    ...entry,
-    preludeText: prelude.details.find((item) => item.code === entry.base.code)?.detail || (entry.progress?.lastEventText || "无事发生")
-  }));
+  // 江湖争霸不再有战前事件，直接开战
   state.pendingBattle = {
     entries,
-    logs: prelude.logs,
-    previewItems
+    logs: [],
+    previewItems: entries.map((entry) => ({ ...entry, preludeText: "" }))
   };
   state.pendingBattleRendered = false;
   state.battle = null;
-  setBattleSurfaceState({ showPrelude: true, showCanvas: false });
-  renderBattlePrelude();
-  state.pendingBattleRendered = true;
+  setBattleSurfaceState({ showPrelude: false, showCanvas: true });
+  // 直接创建战斗运行时
+  state.battle = createBattleRuntime({
+    entries,
+    skills: state.skills,
+    equipment: state.equipment,
+    statuses: state.statuses,
+    factionWins: state.winSummary?.byFaction || {},
+    speed: Number(dom.speedSelect.value),
+    cameraMode: dom.cameraSelect.value,
+    competitionType: "chaos"
+  });
+  state.pendingBattle = null;
   setBattleControlState({
+    chaosDisabled: true,
     tournamentDisabled: true,
     explorationDisabled: true,
-    pauseDisabled: true,
+    pauseDisabled: false,
     resetDisabled: false
   });
+  await refreshAll();
 }
 
 function togglePauseBattle() {
@@ -1983,6 +2012,8 @@ function resetBattle() {
   state.battle = null;
   state.pendingBattle = null;
   state.pendingBattleRendered = false;
+  state.seasonDuelQueue = [];
+  state.seasonSiegePending = false;
   state.tournamentSetupOpen = false;
   resetChronicleViewState();
   setBattleControlState();
@@ -2058,6 +2089,17 @@ async function applyBattleRewards() {
     dom.pauseBattleBtn.disabled = true;
   } finally {
     state.rewardProcessing = false;
+    // 时节单挑队列：战斗结束后继续下一场或结算攻城
+    if (state.seasonDuelQueue?.length > 0) {
+      const next = state.seasonDuelQueue.shift();
+      startSeasonDuel(next);
+      return;
+    }
+    if (state.seasonSiegePending) {
+      state.seasonSiegePending = false;
+      runSeasonSiege();
+      return;
+    }
     setWorldBattleOverlay(false);
     renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
     renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
@@ -2291,6 +2333,67 @@ function renderBattle() {
   if (state.battle) {
     renderBattlePanels();
   }
+}
+
+function renderSeasonPrelude(garrisonResults, eventResults, duelPairs) {
+  renderSeasonPreludeView({
+    container: dom.battlePrelude,
+    summaryContainer: dom.battleSummary,
+    logContainer: dom.battleLog,
+    garrisonResults,
+    eventResults,
+    duelPairs,
+    allEntries: getEntries(),
+    escapeHtml,
+    onConfirm: () => {
+      if (duelPairs.length > 0) {
+        state.seasonDuelQueue = [...duelPairs];
+        state.seasonSiegePending = true;
+        const next = state.seasonDuelQueue.shift();
+        startSeasonDuel(next);
+      } else {
+        state.seasonSiegePending = false;
+        runSeasonSiege();
+      }
+    }
+  });
+}
+
+function startSeasonDuel({ buildA, buildB }) {
+  const allEntries = getEntries();
+  const entryA = allEntries.find((e) => e.build?.buildId === buildA.buildId);
+  const entryB = allEntries.find((e) => e.build?.buildId === buildB.buildId);
+  if (!entryA || !entryB) {
+    // 找不到角色，跳过这场单挑
+    if (state.seasonDuelQueue.length > 0) {
+      const next = state.seasonDuelQueue.shift();
+      startSeasonDuel(next);
+    } else if (state.seasonSiegePending) {
+      state.seasonSiegePending = false;
+      runSeasonSiege();
+    }
+    return;
+  }
+  startChaosBattle([entryA, entryB]).catch(console.error);
+}
+
+async function runSeasonSiege() {
+  const { worldState: wsS, siegeEvents } = runSiegeAI(state.worldState);
+  let ws = wsS;
+  for (const evt of siegeEvents) {
+    const currentOwner = ws.cities.find((c) => c.id === evt.cityId)?.faction;
+    if (!currentOwner) {
+      ws = applySiegeResult(ws, evt.cityId, evt.factionId, evt.factionId);
+    } else {
+      const winner = Math.random() > 0.45 ? evt.factionId : currentOwner;
+      ws = applySiegeResult(ws, evt.cityId, winner, evt.factionId);
+    }
+  }
+  state.worldState = ws;
+  await state.storage.putWorldState(state.worldState);
+  setWorldBattleOverlay(false);
+  renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
+  renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
 }
 
 function renderBattlePrelude() {
