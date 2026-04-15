@@ -41,7 +41,7 @@ import { createWorldState, syncCharacterStates, advanceSeason, detectAdjacentDue
 import { buildCityTerritories, INITIAL_CITIES } from "./world-map.js";
 import { renderWorldMap, renderArbiterPanel } from "./world-ui.js";
 import { applyJianghuPrestige, applyRankedEventPrestige, runSiegeAI } from "./world-events.js";
-import { runOrdinarySiege, checkExtinctionWar, runExtinctionWar, selectCombatants, injureCombatants, injureGarrisonedAt } from "./world-siege.js";
+import { runOrdinarySiege, checkExtinctionWar, selectCombatants, injureCombatants } from "./world-siege.js";
 import { transferCity, FACTION_IDS } from "./faction-state.js";
 import { checkConnectivity, ensurePrecomputed } from "./world-connectivity.js";
 
@@ -1941,6 +1941,8 @@ function resetBattle() {
   state.pendingBattleRendered = false;
   state.seasonDuelQueue = [];
   state.seasonSiegePending = false;
+  state.siegeBattleQueue = [];
+  state.currentSiege = null;
   state.tournamentSetupOpen = false;
   resetChronicleViewState();
   setBattleControlState();
@@ -2064,9 +2066,12 @@ async function applyBattleRewards() {
       const builds = await state.storage.getAllBuilds();
 
       if (siege.type === "ordinary") {
-        if (winnerKey === siege.attackerFaction) {
+        if (!winnerKey) {
+          // 超时平局，无战果
+          state.worldState = addWorldLog(state.worldState, `攻城战：${siege.attackerFaction} 攻打城池，超时平局！`);
+        } else if (winnerKey === siege.attackerFaction) {
           if (siege.defenderFaction) {
-            state.worldState = injureGarrisonedAt(state.worldState, siege.cityId, siege.defenderFaction);
+            // 只重伤参战防守方（injureGarrisonedAt 有派系混淆问题，改用 injureCombatants）
             state.worldState = injureCombatants(state.worldState, siege.defenderBuilds, siege.defenderFaction);
           }
           state.worldState = {
@@ -2082,7 +2087,10 @@ async function applyBattleRewards() {
         // 防守方参战弟子全员重伤（无论胜负）
         state.worldState = injureCombatants(state.worldState, siege.defenderBuilds, siege.targetFaction);
 
-        if (winnerKey === siege.targetFaction) {
+        if (!winnerKey) {
+          // 超时平局，无人获胜
+          state.worldState = addWorldLog(state.worldState, `灭门战：双方战至超时，结果未定！`);
+        } else if (winnerKey === siege.targetFaction) {
           // 防守方守住：三大城归防守方，进攻方弟子重伤
           const largeCityIds = INITIAL_CITIES
             .filter((c) => c.faction === siege.targetFaction && c.tier === WORLD_CITY_TIERS.LARGE)
