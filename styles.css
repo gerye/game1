@@ -1031,6 +1031,23 @@ button:disabled {
 
 .chronicle-entry p { margin: 0; }
 
+.chronicle-entry-mini {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  font-size: 11px;
+}
+.chronicle-entry-mini strong {
+  display: block;
+  font-weight: 600;
+  color: #333;
+}
+.chronicle-entry-mini p {
+  margin: 2px 0 0;
+  color: #555;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
 /* ============================================================
    技能 & 装备 徽章
    ============================================================ */
@@ -2277,6 +2294,9 @@ tbody tr:last-child td { border-bottom: none; }
 .log-line {
   padding: 2px 0;
   border-bottom: 1px solid #333;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 
 .world-panel { color: inherit; }

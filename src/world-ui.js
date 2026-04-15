@@ -449,27 +449,11 @@ function drawHQBuilding(ctx, city, factionColor) {
  * @param {HTMLElement} container
  * @param {Object} worldState
  */
-function factionColorize(text) {
-  const replacements = [
-    ["qingyun", FACTION_COLORS.qingyun, "青云门"],
-    ["shaolin", FACTION_COLORS.shaolin, "少林"],
-    ["demon",   FACTION_COLORS.demon,   "魔教"],
-    ["palace",  FACTION_COLORS.palace,  "教廷"],
-    ["isle",    FACTION_COLORS.isle,    "仙岛"],
-    ["soul",    FACTION_COLORS.soul,    "魂殿"],
-  ];
-  let result = text;
-  for (const [key, color, name] of replacements) {
-    result = result.replaceAll(key, `<span style="color:${color};font-weight:600">${name}</span>`);
-  }
-  return result;
-}
-
 export function renderArbiterPanel(container, worldState, chronicle) {
   const stats = worldState.factionStats || {};
   const cities = worldState.cities || [];
   const escHtml = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const entries = chronicle?.entries?.slice(0, 8) || [];
+  const entries = chronicle?.entries ? chronicle.entries.slice(-8).reverse() : [];
 
   container.innerHTML = `
     <div class="world-panel">
@@ -495,7 +479,7 @@ export function renderArbiterPanel(container, worldState, chronicle) {
       </table>
       <div class="world-log">
         ${entries.length > 0
-          ? entries.map((e) => `<div class="chronicle-entry-mini"><strong>${escHtml(e.title || "")}</strong><p>${escHtml(e.body || "")}</p></div>`).join("")
+          ? entries.map((e) => `<div class="chronicle-entry-mini"><strong>${escHtml(e.title || "")}</strong><p>${escHtml(e.text || "")}</p></div>`).join("")
           : `<div class="log-line" style="opacity:0.5">江湖故事正在酝酿中…</div>`
         }
       </div>
