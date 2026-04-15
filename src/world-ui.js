@@ -13,7 +13,7 @@ export const FACTION_COLORS = {
   qingyun:  "#1a7f5e",
   shaolin:  "#c8960c",
   demon:    "#b32c2c",
-  palace:   "#c8a028",
+  palace:   "#d8cfbd",
   isle:     "#4a8fcf",
   soul:     "#6b3fa0",
 };
@@ -40,7 +40,7 @@ function hexToPixel(q, r) {
 function hexCorners(cx, cy, size) {
   const corners = [];
   for (let i = 0; i < 6; i++) {
-    const angle = (Math.PI / 180) * (60 * i - 30);
+    const angle = (Math.PI / 180) * (60 * i);
     corners.push({ x: cx + size * Math.cos(angle), y: cy + size * Math.sin(angle) });
   }
   return corners;
@@ -59,6 +59,8 @@ export function renderWorldMap(canvas, worldState, viewState = {}, entries = [])
   const { offsetX = 0, offsetY = 0, zoom = 1 } = viewState;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#6b7280";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.save();
   ctx.translate(canvas.width / 2 + offsetX, canvas.height / 2 + offsetY);
   ctx.scale(zoom, zoom);
@@ -91,7 +93,7 @@ export function renderWorldMap(canvas, worldState, viewState = {}, entries = [])
     return (tierOrder[a.tier] ?? 3) - (tierOrder[b.tier] ?? 3);
   });
   sortedCities.forEach((city) => {
-    const owner = cityOwnership[city.id] ?? city.faction;
+    const owner = cityOwnership[city.id]; // null means neutral (不使用模板 faction 作为 fallback)
     const color = owner ? FACTION_COLORS[owner] : "#666666";
     if (city.tier === WORLD_CITY_TIERS.HQ) {
       drawHQBuilding(ctx, city, color);
@@ -447,9 +449,27 @@ function drawHQBuilding(ctx, city, factionColor) {
  * @param {HTMLElement} container
  * @param {Object} worldState
  */
-export function renderArbiterPanel(container, worldState) {
+function factionColorize(text) {
+  const replacements = [
+    ["qingyun", FACTION_COLORS.qingyun, "青云门"],
+    ["shaolin", FACTION_COLORS.shaolin, "少林"],
+    ["demon",   FACTION_COLORS.demon,   "魔教"],
+    ["palace",  FACTION_COLORS.palace,  "教廷"],
+    ["isle",    FACTION_COLORS.isle,    "仙岛"],
+    ["soul",    FACTION_COLORS.soul,    "魂殿"],
+  ];
+  let result = text;
+  for (const [key, color, name] of replacements) {
+    result = result.replaceAll(key, `<span style="color:${color};font-weight:600">${name}</span>`);
+  }
+  return result;
+}
+
+export function renderArbiterPanel(container, worldState, chronicle) {
   const stats = worldState.factionStats || {};
   const cities = worldState.cities || [];
+  const escHtml = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const entries = chronicle?.entries?.slice(0, 8) || [];
 
   container.innerHTML = `
     <div class="world-panel">
@@ -474,7 +494,10 @@ export function renderArbiterPanel(container, worldState) {
         </tbody>
       </table>
       <div class="world-log">
-        ${(worldState.log || []).slice(-8).reverse().map((l) => `<div class="log-line">${l}</div>`).join("")}
+        ${entries.length > 0
+          ? entries.map((e) => `<div class="chronicle-entry-mini"><strong>${escHtml(e.title || "")}</strong><p>${escHtml(e.body || "")}</p></div>`).join("")
+          : `<div class="log-line" style="opacity:0.5">江湖故事正在酝酿中…</div>`
+        }
       </div>
     </div>
   `;

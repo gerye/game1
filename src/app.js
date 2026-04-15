@@ -1,5 +1,5 @@
 ﻿
-import { BATTLE_LOG_LIMIT, FACTIONS, GAME_VERSION, GRADE_SCALE, META_KEYS, ROLE_LABELS, TERRAIN_TYPES } from "./config.js";
+import { BATTLE_LOG_LIMIT, FACTIONS, GAME_VERSION, GRADE_SCALE, META_KEYS, ROLE_LABELS, TERRAIN_TYPES, WORLD_CHARACTER_STATES } from "./config.js";
 import { createBattleState as createBattleRuntime, renderBattleScene, updateBattleState } from "./battle-system.js";
 import { getFactionSections, renderBuildGrid as renderBuildGridView, renderCapDetail as renderCapDetailView, renderHeroStats as renderHeroStatsView } from "./character-ui.js";
 import { renderBloodlineDatabase as renderBloodlineDatabaseView, renderCharacterDatabase as renderCharacterDatabaseView, renderEquipmentDatabase as renderEquipmentDatabaseView, renderEventDatabase as renderEventDatabaseView, renderSkillDatabase as renderSkillDatabaseView, renderStatusDatabase as renderStatusDatabaseView } from "./database-ui.js";
@@ -22,10 +22,10 @@ import { EQUIPMENT_SLOT_LABELS, applyEquipmentDrop, canRoleEquip, getEquippedIte
 import { buildEntries, buildHonorBonusContext, getBaseBrand, getBaseName, getDisplayName, getPersistentStatuses, normalizeBaseIdentity } from "./entry-utils.js";
 import { renderExplorationPanelsHtml, renderExplorationTierDivider as renderExplorationTierDividerHtml, renderExplorationTierSection as renderExplorationTierSectionHtml } from "./exploration-ui.js";
 import { buildExplorationState, EXPLORATION_GRADE_FLOW, EXPLORATION_QUESTION_BANK, getExplorationCodesByTier, getExplorationNextTier, getVisibleExplorationGrades, shuffleValues } from "./exploration-utils.js";
-import { advanceEndlessFastSimMeta, advanceFastSimBracketMeta, buildEndlessTournamentRewardSpec, buildFastSimRewardSpec, getEligibleFastSimExplorationStage, getEligibleFastSimTournamentStage, getEndlessFastSimAction, getNextFastSimBracketMode, normalizeFastSimMeta } from "./fast-sim.js";
+import { advanceEndlessFastSimMeta, advanceFastSimBracketMeta, buildEndlessTournamentRewardSpec, buildEndlessRankingRewardSpec, buildFastSimRewardSpec, getEligibleFastSimExplorationStage, getEligibleFastSimTournamentStage, getEndlessFastSimAction, getNextFastSimBracketMode, normalizeFastSimMeta } from "./fast-sim.js";
 import { addPendingStatus, addPrimaryBonus, appendBiographyEntry, buildCharacterProfile, buildSkillSeedForGrade, clearPendingBattleEffects, createDefaultProgress, expToNextLevel, getBaseSkillFamilies, getEffectiveSheet, grantExp, grantSkillToBuild, hasPendingBattleEffects, learnSkillForBuild, normalizeProgressRecord, rebuildLearnedSkillState, renderSkillChip, rollEvent, setNextBattleRandomSpawn, syncEventLibrary, syncSkillLibrary } from "./game-data.js";
 import { buildCapBaseRecords, isLikelySameCap, refreshBaseColorProfile } from "./image-tools.js";
-import { applyPreBattleEvents as runPreBattleEvents, renderBattlePrelude as renderBattlePreludeView } from "./prebattle.js";
+import { applyPreBattleEvents as runPreBattleEvents, renderBattlePrelude as renderBattlePreludeView, renderSeasonPrelude as renderSeasonPreludeView } from "./prebattle.js";
 import { buildRankingState, canEnterRankingKnockout, canGenerateNextRankingRound, enterRankingKnockout, finalizeRanking, generateNextRankingRound, getNextRankingMatch, getRankingFinalPlacementMap, getRankingKnockoutPreview, getRankingRoundRows, getRankingStandings, isRankingFinished, recordRankingBattleWinner } from "./ranking-utils.js";
 import { getDefaultRankingBoardTab, renderRankingBoardContent, renderRankingLastResult, renderRankingMatchPreview, renderRankingModeInfo } from "./ranking-ui.js";
 import { createRankingHistorySnapshot, getRankingHistoryEntryByCode, getRankingHistoryKnockoutPreview, getRankingHistoryRoundRows, getRankingHistoryStandings, normalizeRankingHistory } from "./ranking-history.js";
@@ -37,10 +37,12 @@ import { normalizeStoredCharacterData } from "./storage-normalizer.js";
 import { getTournamentMatchState, renderTournamentBracket, renderTournamentFullTree, renderTournamentPanelsHtml, renderTournamentPreludeHtml } from "./tournament-ui.js";
 import { advanceTournamentWinner, buildTournamentState, getNextTournamentMatch } from "./tournament-utils.js";
 import { clamp, escapeHtml, gradeColor, gradeIndex, signedPct } from "./utils.js";
-import { createWorldState, syncCharacterStates, advanceSeason } from "./world-tick.js";
+import { createWorldState, syncCharacterStates, advanceSeason, detectAdjacentDuels } from "./world-tick.js";
 import { buildCityTerritories } from "./world-map.js";
 import { renderWorldMap, renderArbiterPanel } from "./world-ui.js";
-import { applyJianghuPrestige, applyRankedEventPrestige, runSiegeAI, applySiegeResult } from "./world-events.js";
+import { applyJianghuPrestige, applyRankedEventPrestige, runSiegeAI } from "./world-events.js";
+import { runOrdinarySiege, checkExtinctionWar, runExtinctionWar } from "./world-siege.js";
+import { checkConnectivity, ensurePrecomputed } from "./world-connectivity.js";
 
 const dom = {
   photoInput: document.getElementById("photoInput"),
@@ -79,7 +81,6 @@ const dom = {
   battleModeInfo: document.getElementById("battleModeInfo"),
   battleModeSelect: document.getElementById("battleModeSelect"),
   startSelectedBattleBtn: document.getElementById("startSelectedBattleBtn"),
-  simModeSelect: document.getElementById("simModeSelect"),
   toggleSelectedSimBtn: document.getElementById("toggleSelectedSimBtn"),
   startChaosBtn: document.getElementById("startChaosBtn"),
   startTournamentBtn: document.getElementById("startTournamentBtn"),
@@ -102,9 +103,6 @@ const dom = {
   worldArbiterPanel: document.getElementById("world-arbiter-panel"),
   worldBattleOverlay: document.getElementById("world-battle-overlay"),
   advanceSeasonBtn: document.getElementById("advanceSeasonBtn"),
-  triggerJianghuBtn: document.getElementById("triggerJianghuBtn"),
-  triggerTournamentBtn: document.getElementById("triggerTournamentBtn"),
-  worldFastSimBtn: document.getElementById("worldFastSimBtn"),
 };
 
 const previewCtx = dom.previewCanvas.getContext("2d");
@@ -169,6 +167,8 @@ const state = {
   },
   rewardProcessing: false,
   fastSimRunning: false,
+  seasonDuelQueue: [],
+  seasonSiegePending: false,
   worldState: null,
   worldViewState: { offsetX: 0, offsetY: 0, zoom: 1 },
 };
@@ -201,38 +201,52 @@ async function init() {
   if (!state.worldState.cityTerritories) {
     state.worldState = { ...state.worldState, cityTerritories: buildCityTerritories() };
   }
-  // 迁移旧 city ID（jiaoting→palace, mojiao→demon, xiandao→isle, hundian→soul）
+  // 迁移旧 faction/city ID（jiaoting→palace, mojiao→demon, xiandao→isle, hundian→soul）
   {
-    const _cityIdPrefixMap = { "jiaoting": "palace", "mojiao": "demon", "xiandao": "isle", "hundian": "soul" };
+    const _oldToNew = { "jiaoting": "palace", "mojiao": "demon", "xiandao": "isle", "hundian": "soul" };
+
+    // 迁移 characterStates.cityId
     const _oldCharStates = state.worldState.characterStates || {};
-    let _needsCityMigration = false;
-    for (const cs of Object.values(_oldCharStates)) {
-      if (cs.cityId) {
-        for (const old of Object.keys(_cityIdPrefixMap)) {
-          if (cs.cityId.startsWith(old + "-")) { _needsCityMigration = true; break; }
+    const _migratedStates = {};
+    for (const [bid, cs] of Object.entries(_oldCharStates)) {
+      let cityId = cs.cityId;
+      if (cityId) {
+        for (const [old, newId] of Object.entries(_oldToNew)) {
+          cityId = cityId.replace(old + "-", newId + "-");
         }
       }
-      if (_needsCityMigration) break;
+      _migratedStates[bid] = { ...cs, cityId };
     }
-    if (_needsCityMigration) {
-      const _migratedStates = {};
-      for (const [bid, cs] of Object.entries(_oldCharStates)) {
-        let cityId = cs.cityId;
-        if (cityId) {
-          for (const [old, newId] of Object.entries(_cityIdPrefixMap)) {
-            cityId = cityId.replace(old + "-", newId + "-");
-          }
-        }
-        _migratedStates[bid] = { ...cs, cityId };
+    state.worldState = { ...state.worldState, characterStates: _migratedStates };
+
+    // 迁移 worldState.cities 的 id 和 faction
+    const _migratedCities = (state.worldState.cities || []).map((c) => {
+      let id = c.id || "";
+      let faction = c.faction || null;
+      for (const [old, newKey] of Object.entries(_oldToNew)) {
+        if (id.startsWith(old + "-")) id = newKey + id.slice(old.length);
+        if (faction === old) faction = newKey;
       }
-      state.worldState = { ...state.worldState, characterStates: _migratedStates };
+      return { id, faction };
+    });
+    state.worldState = { ...state.worldState, cities: _migratedCities };
+
+    // 迁移 factionStats key
+    const _oldStats = state.worldState.factionStats || {};
+    const _newStats = {};
+    for (const [key, val] of Object.entries(_oldStats)) {
+      _newStats[_oldToNew[key] || key] = val;
     }
+    state.worldState = { ...state.worldState, factionStats: _newStats };
+
+    // 始终重建 cityTerritories 确保 key 与新 city ID 一致
+    state.worldState = { ...state.worldState, cityTerritories: buildCityTerritories() };
   }
   const allBuildsForWorld = await state.storage.getAllBuilds();
   state.worldState = syncCharacterStates(state.worldState, allBuildsForWorld);
   await state.storage.putWorldState(state.worldState);
   renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-  renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+  renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
 
   startRenderLoop();
 }
@@ -285,12 +299,13 @@ function bindEvents() {
   dom.statusDatabase.addEventListener("click", handleStatusDatabaseClick);
   dom.startSelectedBattleBtn?.addEventListener("click", () => {
     getSelectedBattleProxyButton()?.click();
+    document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   dom.toggleSelectedSimBtn?.addEventListener("click", () => {
-    getSelectedSimProxyButton()?.click();
+    dom.toggleEndlessSimBtn?.click();
+    document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   dom.battleModeSelect?.addEventListener("change", syncCombinedActionControls);
-  dom.simModeSelect?.addEventListener("change", syncCombinedActionControls);
   dom.startChaosBtn.addEventListener("click", () => {
     startChaosBattle().catch((error) => {
       console.error(error);
@@ -357,99 +372,54 @@ function bindEvents() {
 
   // 世界地图仲裁者操作
   dom.advanceSeasonBtn?.addEventListener("click", async () => {
+    if (state.seasonDuelQueue?.length > 0 || state.seasonSiegePending) return; // 防止重复触发
+
     const builds = await state.storage.getAllBuilds();
-    const fastSim = (buildA, buildB) => {
-      const scoreA = (buildA.physicalAttack || 0) + (buildA.magicAttack || 0);
-      const scoreB = (buildB.physicalAttack || 0) + (buildB.magicAttack || 0);
-      const rand = Math.random();
-      const aWins = rand < (scoreA + 1) / (scoreA + scoreB + 2);
-      return {
-        winnerBuildId: aWins ? buildA.buildId : buildB.buildId,
-        loserBuildId: aWins ? buildB.buildId : buildA.buildId,
-      };
-    };
-    let { worldState } = advanceSeason(state.worldState, builds, fastSim);
-    // 攻城 AI（在 app.js 中调用，避免 world-tick ↔ world-events 循环依赖）
-    const { worldState: wsAfterSiege, siegeEvents } = runSiegeAI(worldState);
-    worldState = wsAfterSiege;
-    for (const evt of siegeEvents) {
-      const currentOwner = worldState.cities.find((c) => c.id === evt.cityId)?.faction;
-      if (!currentOwner) {
-        worldState = applySiegeResult(worldState, evt.cityId, evt.factionId, evt.factionId);
-      } else {
-        const rand = Math.random();
-        const winner = rand > 0.45 ? evt.factionId : currentOwner;
-        worldState = applySiegeResult(worldState, evt.cityId, winner, evt.factionId);
-      }
-    }
+    // 1. 推进时节（只更新 AI 状态，不做事件）
+    const { worldState } = advanceSeason(state.worldState, builds);
     state.worldState = worldState;
-    await state.storage.putWorldState(state.worldState);
-    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
-  });
 
-  dom.triggerJianghuBtn?.addEventListener("click", () => {
-    // 触发真实江湖争霸战斗；声望在 applyBattleRewards 结束时自动发放
-    startChaosBattle().catch((error) => {
-      console.error("触发江湖争霸失败：", error);
-    });
-    // 滚动到战场
-    document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-
-  dom.triggerTournamentBtn?.addEventListener("click", () => {
-    // 触发真实武道会；声望在 finishTournament 结束时自动发放
-    startTournamentFlow().catch((error) => {
-      console.error("触发武道会失败：", error);
-    });
-    document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-
-  dom.worldFastSimBtn?.addEventListener("click", async () => {
-    if (state.fastSimRunning) return;
-    state.fastSimRunning = true;
-    dom.worldFastSimBtn.textContent = "推演中...";
-    dom.worldFastSimBtn.disabled = true;
-
-    const SEASONS_PER_BATTLE = 2;
-    const MAX_SEASONS = 12;
-    let seasonCount = 0;
-    const builds = await state.storage.getAllBuilds();
-
-    while (seasonCount < MAX_SEASONS) {
-      let { worldState } = advanceSeason(state.worldState, builds, null);
-      // 攻城 AI
-      const { worldState: wsS, siegeEvents } = runSiegeAI(worldState);
-      worldState = wsS;
-      for (const evt of siegeEvents) {
-        const currentOwner = worldState.cities.find((c) => c.id === evt.cityId)?.faction;
-        if (!currentOwner) {
-          worldState = applySiegeResult(worldState, evt.cityId, evt.factionId, evt.factionId);
-        } else {
-          const rand = Math.random();
-          const winner = rand > 0.45 ? evt.factionId : currentOwner;
-          worldState = applySiegeResult(worldState, evt.cityId, winner, evt.factionId);
-        }
-      }
-      state.worldState = worldState;
-      seasonCount++;
-
-      if (seasonCount % SEASONS_PER_BATTLE === 0) {
-        const winner = fastPickChaosWinner(getEntries());
-        if (winner) {
-          state.worldState = applyJianghuPrestige(state.worldState, winner);
-        }
-      }
-      await new Promise((resolve) => setTimeout(resolve, 0));
+    // 2. 结算驻守经验
+    const garrisonResults = [];
+    for (const build of builds) {
+      const cs = worldState.characterStates[build.buildId];
+      if (!cs || cs.state !== "garrison") continue;
+      const prog = state.progress.find((p) => p.buildId === build.buildId);
+      if (!prog) continue;
+      const xpGain = Math.round(expToNextLevel(prog.level || 1) * 0.1);
+      const updatedProg = { ...prog };
+      grantExp(updatedProg, xpGain);
+      await state.storage.putProgress(updatedProg);
+      const entry = getEntries().find((e) => e.build?.buildId === build.buildId);
+      garrisonResults.push({ name: entry?.displayName || build.buildId, xpGain, avatarDataUrl: entry?.base?.avatarDataUrl || "" });
     }
 
-    await state.storage.putWorldState(state.worldState);
-    renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+    // 3. 游历奇遇事件
+    await refreshAll();
+    const currentEntries = getEntries();
+    const roamingEntries = currentEntries.filter((e) => {
+      const cs = worldState.characterStates[e.build?.buildId];
+      return cs?.state === "roaming" && e.build && e.progress;
+    });
+    const eventResults = roamingEntries.length > 0
+      ? await applyPreBattleEvents(roamingEntries)
+      : { logs: [], details: [] };
+    await refreshAll();
 
-    state.fastSimRunning = false;
-    dom.worldFastSimBtn.textContent = "快速推演";
-    dom.worldFastSimBtn.disabled = false;
+    // 4. 检测相邻单挑
+    const duelPairs = detectAdjacentDuels(worldState, builds);
+
+    // 5. 保存世界状态
+    await state.storage.putWorldState(state.worldState);
+
+    // 6. 渲染时节事件面板
+    state.pendingBattle = null;
+    state.battle = null;
+    setBattleSurfaceState({ showPrelude: true, showCanvas: false });
+    renderSeasonPrelude(garrisonResults, eventResults, duelPairs);
+    setBattleControlState({ pauseDisabled: true, resetDisabled: false });
+    document.getElementById("battle-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setWorldBattleOverlay(true);
   });
 
   // 世界地图平移/缩放
@@ -499,10 +469,6 @@ function getSelectedBattleProxyButton() {
   }
 }
 
-function getSelectedSimProxyButton() {
-  return dom.simModeSelect?.value === "endless" ? dom.toggleEndlessSimBtn : dom.toggleFastSimBtn;
-}
-
 function syncCombinedActionControls() {
   if (dom.startSelectedBattleBtn) {
     const battleButton = getSelectedBattleProxyButton();
@@ -510,10 +476,10 @@ function syncCombinedActionControls() {
     dom.startSelectedBattleBtn.disabled = battleButton?.disabled ?? false;
   }
   if (dom.toggleSelectedSimBtn) {
-    const simButton = getSelectedSimProxyButton();
-    dom.toggleSelectedSimBtn.textContent = state.fastSim.enabled && state.fastSim.mode === dom.simModeSelect?.value
-      ? "停止"
-      : "开启";
+    const simButton = dom.toggleEndlessSimBtn;
+    dom.toggleSelectedSimBtn.textContent = state.fastSim.enabled && state.fastSim.mode === "endless"
+      ? "停止无尽推演"
+      : "无尽推演";
     dom.toggleSelectedSimBtn.disabled = simButton?.disabled ?? false;
   }
 }
@@ -529,8 +495,7 @@ function syncFastSimButton() {
     dom.toggleFastSimBtn.classList.toggle("active", state.fastSim.enabled && state.fastSim.mode === "fast");
   }
   if (dom.toggleEndlessSimBtn) {
-    const enableLabel = state.fastSimMeta.finalWinnerCode ? "开启无尽推演" : "开启无尽推演（含前期）";
-    dom.toggleEndlessSimBtn.textContent = state.fastSim.enabled && state.fastSim.mode === "endless" ? "停止无尽推演" : enableLabel;
+    dom.toggleEndlessSimBtn.textContent = state.fastSim.enabled && state.fastSim.mode === "endless" ? "停止无尽推演" : "开启无尽推演";
     dom.toggleEndlessSimBtn.classList.toggle("active", state.fastSim.enabled && state.fastSim.mode === "endless");
   }
   syncCombinedActionControls();
@@ -555,7 +520,6 @@ async function saveFastSimMeta(nextMeta) {
 
 async function runFastSimulationStep() {
   if (!state.fastSim.enabled || state.fastSim.processing || state.rewardProcessing) return;
-  const endlessUnlocked = Boolean(state.fastSimMeta.finalWinnerCode);
 
   state.fastSim.processing = true;
   try {
@@ -597,41 +561,55 @@ async function runFastSimulationStep() {
 
     if (state.tournamentBattle) return;
 
-    const entries = getReadyEntries();
+    // 无尽推演：[season×2 + chaos] ×3 → 武道会/秘境探索/排位赛（循环）
+    const action = getEndlessFastSimAction(state.fastSimMeta);
+    if (action?.type === "season") {
+      const builds = await state.storage.getAllBuilds();
+      let { worldState } = advanceSeason(state.worldState, builds, null);
+      worldState = ensurePrecomputed(worldState);
+      const { worldState: wsS, siegeEvents } = runSiegeAI(worldState, builds);
+      worldState = wsS;
+      for (const evt of siegeEvents) {
+        worldState = runOrdinarySiege(worldState, builds, evt.factionId, evt.cityId);
+      }
+      worldState = checkConnectivity(worldState, builds);
+      const extWar = checkExtinctionWar(worldState);
+      if (extWar) {
+        const { worldState: wsExt, factionChanges } = runExtinctionWar(worldState, builds, extWar.targetFaction, extWar.attackers);
+        worldState = wsExt;
+        await applyFactionChanges(factionChanges, builds);
+      }
+      state.worldState = worldState;
+      await state.storage.putWorldState(state.worldState);
 
-    if (endlessUnlocked) {
-      const action = getEndlessFastSimAction(state.fastSimMeta);
-      if (action?.type === "exploration") {
-        await startFastSimulationExploration(0);
-        return;
+      // 游历奇遇事件（fast sim 静默应用，不渲染面板）
+      await refreshAll();
+      const fastSimRoamingEntries = getEntries().filter((e) => {
+        const cs = worldState.characterStates[e.build?.buildId];
+        return cs?.state === "roaming" && e.build && e.progress;
+      });
+      if (fastSimRoamingEntries.length > 0) {
+        await applyPreBattleEvents(fastSimRoamingEntries);
       }
-      if (action?.type === "tournament") {
-        if (getNextFastSimBracketMode(state.fastSimMeta) === "ranking") {
-          await startEndlessSimulationRanking();
-        } else {
-          await startEndlessSimulationTournament();
-        }
-        return;
-      }
-      await startChaosBattle();
+
+      await saveFastSimMeta(advanceEndlessFastSimMeta(state.fastSimMeta));
+      renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
+      renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
       return;
     }
-
-    const nextExplorationStage = getEligibleFastSimExplorationStage(entries, state.fastSimMeta);
-    if (nextExplorationStage) {
-      await startFastSimulationExploration(nextExplorationStage);
+    if (action?.type === "tournament") {
+      await startEndlessSimulationTournament();
       return;
     }
-    const nextTournamentStage = getEligibleFastSimTournamentStage(entries, state.fastSimMeta);
-    if (nextTournamentStage) {
-      if (getNextFastSimBracketMode(state.fastSimMeta) === "ranking") {
-        await startFastSimulationRanking(nextTournamentStage);
-      } else {
-        await startFastSimulationTournament(nextTournamentStage);
-      }
+    if (action?.type === "ranking") {
+      await startEndlessSimulationRanking();
       return;
     }
-
+    if (action?.type === "exploration") {
+      await startFastSimulationExploration(0);
+      return;
+    }
+    // chaos
     await startChaosBattle();
   } finally {
     state.fastSim.processing = false;
@@ -710,7 +688,7 @@ async function startEndlessSimulationRanking() {
   state.battle = null;
   state.tournament = null;
   state.tournamentBattle = null;
-  const rewards = buildEndlessTournamentRewardSpec();
+  const rewards = buildEndlessRankingRewardSpec();
   state.tournamentRewardSelection.champion = { ...rewards.champion };
   state.tournamentRewardSelection.runnerUp = { ...rewards.runnerUp };
   await createRanking({
@@ -1456,9 +1434,11 @@ async function handleBaseDatabaseClick(event) {
     const existingBuild = state.builds.find((item) => item.capCode === code) || null;
     if (existingBuild) {
       const selectedFaction = FACTIONS.find((item) => item.key === factionKey) || null;
+      const resolvedFaction = selectedFaction || existingBuild.faction;
       const rebuiltBuild = {
         ...rebuildBuildFromBase(base, existingBuild),
-        faction: selectedFaction || existingBuild.faction
+        faction: resolvedFaction,
+        originalFaction: resolvedFaction, // 通过 UI 手动设置门派时同步更新固有门派
       };
       await state.storage.putBuild(rebuiltBuild);
       state.builds = state.builds.map((item) => (item.buildId === rebuiltBuild.buildId ? rebuiltBuild : item));
@@ -1641,8 +1621,17 @@ async function resetAllLevels() {
   await state.storage.saveMeta(META_KEYS.RANKING_HISTORY, state.rankingHistory);
   await state.storage.saveMeta(META_KEYS.FAST_SIM_META, state.fastSimMeta);
   await state.storage.saveMeta(META_KEYS.BLOODLINE_TASK_STATE, state.bloodlineTaskState);
+  // 重置世界地图
+  state.worldState = createWorldState();
+  state.seasonDuelQueue = [];
+  state.seasonSiegePending = false;
   resetBattle();
   await refreshAll();
+  const _resetBuilds = await state.storage.getAllBuilds();
+  state.worldState = syncCharacterStates(state.worldState, _resetBuilds);
+  await state.storage.putWorldState(state.worldState);
+  renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
+  renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
 }
 
 async function seedDemoCaps() {
@@ -1873,7 +1862,7 @@ function resetChronicleViewState() {
   }
 }
 
-async function startChaosBattle() {
+async function startChaosBattle(forcedEntries = null) {
   state.activeBattleMode = "chaos";
   setWorldBattleOverlay(true);
   state.rankingBoardOpen = false;
@@ -1921,34 +1910,48 @@ async function startChaosBattle() {
     return;
   }
 
-  let entries = getReadyEntries();
+  // 支持强制单挑模式（时节单挑队列）或正常江湖争霸
+  const entries = forcedEntries || getReadyEntries();
   if (entries.length < 2) {
-    window.alert("至少需要 2 个有生成属性的角色才能开始战斗。");
+    if (!forcedEntries) window.alert("至少需要 2 个有生成属性的角色才能开始战斗。");
+    setWorldBattleOverlay(false);
     return;
   }
-  const prelude = await applyPreBattleEvents(entries);
-  await refreshAll();
-  entries = getReadyEntries();
-  const previewItems = entries.map((entry) => ({
-    ...entry,
-    preludeText: prelude.details.find((item) => item.code === entry.base.code)?.detail || (entry.progress?.lastEventText || "无事发生")
-  }));
+  // 江湖争霸不再有战前事件，直接开战
   state.pendingBattle = {
     entries,
-    logs: prelude.logs,
-    previewItems
+    logs: [],
+    previewItems: entries.map((entry) => ({ ...entry, preludeText: "" }))
   };
   state.pendingBattleRendered = false;
   state.battle = null;
-  setBattleSurfaceState({ showPrelude: true, showCanvas: false });
-  renderBattlePrelude();
-  state.pendingBattleRendered = true;
+  setBattleSurfaceState({ showPrelude: false, showCanvas: true });
+  // 直接创建战斗运行时（pending effects 已被读取，立即清除存档中的状态）
+  state.battle = createBattleRuntime({
+    entries,
+    skills: state.skills,
+    equipment: state.equipment,
+    statuses: state.statuses,
+    factionWins: state.winSummary?.byFaction || {},
+    speed: Number(dom.speedSelect.value),
+    cameraMode: dom.cameraSelect.value,
+    competitionType: "chaos"
+  });
+  state.pendingBattle = null;
+  for (const entry of entries) {
+    if (!entry.progress) continue;
+    if (hasPendingBattleEffects(entry.progress)) {
+      await state.storage.putProgress(clearPendingBattleEffects(entry.progress));
+    }
+  }
   setBattleControlState({
+    chaosDisabled: true,
     tournamentDisabled: true,
     explorationDisabled: true,
-    pauseDisabled: true,
+    pauseDisabled: false,
     resetDisabled: false
   });
+  await refreshAll();
 }
 
 function togglePauseBattle() {
@@ -1983,6 +1986,8 @@ function resetBattle() {
   state.battle = null;
   state.pendingBattle = null;
   state.pendingBattleRendered = false;
+  state.seasonDuelQueue = [];
+  state.seasonSiegePending = false;
   state.tournamentSetupOpen = false;
   resetChronicleViewState();
   setBattleControlState();
@@ -2044,23 +2049,62 @@ async function applyBattleRewards() {
         await appendChronicleEntry(buildFactionVictoryMilestoneEntry(state.battle.winner, factionWins));
       }
     }
-    // 世界地图声望：江湖争霸
-    if (state.battle.winner && state.worldState) {
+    // 世界地图声望：仅江湖争霸获得（单挑不获声望）
+    const isSeasonDuel = state.seasonSiegePending;
+    if (state.battle.winner && state.worldState && !isSeasonDuel) {
       state.worldState = applyJianghuPrestige(state.worldState, state.battle.winner.key);
       await state.storage.putWorldState(state.worldState);
-      renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+      renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
+    }
+    // 单挑重伤：失败方下场战斗只有一半血量，且进入重伤状态
+    if (isSeasonDuel && state.battle.winner && state.worldState) {
+      const loserEntity = state.battle.entities?.find((e) => !e.alive);
+      if (loserEntity) {
+        const loserBuildId = loserEntity.build?.buildId;
+        const loserProgress = latestProgressByBuildId.get(loserBuildId) || state.progress.find((p) => p.buildId === loserBuildId);
+        if (loserProgress && loserBuildId) {
+          const injuredProgress = addPendingStatus(loserProgress, "sick-half");
+          await state.storage.putProgress(injuredProgress);
+          latestProgressByBuildId.set(loserBuildId, injuredProgress);
+        }
+        // 更新世界角色状态为重伤
+        if (loserBuildId && state.worldState.characterStates?.[loserBuildId]) {
+          const loserFactionKey = loserEntity.build?.faction?.key || String(loserEntity.build?.faction);
+          const charStates = { ...state.worldState.characterStates };
+          charStates[loserBuildId] = {
+            ...charStates[loserBuildId],
+            injured: true,
+            injuredUntilSeason: state.worldState.season + 2,
+            state: WORLD_CHARACTER_STATES.GARRISON,
+            cityId: `${loserFactionKey}-hq`,
+          };
+          state.worldState = { ...state.worldState, characterStates: charStates };
+          await state.storage.putWorldState(state.worldState);
+        }
+      }
     }
     await resolveChaosBloodlineTasks(state.battle.entities, latestBuildByBuildId, latestProgressByBuildId);
-    if (state.fastSim.enabled && state.fastSimMeta.finalWinnerCode) {
+    if (state.fastSim.enabled && state.fastSim.mode === "endless" && !isSeasonDuel) {
       await saveFastSimMeta(advanceEndlessFastSimMeta(state.fastSimMeta));
     }
     await refreshAll();
     dom.pauseBattleBtn.disabled = true;
   } finally {
     state.rewardProcessing = false;
+    // 时节单挑队列：战斗结束后继续下一场或结算攻城
+    if (state.seasonDuelQueue?.length > 0) {
+      const next = state.seasonDuelQueue.shift();
+      startSeasonDuel(next);
+      return;
+    }
+    if (state.seasonSiegePending) {
+      state.seasonSiegePending = false;
+      runSeasonSiege();
+      return;
+    }
     setWorldBattleOverlay(false);
     renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
   }
 }
 
@@ -2291,6 +2335,82 @@ function renderBattle() {
   if (state.battle) {
     renderBattlePanels();
   }
+}
+
+function renderSeasonPrelude(garrisonResults, eventResults, duelPairs) {
+  renderSeasonPreludeView({
+    container: dom.battlePrelude,
+    summaryContainer: dom.battleSummary,
+    logContainer: dom.battleLog,
+    garrisonResults,
+    eventResults,
+    duelPairs,
+    allEntries: getEntries(),
+    escapeHtml,
+    onConfirm: () => {
+      if (duelPairs.length > 0) {
+        state.seasonDuelQueue = [...duelPairs];
+        state.seasonSiegePending = true;
+        const next = state.seasonDuelQueue.shift();
+        startSeasonDuel(next);
+      } else {
+        state.seasonSiegePending = false;
+        runSeasonSiege();
+      }
+    }
+  });
+}
+
+function startSeasonDuel({ buildA, buildB }) {
+  const allEntries = getEntries();
+  const entryA = allEntries.find((e) => e.build?.buildId === buildA.buildId);
+  const entryB = allEntries.find((e) => e.build?.buildId === buildB.buildId);
+  if (!entryA || !entryB) {
+    // 找不到角色，跳过这场单挑
+    if (state.seasonDuelQueue.length > 0) {
+      const next = state.seasonDuelQueue.shift();
+      startSeasonDuel(next);
+    } else if (state.seasonSiegePending) {
+      state.seasonSiegePending = false;
+      runSeasonSiege();
+    }
+    return;
+  }
+  startChaosBattle([entryA, entryB]).catch(console.error);
+}
+
+/** 将灭门战产生的门派变更持久化到 DB（只改 faction，不改 originalFaction）*/
+async function applyFactionChanges(factionChanges, builds) {
+  for (const { buildId, newFaction } of factionChanges) {
+    const build = builds.find((b) => b.buildId === buildId);
+    if (!build) continue;
+    const newFactionObj = FACTIONS.find((f) => f.key === newFaction) || { key: newFaction, name: newFaction };
+    const updatedBuild = { ...build, faction: newFactionObj };
+    await state.storage.putBuild(updatedBuild);
+    state.builds = state.builds.map((b) => b.buildId === buildId ? updatedBuild : b);
+  }
+}
+
+async function runSeasonSiege() {
+  const builds = await state.storage.getAllBuilds();
+  let ws = ensurePrecomputed(state.worldState);
+  const { worldState: wsS, siegeEvents } = runSiegeAI(ws, builds);
+  ws = wsS;
+  for (const evt of siegeEvents) {
+    ws = runOrdinarySiege(ws, builds, evt.factionId, evt.cityId);
+  }
+  ws = checkConnectivity(ws, builds);
+  const extWar = checkExtinctionWar(ws);
+  if (extWar) {
+    const { worldState: wsExt, factionChanges } = runExtinctionWar(ws, builds, extWar.targetFaction, extWar.attackers);
+    ws = wsExt;
+    await applyFactionChanges(factionChanges, builds);
+  }
+  state.worldState = ws;
+  await state.storage.putWorldState(state.worldState);
+  setWorldBattleOverlay(false);
+  renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
+  renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
 }
 
 function renderBattlePrelude() {
@@ -3188,7 +3308,7 @@ async function finishRanking() {
     );
     state.worldState = applyRankedEventPrestige(state.worldState, "ranking", rankingFactionRanks);
     await state.storage.putWorldState(state.worldState);
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
   }
   const topFourCodes = Object.entries(placementMap)
     .filter(([, placement]) => placement === 3 || placement === 4)
@@ -3253,7 +3373,7 @@ async function finishRanking() {
       }
     }
     await saveFastSimMeta(nextMeta);
-  } else if (state.fastSim.enabled && state.fastSimMeta.finalWinnerCode) {
+  } else if (state.fastSim.enabled && state.fastSim.mode === "endless") {
     await saveFastSimMeta(advanceEndlessFastSimMeta(advanceFastSimBracketMeta(state.fastSimMeta)));
   }
   await refreshAll();
@@ -3471,7 +3591,7 @@ async function finishTournament() {
     );
     state.worldState = applyRankedEventPrestige(state.worldState, "tournament", tourneyFactionRanks);
     await state.storage.putWorldState(state.worldState);
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
   }
   for (const code of state.tournament.participantCodes || []) {
     const entry = getEntryByCode(code);
@@ -3515,7 +3635,7 @@ async function finishTournament() {
       }
     }
     await saveFastSimMeta(nextMeta);
-  } else if (state.fastSim.enabled && state.fastSimMeta.finalWinnerCode) {
+  } else if (state.fastSim.enabled && state.fastSim.mode === "endless") {
     await saveFastSimMeta(advanceEndlessFastSimMeta(advanceFastSimBracketMeta(state.fastSimMeta)));
   }
   await refreshAll();
@@ -3951,7 +4071,7 @@ async function finishExplorationRewards() {
         ...state.fastSimMeta,
         completedStages: [...new Set([...(state.fastSimMeta.completedStages || []), `exploration:${finishedFastSimStage}`])]
       });
-    } else if (state.fastSim.enabled && state.fastSimMeta.finalWinnerCode) {
+    } else if (state.fastSim.enabled && state.fastSim.mode === "endless") {
       await saveFastSimMeta(advanceEndlessFastSimMeta(state.fastSimMeta));
     }
     await refreshAll();
