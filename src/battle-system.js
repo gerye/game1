@@ -38,7 +38,8 @@ export function createBattleState({
   cameraMode,
   arenaMode = "field",
   arenaRadius = HEX_RADIUS,
-  competitionType = "chaos"
+  competitionType = "chaos",
+  defenderFactionKey = null      // 灭门战防守方派系key，null表示普通模式
 }) {
   const terrain = arenaMode === "tournament"
     ? generateTournamentTerrain(arenaRadius)
@@ -65,6 +66,7 @@ export function createBattleState({
     speed,
     cameraMode,
     competitionType,
+    defenderFactionKey,           // 灭门战防守方派系key
     factionWins,
     forcedFocus: {
       mode: "elite-sequence",
@@ -84,10 +86,20 @@ export function updateBattleState(battle, dt) {
   battle.elapsed += dt;
   tickVisuals(battle, dt);
 
+  // 灭门战阶段切换：防守方全灭后解除阵营限制，进入各派混战
+  if (battle.defenderFactionKey) {
+    const defendersAlive = battle.entities.some(
+      (e) => e.alive && e.faction.key === battle.defenderFactionKey
+    );
+    if (!defendersAlive) {
+      battle.defenderFactionKey = null;
+    }
+  }
+
   const living = battle.entities.filter((entity) => entity.alive);
   const factionKeys = [...new Set(living.map((entity) => entity.faction.key))];
   if (factionKeys.length <= 1) {
-    if (battle.competitionType === "chaos") {
+    if (battle.competitionType === "chaos" || battle.competitionType === "siege" || battle.competitionType === "extinction") {
       battle.winner = living[0]?.faction || null;
     } else {
       const winnerEntity = living[0] || null;
@@ -589,7 +601,20 @@ function updateEntity(entity, battle, occupancy, factionCounts, dt) {
 }
 
 function getEnemyEntities(entity, battle) {
-  return battle.entities.filter((target) => target.alive && target.faction.key !== entity.faction.key);
+  const allEnemies = battle.entities.filter(
+    (target) => target.alive && target.faction.key !== entity.faction.key
+  );
+  // 灭门战阶段一：防守方存活时，进攻方只攻击防守方
+  if (
+    battle.defenderFactionKey &&
+    entity.faction.key !== battle.defenderFactionKey
+  ) {
+    const defenders = allEnemies.filter(
+      (t) => t.faction.key === battle.defenderFactionKey
+    );
+    if (defenders.length > 0) return defenders;
+  }
+  return allEnemies;
 }
 
 function resolveLockedTarget(entity, enemies, battle) {
