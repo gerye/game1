@@ -3,7 +3,8 @@
 
 import { WORLD_CHARACTER_STATES } from "./config.js";
 import { createInitialFactionStats, FACTION_IDS, tickGoldProduction, addPrestige } from "./faction-state.js";
-import { createInitialCityStates, buildCityTerritories, ALL_CITIES, hexDistance } from "./world-map.js";
+import { createInitialCityStates, buildCityTerritories, ALL_CITIES, hexDistance, inBounds } from "./world-map.js";
+import { buildCityAdjacency, buildTerritoryOwner } from "./world-connectivity.js";
 
 // ── 24节气 ────────────────────────────────────
 
@@ -59,11 +60,14 @@ export function getSeasonLabel(season) {
  * 创建全新的世界状态（首次启动时调用）
  */
 export function createWorldState() {
+  const cityTerritories = buildCityTerritories();
   return {
     season: 1,
     factionStats: createInitialFactionStats(),
     cities: createInitialCityStates(),
-    cityTerritories: buildCityTerritories(),
+    cityTerritories,
+    cityAdjacency: buildCityAdjacency(cityTerritories),
+    territoryOwner: buildTerritoryOwner(cityTerritories),
     characterStates: {},
     log: [`${getSeasonLabel(1)}，江湖初开，六派鼎立。`],
   };
@@ -118,7 +122,10 @@ export function detectAdjacentDuels(worldState, builds) {
     if (cs.state === WORLD_CHARACTER_STATES.GARRISON && cs.cityId) {
       return cityMap[cs.cityId] || null;
     }
-    if (cs.q != null && cs.r != null) return { q: cs.q, r: cs.r };
+    // 漫游位置需非原点且在地图内才参与单挑检测
+    if (cs.q != null && cs.r != null && (cs.q !== 0 || cs.r !== 0) && inBounds(cs.q, cs.r)) {
+      return { q: cs.q, r: cs.r };
+    }
     return null;
   }
 
@@ -212,35 +219,139 @@ export function advanceSeason(worldState, builds, fastSimFn = null) {
 
 function aiUpdateCharacterStates(worldState, builds) {
   const updated = { ...worldState.characterStates };
+  const cityMap = Object.fromEntries(ALL_CITIES.map((c) => [c.id, { q: c.q, r: c.r }]));
 
   builds.forEach((build) => {
     const cs = updated[build.buildId];
     if (!cs || cs.state === WORLD_CHARACTER_STATES.CAMPAIGN) return;
+
+    const factionKey = build.faction?.key || build.faction;
+    const hqId = `${factionKey}-hq`;
 
     // 重伤角色强制驻守在总部
     if (cs.injured) {
       updated[build.buildId] = {
         ...cs,
         state: WORLD_CHARACTER_STATES.GARRISON,
-        cityId: `${build.faction?.key || build.faction}-hq`,
+        cityId: hqId,
+        q: cityMap[hqId]?.q || 0,
+        r: cityMap[hqId]?.r || 0,
       };
       return;
     }
 
-    // 40% 概率漫游，60% 驻守
-    const roll = seededRand(build.buildId + worldState.season);
-    if (roll < 0.4) {
-      updated[build.buildId] = { ...cs, state: WORLD_CHARACTER_STATES.ROAMING };
+    // 移动力：敏捷 / 20，最少 2 格
+    const agility = build.primary?.agility || 20;
+    const movementRange = Math.max(2, Math.floor(agility / 20));
+
+    // 当前位置
+    let cq, cr;
+    let displaced = false; // 驻守城市已被占，需要离开
+    if (cs.state === WORLD_CHARACTER_STATES.GARRISON && cs.cityId) {
+      const cityPos = cityMap[cs.cityId];
+      cq = cityPos?.q || 0;
+      cr = cityPos?.r || 0;
+      // 检查驻守城市是否仍属于己方
+      const cityState = worldState.cities.find((c) => c.id === cs.cityId);
+      if (cityState && cityState.faction !== factionKey) displaced = true;
     } else {
-      const factionKey = build.faction?.key || build.faction;
-      const ownedCities = worldState.cities.filter((c) => c.faction === factionKey);
-      const target = ownedCities.length
-        ? ownedCities[Math.floor(roll * ownedCities.length)]
-        : { id: `${factionKey}-hq` };
+      cq = cs.q || 0;
+      cr = cs.r || 0;
+    }
+
+    const seed = build.buildId + String(worldState.season);
+    const roll = seededRand(seed);
+
+    // 60% 概率驻守（除非被强制离开），40% 游历
+    if (roll >= 0.4 && !displaced) {
+      // 驻守：选一个移动力范围内的己方城市
+      const ownCities = worldState.cities.filter((c) => c.faction === factionKey);
+      const reachable = ownCities.filter((c) => {
+        const tpl = cityMap[c.id];
+        return tpl && hexDistance(cq, cr, tpl.q, tpl.r) <= movementRange;
+      });
+
+      if (reachable.length > 0) {
+        const idx = Math.floor(seededRand(seed + "g") * reachable.length);
+        const target = reachable[idx];
+        const tpos = cityMap[target.id];
+        updated[build.buildId] = {
+          ...cs,
+          state: WORLD_CHARACTER_STATES.GARRISON,
+          cityId: target.id,
+          q: tpos?.q || 0,
+          r: tpos?.r || 0,
+        };
+        return;
+      }
+      // 范围内无己方城市，转为游历
+    }
+
+    // 游历：决定有无念头（50%）
+    const hasIntention = seededRand(seed + "i") < 0.5;
+    let targetQ = cq, targetR = cr;
+
+    if (hasIntention) {
+      // 选目标城市（己方或中立）
+      const availCities = worldState.cities.filter((c) => !c.faction || c.faction === factionKey);
+      if (availCities.length > 0) {
+        const idx = Math.floor(seededRand(seed + "tc") * availCities.length);
+        const tpl = ALL_CITIES.find((c) => c.id === availCities[idx].id);
+        if (tpl) { targetQ = tpl.q; targetR = tpl.r; }
+      }
+    }
+
+    // 计算新坐标，最多 10 次尝试
+    let newQ = cq, newR = cr;
+    let found = false;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      let candQ, candR;
+      if (hasIntention) {
+        const dist = hexDistance(cq, cr, targetQ, targetR);
+        if (dist <= movementRange) {
+          candQ = targetQ; candR = targetR;
+        } else {
+          const ratio = movementRange / dist;
+          candQ = Math.round(cq + (targetQ - cq) * ratio);
+          candR = Math.round(cr + (targetR - cr) * ratio);
+        }
+      } else {
+        const angle = seededRand(seed + "ang" + attempt) * Math.PI * 2;
+        candQ = Math.round(cq + movementRange * Math.cos(angle));
+        candR = Math.round(cr + movementRange * Math.sin(angle));
+      }
+
+      if (isValidRoamPos(candQ, candR, factionKey, worldState)) {
+        newQ = candQ; newR = candR;
+        found = true;
+        break;
+      }
+    }
+    if (!found) { newQ = cq; newR = cr; }
+
+    // 移动后，若在己方城市附近，50% 概率驻守
+    const ownCities = worldState.cities.filter((c) => c.faction === factionKey);
+    const nearbyOwn = ownCities.find((c) => {
+      const tpl = cityMap[c.id];
+      return tpl && hexDistance(newQ, newR, tpl.q, tpl.r) <= movementRange;
+    });
+
+    if (nearbyOwn && seededRand(seed + "settle") > 0.5) {
+      const tpos = cityMap[nearbyOwn.id];
       updated[build.buildId] = {
         ...cs,
         state: WORLD_CHARACTER_STATES.GARRISON,
-        cityId: target.id,
+        cityId: nearbyOwn.id,
+        q: tpos?.q || 0,
+        r: tpos?.r || 0,
+      };
+    } else {
+      updated[build.buildId] = {
+        ...cs,
+        state: WORLD_CHARACTER_STATES.ROAMING,
+        q: newQ,
+        r: newR,
+        cityId: null,
       };
     }
   });
@@ -248,8 +359,19 @@ function aiUpdateCharacterStates(worldState, builds) {
   return { ...worldState, characterStates: updated };
 }
 
+// 坐标验证：在地图内 + 落在己方或中立 Voronoi 格内
+function isValidRoamPos(q, r, factionKey, worldState) {
+  if (!inBounds(q, r)) return false;
+  const { territoryOwner, cities } = worldState;
+  if (!territoryOwner) return true; // 旧存档兜底
+  const cityId = territoryOwner[`${q},${r}`];
+  if (!cityId) return false;
+  const cityState = cities.find((c) => c.id === cityId);
+  return !cityState?.faction || cityState.faction === factionKey;
+}
+
 // 确定性伪随机（0~1），基于字符串种子
-function seededRand(seed) {
+export function seededRand(seed) {
   let h = 0;
   const s = String(seed);
   for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;

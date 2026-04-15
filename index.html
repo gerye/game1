@@ -37,16 +37,22 @@
           </div>
           <div class="battle-controls">
             <button id="advanceSeasonBtn" class="ghost-btn">推进时节</button>
-            <button id="triggerJianghuBtn" class="ghost-btn">触发江湖争霸</button>
-            <button id="triggerTournamentBtn" class="ghost-btn">触发武道会</button>
-            <button id="triggerRankingBtn" class="ghost-btn">触发排位赛</button>
-            <button id="worldFastSimBtn" class="ghost-btn">快速推演</button>
-            <button id="toggleEndlessSimBtn" class="ghost-btn">无尽推演</button>
+            <div class="battle-select-group">
+              <select id="battleModeSelect" aria-label="选择战斗模式">
+                <option value="chaos">江湖争霸</option>
+                <option value="tournament">武道会</option>
+                <option value="ranking">江湖排位</option>
+                <option value="exploration">秘境探索</option>
+              </select>
+              <button id="startSelectedBattleBtn" class="primary-btn">开始</button>
+            </div>
+            <button id="toggleSelectedSimBtn" class="ghost-btn" data-sim-mode="endless">无尽推演</button>
+            <button id="toggleChronicleBtn" class="ghost-btn" title="查看江湖大事记与历史排位">江湖大事记</button>
           </div>
         </div>
         <div class="world-map-layout">
           <div class="world-canvas-wrap" style="position:relative; display:inline-block;">
-            <canvas id="world-map-canvas" width="860" height="680" style="border:1px solid #444; background:#1a1a2e; display:block;"></canvas>
+            <canvas id="world-map-canvas" width="860" height="680" style="border:1px solid #444; display:block;"></canvas>
             <div id="world-battle-overlay" class="world-battle-overlay" hidden>
               <div class="world-battle-overlay-text">⚔ 战斗进行中<br><small>请前往战场区域观看</small></div>
             </div>
@@ -62,31 +68,13 @@
             <p class="panel-note">江湖争霸、武道会、排位赛与大事记共用同一块战场区域。</p>
           </div>
           <div class="battle-toolbar" role="toolbar" aria-label="战场控制">
-            <div class="battle-controls battle-controls-primary">
-              <div class="battle-select-group">
-                <select id="battleModeSelect" aria-label="选择战斗模式">
-                  <option value="chaos">江湖争霸</option>
-                  <option value="tournament">武道会</option>
-                  <option value="ranking">江湖排位</option>
-                  <option value="exploration">秘境探索</option>
-                </select>
-                <button id="startSelectedBattleBtn" class="primary-btn">开始</button>
-              </div>
-              <div class="battle-select-group">
-                <select id="simModeSelect" aria-label="选择推演模式">
-                  <option value="fast">快速推演</option>
-                  <option value="endless">无尽推演</option>
-                </select>
-                <button id="toggleSelectedSimBtn" class="ghost-btn">开启</button>
-              </div>
-              <button id="toggleChronicleBtn" class="ghost-btn" title="查看江湖大事记与历史排位">江湖大事记</button>
-              <button id="startChaosBtn"      class="primary-btn" hidden>开始江湖争霸</button>
-              <button id="startTournamentBtn" class="primary-btn" hidden>开始武道会</button>
-              <button id="startRankingBtn"    class="primary-btn" hidden>开始江湖排位</button>
-              <button id="startExplorationBtn" class="primary-btn" hidden>开始秘境探索</button>
-              <button id="toggleFastSimBtn"   class="ghost-btn"   hidden>开启快速推演</button>
-
-            </div>
+            <!-- 代理按钮（逻辑用，不可见） -->
+            <button id="startChaosBtn"      class="primary-btn" hidden>开始江湖争霸</button>
+            <button id="startTournamentBtn" class="primary-btn" hidden>开始武道会</button>
+            <button id="startRankingBtn"    class="primary-btn" hidden>开始江湖排位</button>
+            <button id="startExplorationBtn" class="primary-btn" hidden>开始秘境探索</button>
+            <button id="toggleFastSimBtn"   class="ghost-btn"   hidden>开启快速推演</button>
+            <button id="toggleEndlessSimBtn" class="ghost-btn"  hidden>开启无尽推演</button>
             <div class="battle-controls battle-controls-secondary">
               <button id="pauseBattleBtn" class="ghost-btn" disabled aria-label="暂停或继续战斗">暂停</button>
               <button id="resetBattleBtn" class="ghost-btn" disabled aria-label="重置当前战斗">重置</button>
