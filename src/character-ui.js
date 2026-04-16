@@ -1,5 +1,5 @@
 import { GRADE_SCALE, MAX_LEVEL } from "./config.js";
-import { formatSkillDescription, formatSkillValueSummary } from "./game-data.js";
+import { computeCombatScoreFromPrimary, formatSkillDescription, formatSkillValueSummary } from "./game-data.js";
 
 const TEXT = {
   totalRoles: "\u89d2\u8272\u603b\u6570",
@@ -197,6 +197,7 @@ export function renderCapDetail({
   const honorContext = entry.honorContext || getHonorBonusContext(entry.build, entry.progress);
   const current = getEffectiveSheet(entry.build, entry.progress.level, skills, equipment, honorContext);
   const final = getEffectiveSheet(entry.build, MAX_LEVEL, skills, equipment, honorContext);
+  const combatScore = computeCombatScoreFromPrimary(current.primary, entry.build.skillScore || 0);
 
   container.innerHTML = `
     <div class="detail-panel-head">
@@ -217,7 +218,7 @@ export function renderCapDetail({
       <div class="stat-pair"><span>${TEXT.record}</span><strong>${entry.progress.wins}/${entry.progress.totalBattles}</strong></div>
       <div class="stat-pair"><span>${TEXT.championCount}</span><strong>${entry.progress.tournamentChampionCount || 0}</strong></div>
       <div class="stat-pair"><span>${TEXT.kad}</span><strong>${entry.progress.kills}/${entry.progress.assists}/${entry.progress.deaths}</strong></div>
-      <div class="stat-pair"><span>${TEXT.combatScore}</span><strong>${entry.build.combatScore}</strong></div>
+      <div class="stat-pair"><span>${TEXT.combatScore}</span><strong>${combatScore}</strong></div>
       <div class="stat-pair"><span>${TEXT.skillSlots}</span><strong>${entry.build.skillIds.length}/${entry.build.skillSlots || 1}</strong></div>
       <div class="stat-pair"><span>${TEXT.flourish}</span><strong>${entry.build.potentialScore}</strong></div>
       <div class="stat-pair"><span>${TEXT.colors}</span><strong>${formatPotentialColors(entry.build.potentialReason)}</strong></div>
@@ -284,7 +285,7 @@ export function getFactionSections(entries, factions, gradeIndex, winSummary = {
   return sections;
 }
 
-function compareFactionEntries(left, right, gradeIndex) {
+export function compareFactionEntries(left, right, gradeIndex) {
   const leftPriority = getEntryDisplayPriority(left);
   const rightPriority = getEntryDisplayPriority(right);
   if (leftPriority !== rightPriority) return rightPriority - leftPriority;
@@ -312,7 +313,7 @@ function compareFactionEntries(left, right, gradeIndex) {
   return String(left.base?.code || "").localeCompare(String(right.base?.code || ""));
 }
 
-function getEntryDisplayPriority(entry) {
+export function getEntryDisplayPriority(entry) {
   const progress = entry.progress || {};
   if ((progress.tournamentChampionCount || 0) > 0) return 5;
   if ((progress.tournamentRunnerUpCount || 0) > 0) return 4;

@@ -108,7 +108,7 @@ export function transferCity(cityStates, cityId, newFaction) {
  * 计算门派实力评分（用于 UI 展示）
  * = 100(基础) + 大城数×30 + 小城数×10 + 声望×0.1
  */
-export function computePowerScore(factionId, factionStats, cityStates) {
+export function computePowerScore(factionId, cityStates, entries = []) {
   const owned = citiesOwnedBy(factionId, cityStates);
   const largeCities = owned.filter((c) => {
     const t = ALL_CITIES.find((a) => a.id === c.id);
@@ -118,6 +118,9 @@ export function computePowerScore(factionId, factionStats, cityStates) {
     const t = ALL_CITIES.find((a) => a.id === c.id);
     return t && t.tier === WORLD_CITY_TIERS.SMALL;
   }).length;
-  const prestige = factionStats[factionId]?.prestige || 0;
-  return 100 + largeCities * 30 + smallCities * 10 + Math.round(prestige * 0.1);
+  const discipleScoreTotal = entries
+    .filter((entry) => entry.build?.faction?.key === factionId)
+    .reduce((sum, entry) => sum + Number(entry.combatScore ?? entry.build?.combatScore ?? 0), 0);
+  const total = discipleScoreTotal / 500 + largeCities * 10 + smallCities * 5;
+  return Math.round(total * 10) / 10;
 }

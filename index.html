@@ -15,7 +15,7 @@
         <h1>瓶盖派系战争</h1>
         <p class="hero-copy">上传现实中的瓶盖照片，系统会先抽取稳定的基础头像与识别编码，再在当前版本中生成唯一的角色属性、技能与成长曲线。</p>
         <nav class="hero-quick-actions" aria-label="快速操作">
-          <a class="ghost-btn back-link" href="./trial.html">进入试炼场</a>
+          <a id="openTrialPageLink" class="ghost-btn back-link" href="trial.html" target="_blank" rel="noopener noreferrer">进入试炼场</a>
           <button id="exportRoleSaveBtn" class="ghost-btn" title="将当前所有角色数据导出为 JSON 文件">导出角色存档</button>
           <button id="importRoleSaveBtn" class="ghost-btn" title="从本地 JSON 文件导入角色存档">从存档导入</button>
           <button id="openDatabaseBtn" class="ghost-btn" title="查看技能、装备、血脉等数据库">打开数据库</button>
@@ -43,6 +43,7 @@
                 <option value="tournament">武道会</option>
                 <option value="ranking">江湖排位</option>
                 <option value="exploration">秘境探索</option>
+                <option value="auction">拍卖会</option>
               </select>
               <button id="startSelectedBattleBtn" class="primary-btn">开始</button>
             </div>
@@ -73,6 +74,7 @@
             <button id="startTournamentBtn" class="primary-btn" hidden>开始武道会</button>
             <button id="startRankingBtn"    class="primary-btn" hidden>开始江湖排位</button>
             <button id="startExplorationBtn" class="primary-btn" hidden>开始秘境探索</button>
+            <button id="startAuctionBtn" class="primary-btn" hidden>开始拍卖会</button>
             <button id="toggleFastSimBtn"   class="ghost-btn"   hidden>开启快速推演</button>
             <button id="toggleEndlessSimBtn" class="ghost-btn"  hidden>开启无尽推演</button>
             <div class="battle-controls battle-controls-secondary">

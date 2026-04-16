@@ -803,6 +803,18 @@ export function getEffectiveSheet(build, level, allSkills = [], allEquipment = [
     };
 }
 
+export function computeCombatScoreFromPrimary(primary = {}, skillScore = 0) {
+  const primaryTotal = ["strength", "vitality", "agility", "intelligence", "spirit"]
+    .reduce((sum, key) => sum + Number(primary?.[key] || 0), 0);
+  return Math.round(Number(skillScore || 0) + primaryTotal * 2.4);
+}
+
+export function computeBuildCombatScore(build, level, allSkills = [], allEquipment = [], bonusContext = {}) {
+  if (!build) return 0;
+  const sheet = getEffectiveSheet(build, level, allSkills, allEquipment, bonusContext);
+  return computeCombatScoreFromPrimary(sheet.primary, build.skillScore || 0);
+}
+
 function applyHonorBonuses(whitePrimary, factionBattleWinCount = 0, progress = null, factionChampionCount = 0) {
   const championCount = Math.max(0, Number(progress?.tournamentChampionCount || 0));
   const runnerUpCount = Math.max(0, Number(progress?.tournamentRunnerUpCount || 0));

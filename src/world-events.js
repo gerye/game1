@@ -11,6 +11,30 @@ import { isHQSurrounded, ALL_CITIES, hexDistance } from "./world-map.js";
 import { addWorldLog } from "./world-tick.js";
 import { ensurePrecomputed } from "./world-connectivity.js";
 
+function getSiegeCost(template, currentOwner) {
+  if (!template || template.tier === WORLD_CITY_TIERS.HQ) return null;
+  if (!currentOwner) {
+    return template.tier === WORLD_CITY_TIERS.LARGE
+      ? WORLD_PRESTIGE_COSTS.captureNeutralLarge
+      : WORLD_PRESTIGE_COSTS.captureNeutralSmall;
+  }
+  return template.tier === WORLD_CITY_TIERS.LARGE
+    ? WORLD_PRESTIGE_COSTS.attackLargeCity
+    : WORLD_PRESTIGE_COSTS.attackSmallCity;
+}
+
+function recordSiegeLoss(worldState, attackerFaction, defenderFaction) {
+  if (!attackerFaction || !defenderFaction) return worldState;
+  const recentSiegeLosses = { ...(worldState.recentSiegeLosses || {}) };
+  const previous = Array.isArray(recentSiegeLosses[attackerFaction])
+    ? recentSiegeLosses[attackerFaction]
+    : [];
+  recentSiegeLosses[attackerFaction] = [defenderFaction, ...previous]
+    .filter((factionId, index, list) => factionId && list.indexOf(factionId) === index)
+    .slice(0, 2);
+  return { ...worldState, recentSiegeLosses };
+}
+
 // ── 声望分配 ─────────────────────────────────────
 
 /**
@@ -67,16 +91,11 @@ export function applyRankedEventPrestige(worldState, eventType, rankedFactions) 
 export function tryLaunchSiege(worldState, attackerFaction, cityId) {
   const template = ALL_CITIES.find((c) => c.id === cityId);
   if (!template) return { worldState, launched: false };
+  if (template.tier === WORLD_CITY_TIERS.HQ) return { worldState, launched: false };
 
   const currentOwner = worldState.cities.find((c) => c.id === cityId)?.faction;
-  let cost;
-  if (!currentOwner) {
-    cost = WORLD_PRESTIGE_COSTS.captureNeutral;
-  } else if (template.tier === WORLD_CITY_TIERS.LARGE || template.tier === WORLD_CITY_TIERS.HQ) {
-    cost = WORLD_PRESTIGE_COSTS.attackLargeCity;
-  } else {
-    cost = WORLD_PRESTIGE_COSTS.attackSmallCity;
-  }
+  const cost = getSiegeCost(template, currentOwner);
+  if (cost == null) return { worldState, launched: false };
 
   const { ok, factionStats } = spendPrestige(worldState.factionStats, attackerFaction, cost);
   if (!ok) return { worldState, launched: false };
@@ -102,8 +121,11 @@ export function applySiegeResult(worldState, cityId, winnerFaction, attackerFact
 
   if (winnerFaction !== attackerFaction) {
     // 守方获胜
+    const failedState = wasOwnedBy
+      ? recordSiegeLoss(worldState, attackerFaction, wasOwnedBy)
+      : worldState;
     return addWorldLog(
-      worldState,
+      failedState,
       `攻城战：${attackerFaction} 攻打 ${cityName} 失败，${wasOwnedBy ?? "中立"} 守住。`
     );
   }
@@ -150,6 +172,9 @@ function chooseSiegeTarget(factionId, worldState) {
   if (ownCityIds.size === 0) return null;
 
   const prestige = factionStats[factionId]?.prestige || 0;
+  const recentLossOwners = Array.isArray(worldState.recentSiegeLosses?.[factionId])
+    ? worldState.recentSiegeLosses[factionId]
+    : [];
 
   // 收集所有接壤的非己方城市
   const neutral = [];
@@ -160,6 +185,8 @@ function chooseSiegeTarget(factionId, worldState) {
       if (ownCityIds.has(neighborId)) continue;
       const state = cities.find((c) => c.id === neighborId);
       if (!state) continue;
+      const template = ALL_CITIES.find((c) => c.id === neighborId);
+      if (!template || template.tier === WORLD_CITY_TIERS.HQ) continue;
       if (!state.faction) {
         if (!neutral.includes(neighborId)) neutral.push(neighborId);
       } else {
@@ -184,16 +211,32 @@ function chooseSiegeTarget(factionId, worldState) {
 
   // 情况 A：有接壤空白城市
   if (neutral.length > 0) {
-    if (prestige < WORLD_PRESTIGE_COSTS.captureNeutral) return null; // 积蓄声望
-
-    // 优先大城
-    const largeNeutral = neutral.filter((id) => {
+    const adjacentLargeNeutral = neutral.filter((id) => {
       const tpl = ALL_CITIES.find((c) => c.id === id);
       return tpl?.tier === WORLD_CITY_TIERS.LARGE;
     });
-    const candidates = largeNeutral.length > 0 ? largeNeutral : neutral;
+    if (adjacentLargeNeutral.length > 0) {
+      const affordableLargeNeutral = adjacentLargeNeutral.filter((id) => {
+        const tpl = ALL_CITIES.find((c) => c.id === id);
+        return prestige >= (getSiegeCost(tpl, null) ?? Infinity);
+      });
+      if (affordableLargeNeutral.length === 0) return null;
+      affordableLargeNeutral.sort((a, b) => minDistToOwn(a) - minDistToOwn(b));
+      return affordableLargeNeutral[0] || null;
+    }
 
-    // 按距离排序，选最近
+    const smallNeutral = neutral
+      .filter((id) => {
+        const tpl = ALL_CITIES.find((c) => c.id === id);
+        return tpl?.tier === WORLD_CITY_TIERS.SMALL;
+      })
+      .filter((id) => {
+        const tpl = ALL_CITIES.find((c) => c.id === id);
+        return prestige >= (getSiegeCost(tpl, null) ?? Infinity);
+      });
+    const candidates = smallNeutral;
+    if (candidates.length === 0) return null;
+
     candidates.sort((a, b) => minDistToOwn(a) - minDistToOwn(b));
     return candidates[0] || null;
   }
@@ -201,13 +244,34 @@ function chooseSiegeTarget(factionId, worldState) {
   // 情况 B：只剩有主城市，按距离从近到远，声望够就攻
   if (enemy.length > 0) {
     enemy.sort((a, b) => minDistToOwn(a) - minDistToOwn(b));
-    for (const cityId of enemy) {
+    const enemyTargets = enemy.map((cityId) => {
       const tpl = ALL_CITIES.find((c) => c.id === cityId);
-      const cost = (tpl?.tier === WORLD_CITY_TIERS.LARGE || tpl?.tier === WORLD_CITY_TIERS.HQ)
-        ? WORLD_PRESTIGE_COSTS.attackLargeCity
-        : WORLD_PRESTIGE_COSTS.attackSmallCity;
-      if (prestige >= cost) return cityId;
+      const owner = cities.find((c) => c.id === cityId)?.faction || null;
+      const cost = getSiegeCost(tpl, owner);
+      return {
+        cityId,
+        owner,
+        tier: tpl?.tier || WORLD_CITY_TIERS.SMALL,
+        cost,
+        affordable: prestige >= (cost ?? Infinity),
+        avoided: Boolean(owner && recentLossOwners.includes(owner))
+      };
+    });
+    const affordableEnemy = enemyTargets.filter((target) => target.affordable);
+    if (affordableEnemy.length === 0) return null;
+
+    const preferredEnemy = affordableEnemy.filter((target) => !target.avoided);
+    if (preferredEnemy.length > 0) {
+      return preferredEnemy[0]?.cityId || null;
     }
+
+    const hasPreferredLargeEnemy = enemyTargets.some((target) =>
+      target.tier === WORLD_CITY_TIERS.LARGE && !target.avoided
+    );
+    if (hasPreferredLargeEnemy) return null;
+
+    const fallbackSmallEnemy = affordableEnemy.find((target) => target.tier === WORLD_CITY_TIERS.SMALL);
+    return fallbackSmallEnemy?.cityId || affordableEnemy[0]?.cityId || null;
   }
 
   return null;

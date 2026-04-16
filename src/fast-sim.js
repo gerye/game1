@@ -29,6 +29,14 @@ const ENDLESS_FAST_SIM_CYCLE = [
 ];
 
 export function normalizeFastSimMeta(meta = {}) {
+  const allowedPendingActionTypes = new Set([
+    "season",
+    "chaos",
+    "exploration",
+    "tournament",
+    "ranking"
+  ]);
+  const endlessPendingActionType = String(meta.endlessPendingActionType || "");
   return {
     completedStages: [...new Set(
       Array.isArray(meta.completedStages)
@@ -40,7 +48,8 @@ export function normalizeFastSimMeta(meta = {}) {
     finalWinnerCode: typeof meta.finalWinnerCode === "string" ? meta.finalWinnerCode : "",
     bracketCount: Math.max(0, Math.floor(Number(meta.bracketCount || 0))),
     endlessStep: Math.max(0, Math.floor(Number(meta.endlessStep || 0))) % ENDLESS_FAST_SIM_CYCLE.length,
-    endlessCycleCount: Math.max(0, Math.floor(Number(meta.endlessCycleCount || 0)))
+    endlessCycleCount: Math.max(0, Math.floor(Number(meta.endlessCycleCount || 0))),
+    endlessPendingActionType: allowedPendingActionTypes.has(endlessPendingActionType) ? endlessPendingActionType : ""
   };
 }
 

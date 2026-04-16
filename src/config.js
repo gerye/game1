@@ -181,9 +181,10 @@ export const TERRAIN_TYPES = {
 export const WORLD_MAP_RADIUS = 40;
 
 export const WORLD_PRESTIGE_COSTS = {
-  captureNeutral:   500,
-  attackSmallCity:  1000,
-  attackLargeCity:  2500,
+  captureNeutralSmall: 200,
+  captureNeutralLarge: 500,
+  attackSmallCity:     500,
+  attackLargeCity:     1000,
 };
 
 export const WORLD_PRESTIGE_REWARDS = {

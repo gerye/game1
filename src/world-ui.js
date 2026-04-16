@@ -449,11 +449,11 @@ function drawHQBuilding(ctx, city, factionColor) {
  * @param {HTMLElement} container
  * @param {Object} worldState
  */
-export function renderArbiterPanel(container, worldState, chronicle) {
+export function renderArbiterPanel(container, worldState, chronicle, entries = []) {
   const stats = worldState.factionStats || {};
   const cities = worldState.cities || [];
   const escHtml = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const entries = chronicle?.entries ? chronicle.entries.slice(0, 8) : [];
+  const chronicleEntries = chronicle?.entries ? chronicle.entries.slice(0, 8) : [];
 
   container.innerHTML = `
     <div class="world-panel">
@@ -465,7 +465,7 @@ export function renderArbiterPanel(container, worldState, chronicle) {
         <tbody>
           ${FACTION_IDS.map((fid) => {
             const fs = stats[fid] || { prestige: 0, gold: 0 };
-            const power = computePowerScore(fid, stats, cities);
+            const power = computePowerScore(fid, cities, entries);
             const cityCount = cities.filter((c) => c.faction === fid).length;
             return `<tr>
               <td><span class="faction-dot" style="background:${FACTION_COLORS[fid]}"></span>${FACTION_NAMES[fid]}</td>
@@ -478,8 +478,8 @@ export function renderArbiterPanel(container, worldState, chronicle) {
         </tbody>
       </table>
       <div class="world-log">
-        ${entries.length > 0
-          ? entries.map((e) => `<div class="chronicle-entry-mini"><strong>${escHtml(e.title || "")}</strong><p>${escHtml(e.text || "")}</p></div>`).join("")
+        ${chronicleEntries.length > 0
+          ? chronicleEntries.map((e) => `<div class="chronicle-entry-mini"><strong>${escHtml(e.title || "")}</strong><p>${escHtml(e.text || "")}</p></div>`).join("")
           : `<div class="log-line" style="opacity:0.5">江湖故事正在酝酿中…</div>`
         }
       </div>

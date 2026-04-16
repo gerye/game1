@@ -81,7 +81,18 @@ export function createBattleState({
 }
 
 export function updateBattleState(battle, dt) {
-  if (!battle || battle.winner) return;
+  if (!battle) return;
+
+  if (battle.winner) {
+    const living = battle.entities.filter((entity) => entity.alive);
+    const factionKeys = [...new Set(living.map((entity) => entity.faction.key))];
+    if (factionKeys.length > 1) {
+      battle.winner = null;
+      battle.rewardsApplied = false;
+    } else {
+      return;
+    }
+  }
 
   battle.elapsed += dt;
   tickVisuals(battle, dt);
@@ -1139,6 +1150,10 @@ function tryReviveOnDeath(entity, battle, occupancy, reason = "") {
   const stoneRevivePct = entity.derived?.stoneReviveHpPct || 0;
   if (!reviveStatus && !stoneRevivePct) return false;
   if (!occupancy) return false;
+  if (battle) {
+    battle.winner = null;
+    battle.rewardsApplied = false;
+  }
   entity.deaths += 1;
   entity.reviveTriggers += 1;
   if (reviveStatus) {

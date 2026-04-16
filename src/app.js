@@ -1,11 +1,13 @@
 ﻿
 import { BATTLE_LOG_LIMIT, FACTIONS, GAME_VERSION, GRADE_SCALE, META_KEYS, ROLE_LABELS, TERRAIN_TYPES, WORLD_CHARACTER_STATES, WORLD_CITY_TIERS } from "./config.js";
 import { createBattleState as createBattleRuntime, renderBattleScene, updateBattleState } from "./battle-system.js";
-import { getFactionSections, renderBuildGrid as renderBuildGridView, renderCapDetail as renderCapDetailView, renderHeroStats as renderHeroStatsView } from "./character-ui.js";
+import { compareFactionEntries, getFactionSections, renderBuildGrid as renderBuildGridView, renderCapDetail as renderCapDetailView, renderHeroStats as renderHeroStatsView } from "./character-ui.js";
 import { renderBloodlineDatabase as renderBloodlineDatabaseView, renderCharacterDatabase as renderCharacterDatabaseView, renderEquipmentDatabase as renderEquipmentDatabaseView, renderEventDatabase as renderEventDatabaseView, renderSkillDatabase as renderSkillDatabaseView, renderStatusDatabase as renderStatusDatabaseView } from "./database-ui.js";
 import { appendChronicleEntry as appendChronicleStateEntry, buildBloodlineBiographyEntry, buildBloodlineChronicleEntry, buildExplorationBiographyEntry, buildExplorationChronicleEntry, buildFactionVictoryMilestoneEntry, buildFateChangeChronicleEntry, buildLegendaryEquipmentRecord, buildLegendarySkillRecord, buildRankingBiographyEntry, buildRankingChronicleEntry, buildTournamentBiographyEntry, buildTournamentChronicleEntry, buildTournamentPlacementMap, createChronicleState, normalizeChronicleState, recordKillMilestones, recordLevelMilestones, renderChroniclePanel as renderChronicleHtml } from "./chronicle.js";
 import { getSelectedRankingHistorySnapshot, renderChronicleStageHtml } from "./chronicle-ui.js";
 import { persistBaseImageAssets } from "./cap-asset-store.js";
+import { buildAuctionGoldRanking, buildAuctionState, resolveAuctionLots } from "./auction-utils.js";
+import { renderAuctionPanels, renderAuctionPrelude } from "./auction-ui.js";
 import { getBloodlineById, getBuiltinBloodlines, syncBloodlineLibrary } from "./bloodlines.js";
 import {
   BLOODLINE_TASKS,
@@ -64,6 +66,7 @@ const dom = {
   uploadPanelBody: document.getElementById("uploadPanelBody"),
   exportRoleSaveBtn: document.getElementById("exportRoleSaveBtn"),
   importRoleSaveBtn: document.getElementById("importRoleSaveBtn"),
+  openTrialPageLink: document.getElementById("openTrialPageLink"),
   storageStatus: document.getElementById("storageStatus"),
   openDatabaseBtn: document.getElementById("openDatabaseBtn"),
   closeDatabaseBtn: document.getElementById("closeDatabaseBtn"),
@@ -87,6 +90,7 @@ const dom = {
   startTournamentBtn: document.getElementById("startTournamentBtn"),
   startRankingBtn: document.getElementById("startRankingBtn"),
   startExplorationBtn: document.getElementById("startExplorationBtn"),
+  startAuctionBtn: document.getElementById("startAuctionBtn"),
   toggleFastSimBtn: document.getElementById("toggleFastSimBtn"),
   toggleEndlessSimBtn: document.getElementById("toggleEndlessSimBtn"),
   toggleChronicleBtn: document.getElementById("toggleChronicleBtn"),
@@ -139,6 +143,8 @@ const state = {
   rankingBattle: null,
   rankingAutoCompleteRound: null,
   exploration: null,
+  auction: null,
+  auctionViewDirty: true,
   activeBattleMode: "chaos",
   lastFrameTime: 0,
   imageCache: new Map(),
@@ -249,7 +255,7 @@ async function init() {
   state.worldState = syncCharacterStates(state.worldState, allBuildsForWorld);
   await state.storage.putWorldState(state.worldState);
   renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-  renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
+  renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle, getEntries());
 
   startRenderLoop();
 }
@@ -276,6 +282,10 @@ function fastPickChaosWinner(entries) {
 }
 
 function bindEvents() {
+  dom.openTrialPageLink?.addEventListener("click", (event) => {
+    event.preventDefault();
+    window.open("trial.html", "_blank", "noopener,noreferrer");
+  });
   dom.photoInput.addEventListener("change", handlePhotoInput);
   dom.analyzeBtn.addEventListener("click", () => {
     saveCurrentUpload().catch((error) => {
@@ -346,6 +356,12 @@ function bindEvents() {
     startExplorationFlow().catch((error) => {
       console.error(error);
       window.alert(`开始秘境探索失败：${error?.message || "请打开控制台查看详情。"}`);
+    });
+  });
+  dom.startAuctionBtn.addEventListener("click", () => {
+    startAuctionFlow().catch((error) => {
+      console.error(error);
+      window.alert(`开始拍卖会失败：${error?.message || "请打开控制台查看详情。"}`);
     });
   });
   dom.battlePrelude.addEventListener("change", handleBattlePreludeChange);
@@ -427,6 +443,8 @@ function getSelectedBattleProxyButton() {
       return dom.startRankingBtn;
     case "exploration":
       return dom.startExplorationBtn;
+    case "auction":
+      return dom.startAuctionBtn;
     case "chaos":
     default:
       return dom.startChaosBtn;
@@ -482,6 +500,35 @@ async function saveFastSimMeta(nextMeta) {
   await state.storage.saveMeta(META_KEYS.FAST_SIM_META, state.fastSimMeta);
 }
 
+function getPendingEndlessFastSimActionType() {
+  return state.fastSim.mode === "endless"
+    ? String(state.fastSimMeta?.endlessPendingActionType || "")
+    : "";
+}
+
+async function markEndlessFastSimActionPending(actionType) {
+  if (state.fastSim.mode !== "endless") return;
+  const nextType = String(actionType || "");
+  if ((state.fastSimMeta?.endlessPendingActionType || "") === nextType) return;
+  await saveFastSimMeta({
+    ...state.fastSimMeta,
+    endlessPendingActionType: nextType
+  });
+}
+
+async function resolveCompletedEndlessFastSimAction(options = {}) {
+  if (!(state.fastSim.enabled && state.fastSim.mode === "endless")) return;
+  const { advanceBracket = false } = options;
+  let nextMeta = {
+    ...state.fastSimMeta,
+    endlessPendingActionType: ""
+  };
+  if (advanceBracket) {
+    nextMeta = advanceFastSimBracketMeta(nextMeta);
+  }
+  await saveFastSimMeta(advanceEndlessFastSimMeta(nextMeta));
+}
+
 async function runFastSimulationStep() {
   if (!state.fastSim.enabled || state.fastSim.processing || state.rewardProcessing) return;
 
@@ -496,6 +543,10 @@ async function runFastSimulationStep() {
       if (state.exploration) {
         await runFastSimulationExplorationStep();
       }
+      return;
+    }
+
+    if (state.activeBattleMode === "auction") {
       return;
     }
 
@@ -528,9 +579,13 @@ async function runFastSimulationStep() {
 
     if (state.tournamentBattle) return;
 
-    // 无尽推演：[season×2 + chaos] ×3 → 武道会/秘境探索/排位赛（循环）
-    const action = getEndlessFastSimAction(state.fastSimMeta);
+    // 无尽推演优先恢复上次未完成的大步骤；没有恢复点时再按循环推进
+    const pendingActionType = getPendingEndlessFastSimActionType();
+    const action = pendingActionType
+      ? { type: pendingActionType }
+      : getEndlessFastSimAction(state.fastSimMeta);
     if (action?.type === "season") {
+      await markEndlessFastSimActionPending("season");
       const { garrisonResults, eventResults, duelPairs } = await runSeasonAdvance();
       // 渲染时节结算面板（快速展示结果）
       state.pendingBattle = null;
@@ -551,18 +606,22 @@ async function runFastSimulationStep() {
       return;
     }
     if (action?.type === "tournament") {
+      await markEndlessFastSimActionPending("tournament");
       await startEndlessSimulationTournament();
       return;
     }
     if (action?.type === "ranking") {
+      await markEndlessFastSimActionPending("ranking");
       await startEndlessSimulationRanking();
       return;
     }
     if (action?.type === "exploration") {
+      await markEndlessFastSimActionPending("exploration");
       await startFastSimulationExploration(0);
       return;
     }
     // chaos
+    await markEndlessFastSimActionPending("chaos");
     await startChaosBattle();
   } finally {
     state.fastSim.processing = false;
@@ -622,6 +681,7 @@ async function startEndlessSimulationTournament() {
   setBattleControlState({
     chaosDisabled: true,
     explorationDisabled: true,
+    auctionDisabled: true,
     tournamentLabel: "开始下一场",
     pauseDisabled: true,
     resetDisabled: false
@@ -678,6 +738,7 @@ async function startFastSimulationTournament(stage) {
   setBattleControlState({
     chaosDisabled: true,
     explorationDisabled: true,
+    auctionDisabled: true,
     tournamentLabel: "开始下一场",
     pauseDisabled: true,
     resetDisabled: false
@@ -808,6 +869,12 @@ function toggleChronicle() {
   if (state.activeBattleMode === "tournament") {
     state.tournamentViewDirty = true;
     renderTournamentShell();
+  } else if (state.activeBattleMode === "auction") {
+    if (state.chronicleOpen) {
+      renderChronicleStage();
+    } else {
+      renderAuctionShell();
+    }
   } else {
     if (state.chronicleOpen) {
       renderChronicleStage();
@@ -850,6 +917,8 @@ function getReadyEntries() {
     progressList: state.progress,
     bloodlines: state.bloodlines,
     statuses: state.statuses,
+    skills: state.skills,
+    equipment: state.equipment,
     winSummary: state.winSummary,
     tournamentMeta: state.tournamentMeta,
     rankingMeta: state.rankingMeta,
@@ -871,9 +940,11 @@ function setBattleControlState({
   tournamentDisabled = false,
   rankingDisabled = false,
   explorationDisabled = false,
+  auctionDisabled = false,
   tournamentLabel = "开始武道会",
   rankingLabel = "开始江湖排位",
   explorationLabel = "开始秘境探索",
+  auctionLabel = "开始拍卖会",
   pauseDisabled = true,
   pauseLabel = "暂停",
   resetDisabled = true
@@ -885,6 +956,8 @@ function setBattleControlState({
   dom.startRankingBtn.textContent = rankingLabel;
   dom.startExplorationBtn.disabled = explorationDisabled;
   dom.startExplorationBtn.textContent = explorationLabel;
+  dom.startAuctionBtn.disabled = auctionDisabled;
+  dom.startAuctionBtn.textContent = auctionLabel;
   dom.pauseBattleBtn.disabled = pauseDisabled;
   dom.pauseBattleBtn.textContent = pauseLabel;
   dom.resetBattleBtn.disabled = resetDisabled;
@@ -974,6 +1047,8 @@ async function refreshAll() {
   renderTournamentRewardOptions();
   if (state.activeBattleMode === "tournament") {
     renderTournamentShell();
+  } else if (state.activeBattleMode === "auction") {
+    renderAuctionShell();
   } else if (state.activeBattleMode === "exploration") {
     renderExplorationShell();
   } else {
@@ -1021,6 +1096,8 @@ function getEntries() {
     progressList: state.progress,
     bloodlines: state.bloodlines,
     statuses: state.statuses,
+    skills: state.skills,
+    equipment: state.equipment,
     winSummary: state.winSummary,
     tournamentMeta: state.tournamentMeta,
     rankingMeta: state.rankingMeta
@@ -1584,7 +1661,7 @@ async function resetAllLevels() {
   state.worldState = syncCharacterStates(state.worldState, _resetBuilds);
   await state.storage.putWorldState(state.worldState);
   renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-  renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
+  renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle, getEntries());
 }
 
 async function seedDemoCaps() {
@@ -1916,6 +1993,7 @@ function togglePauseBattle() {
     toggleRankingBattle();
     return;
   }
+  if (state.activeBattleMode === "auction") return;
   if (state.activeBattleMode === "exploration") return;
   if (!state.battle) return;
   state.battle.paused = !state.battle.paused;
@@ -1930,6 +2008,10 @@ function resetBattle() {
   }
   if (state.activeBattleMode === "ranking") {
     resetRanking();
+    return;
+  }
+  if (state.activeBattleMode === "auction") {
+    resetAuction();
     return;
   }
   if (state.activeBattleMode === "exploration") {
@@ -1966,6 +2048,8 @@ async function applyBattleRewards() {
   state.rewardProcessing = true;
   try {
     const winSummary = structuredClone(state.winSummary || { totalWins: 0, byFaction: {} });
+    const isSeasonDuel = state.seasonSiegePending;
+    const isSiegeBattle = state.currentSiege !== null;
     const latestBuildByBuildId = new Map();
     const latestProgressByBuildId = new Map();
     for (const entity of state.battle.entities) {
@@ -1994,7 +2078,7 @@ async function applyBattleRewards() {
         }
       }
     }
-    if (state.battle.winner) {
+    if (state.battle.winner && !isSeasonDuel && !isSiegeBattle) {
       winSummary.totalWins += 1;
       const factionWins = (winSummary.byFaction[state.battle.winner.key] || 0) + 1;
       winSummary.byFaction[state.battle.winner.key] = factionWins;
@@ -2005,12 +2089,10 @@ async function applyBattleRewards() {
       }
     }
     // 世界地图声望：仅江湖争霸获得（单挑不获声望，攻城战不获声望）
-    const isSeasonDuel = state.seasonSiegePending;
-    const isSiegeBattle = state.currentSiege !== null;
     if (state.battle.winner && state.worldState && !isSeasonDuel && !isSiegeBattle) {
       state.worldState = applyJianghuPrestige(state.worldState, state.battle.winner.key);
       await state.storage.putWorldState(state.worldState);
-      renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
+      renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle, getEntries());
     }
     // 单挑重伤：失败方下场战斗只有一半血量，且进入重伤状态
     if (isSeasonDuel && state.battle.winner && state.worldState) {
@@ -2041,7 +2123,7 @@ async function applyBattleRewards() {
     }
     await resolveChaosBloodlineTasks(state.battle.entities, latestBuildByBuildId, latestProgressByBuildId);
     if (state.fastSim.enabled && state.fastSim.mode === "endless" && !isSeasonDuel && !isSiegeBattle) {
-      await saveFastSimMeta(advanceEndlessFastSimMeta(state.fastSimMeta));
+      await resolveCompletedEndlessFastSimAction();
     }
     await refreshAll();
     dom.pauseBattleBtn.disabled = true;
@@ -2152,7 +2234,7 @@ async function applyBattleRewards() {
     }
     setWorldBattleOverlay(false);
     renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle, getEntries());
   }
 }
 
@@ -2392,6 +2474,15 @@ function renderBattle() {
     }
     return;
   }
+  if (state.activeBattleMode === "auction") {
+    if (state.auctionViewDirty) {
+      renderAuctionShell();
+    }
+    if (state.chronicleOpen) {
+      renderChronicleStage();
+    }
+    return;
+  }
   renderBattleModeInfoPanel();
   if (state.chronicleOpen) {
     renderChronicleStage();
@@ -2590,10 +2681,10 @@ async function startNextSiegeBattle() {
     await state.storage.putWorldState(state.worldState);
     setWorldBattleOverlay(false);
     renderWorldMap(dom.worldMapCanvas, state.worldState, state.worldViewState, getEntries());
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle, getEntries());
     // 无尽推演：队列清空时统一推进 fastSimMeta
     if (state.fastSim.enabled && state.fastSim.mode === "endless") {
-      await saveFastSimMeta(advanceEndlessFastSimMeta(state.fastSimMeta));
+      await resolveCompletedEndlessFastSimAction();
     }
     return;
   }
@@ -2650,6 +2741,7 @@ async function startNextSiegeBattle() {
     chaosDisabled: true,
     tournamentDisabled: true,
     explorationDisabled: true,
+    auctionDisabled: true,
     pauseDisabled: false,
     resetDisabled: false,
   });
@@ -3232,6 +3324,7 @@ async function startTournamentFlow() {
     setBattleControlState({
       chaosDisabled: true,
       explorationDisabled: true,
+      auctionDisabled: true,
       tournamentLabel: "锁定奖池并生成赛程",
       resetDisabled: false
     });
@@ -3263,6 +3356,7 @@ async function startRankingFlow() {
       chaosDisabled: true,
       tournamentDisabled: true,
       explorationDisabled: true,
+      auctionDisabled: true,
       rankingLabel: "锁定奖池并生成第1轮",
       resetDisabled: false
     });
@@ -3551,7 +3645,7 @@ async function finishRanking() {
     );
     state.worldState = applyRankedEventPrestige(state.worldState, "ranking", rankingFactionRanks);
     await state.storage.putWorldState(state.worldState);
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle, getEntries());
   }
   const topFourCodes = Object.entries(placementMap)
     .filter(([, placement]) => placement === 3 || placement === 4)
@@ -3617,7 +3711,7 @@ async function finishRanking() {
     }
     await saveFastSimMeta(nextMeta);
   } else if (state.fastSim.enabled && state.fastSim.mode === "endless") {
-    await saveFastSimMeta(advanceEndlessFastSimMeta(advanceFastSimBracketMeta(state.fastSimMeta)));
+    await resolveCompletedEndlessFastSimAction({ advanceBracket: true });
   }
   await refreshAll();
   setBattleControlState({
@@ -3834,7 +3928,7 @@ async function finishTournament() {
     );
     state.worldState = applyRankedEventPrestige(state.worldState, "tournament", tourneyFactionRanks);
     await state.storage.putWorldState(state.worldState);
-    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle);
+    renderArbiterPanel(dom.worldArbiterPanel, state.worldState, state.chronicle, getEntries());
   }
   for (const code of state.tournament.participantCodes || []) {
     const entry = getEntryByCode(code);
@@ -3879,7 +3973,7 @@ async function finishTournament() {
     }
     await saveFastSimMeta(nextMeta);
   } else if (state.fastSim.enabled && state.fastSim.mode === "endless") {
-    await saveFastSimMeta(advanceEndlessFastSimMeta(advanceFastSimBracketMeta(state.fastSimMeta)));
+    await resolveCompletedEndlessFastSimAction({ advanceBracket: true });
   }
   await refreshAll();
   setBattleControlState({
@@ -4012,6 +4106,151 @@ function syncTournamentParticipants() {
   state.tournament.participantCodes = state.tournament.participantCodes.filter((code) => liveCodes.has(code));
 }
 
+function bindAuctionActionButtons() {
+  const primaryButton = document.getElementById("auctionBidBtnPrimary");
+  const secondaryButton = document.getElementById("auctionBidBtnSecondary");
+  if (primaryButton) {
+    primaryButton.onclick = () => {
+      finalizeAuction();
+    };
+  }
+  if (secondaryButton) {
+    secondaryButton.onclick = () => {
+      finalizeAuction();
+    };
+  }
+}
+
+async function startAuctionFlow() {
+  state.fastSim.enabled = false;
+  syncFastSimButton();
+  state.activeBattleMode = "auction";
+  state.rankingBoardOpen = false;
+  renderRankingBoardOverlay();
+  state.pendingBattle = null;
+  state.pendingBattleRendered = false;
+  state.battle = null;
+  state.tournament = null;
+  state.tournamentBattle = null;
+  state.ranking = null;
+  state.rankingBattle = null;
+  state.exploration = null;
+  state.tournamentSetupOpen = false;
+  state.tournamentTreeOpen = false;
+  resetChronicleViewState();
+  const entries = getReadyEntries();
+  if (entries.length < 1) {
+    window.alert("至少需要 1 个有生成属性的角色才能进入拍卖会。");
+    return;
+  }
+  state.auction = buildAuctionState(entries, state.equipment, state.worldState?.factionStats || {}, `auction:${Date.now()}`);
+  state.auctionViewDirty = true;
+  setBattleControlState({
+    chaosDisabled: true,
+    tournamentDisabled: true,
+    rankingDisabled: true,
+    explorationDisabled: true,
+    auctionDisabled: true,
+    auctionLabel: "拍卖会进行中",
+    pauseDisabled: true,
+    resetDisabled: false
+  });
+  renderAuctionShell();
+}
+
+function resetAuction() {
+  state.auction = null;
+  state.auctionViewDirty = true;
+  state.activeBattleMode = "chaos";
+  setBattleControlState();
+  setBattleSurfaceState({ showPrelude: false, showCanvas: true });
+  resetBattlePanels();
+  renderBattleModeInfoPanel();
+  clearBattleCanvas();
+}
+
+function renderAuctionShell() {
+  dom.battleModeInfoTitle.textContent = "拍卖规则";
+  dom.battleModeInfo.innerHTML = `
+    <div class="terrain-item">每次展示三件随机武器 / 防具，三件拍品的品级互不相同，范围为 D 至 SS。</div>
+    <div class="terrain-item">点击“竞价”后，金币最高的门派优先获得最高品级拍品，以此类推。</div>
+    <div class="terrain-item">获得拍品的门派金币会被清零，门派内部再按当前角色排序依次尝试装备。</div>
+    ${state.auction && !state.auction.resolved ? '<div class="card-actions" style="margin-top:12px"><button id="auctionBidBtnSecondary" class="primary-btn" type="button">竞价</button></div>' : ""}
+  `;
+  const factionLookup = new Map(FACTIONS.map((faction) => [faction.key, faction]));
+  setBattleSurfaceState({
+    showPrelude: true,
+    showCanvas: false,
+    preludeHtml: renderAuctionPrelude({
+      auction: state.auction,
+      factionLookup,
+      gradeColor,
+      escapeHtml
+    })
+  });
+  const { summaryHtml, logHtml } = renderAuctionPanels({
+    auction: state.auction,
+    factionLookup,
+    gradeColor,
+    escapeHtml,
+    logLimit: BATTLE_LOG_LIMIT
+  });
+  dom.battleSummary.innerHTML = summaryHtml;
+  dom.battleLog.innerHTML = logHtml;
+  bindAuctionActionButtons();
+  state.auctionViewDirty = false;
+}
+
+async function finalizeAuction() {
+  if (!state.auction || state.auction.resolved) return;
+  try {
+    const primaryButton = document.getElementById("auctionBidBtnPrimary");
+    const secondaryButton = document.getElementById("auctionBidBtnSecondary");
+    if (primaryButton) primaryButton.textContent = "处理中";
+    if (secondaryButton) secondaryButton.textContent = "处理中";
+    state.auction = {
+      ...state.auction,
+      logs: [...(state.auction.logs || []), "[系统] 已收到竞价指令，正在结算拍卖结果。"]
+    };
+    state.auctionViewDirty = true;
+    renderAuctionShell();
+
+    const entries = getReadyEntries();
+    const factionLookup = new Map(FACTIONS.map((faction) => [faction.key, faction]));
+    const result = resolveAuctionLots({
+      auction: state.auction,
+      entries,
+      equipment: state.equipment,
+      factionStats: state.worldState?.factionStats || {},
+      compareEntries: (left, right) => compareFactionEntries(left, right, gradeIndex),
+      factionLookup
+    });
+
+    for (const [buildId, nextBuild] of result.buildUpdates.entries()) {
+      await state.storage.putBuild(nextBuild);
+      state.builds = state.builds.map((build) => build.buildId === buildId ? nextBuild : build);
+    }
+
+    state.worldState = {
+      ...(state.worldState || createWorldState()),
+      factionStats: result.factionStats
+    };
+    await state.storage.putWorldState(state.worldState);
+    state.auction = {
+      ...state.auction,
+      resolved: true,
+      assignments: result.assignments,
+      logs: result.logs,
+      postGoldRanking: result.goldRanking
+    };
+    state.auctionViewDirty = true;
+    await refreshAll();
+  } catch (error) {
+    console.error("[拍卖会] 竞价失败：", error);
+    window.alert(`拍卖会竞价失败：${error?.message || "请打开控制台查看详情。"}`);
+  }
+}
+
 async function startExplorationFlow(options = {}) {
   const { preserveFastSim = false } = options;
   if (!preserveFastSim) {
@@ -4042,6 +4281,7 @@ async function startExplorationFlow(options = {}) {
     chaosDisabled: true,
     tournamentDisabled: true,
     explorationDisabled: true,
+    auctionDisabled: true,
     explorationLabel: "秘境探索进行中",
     pauseDisabled: true,
     resetDisabled: false
@@ -4315,7 +4555,7 @@ async function finishExplorationRewards() {
         completedStages: [...new Set([...(state.fastSimMeta.completedStages || []), `exploration:${finishedFastSimStage}`])]
       });
     } else if (state.fastSim.enabled && state.fastSim.mode === "endless") {
-      await saveFastSimMeta(advanceEndlessFastSimMeta(state.fastSimMeta));
+      await resolveCompletedEndlessFastSimAction();
     }
     await refreshAll();
     state.activeBattleMode = "exploration";

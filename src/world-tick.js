@@ -54,6 +54,9 @@ export function getSeasonLabel(season) {
 //     }
 //   },
 //   log: string[],             // 最近 50 条世界事件日志
+//   recentSiegeLosses: {       // 各门派最近两次攻城失败时输给的防守门派
+//     [factionId]: string[]
+//   }
 // }
 
 /**
@@ -69,6 +72,7 @@ export function createWorldState() {
     cityAdjacency: buildCityAdjacency(cityTerritories),
     territoryOwner: buildTerritoryOwner(cityTerritories),
     characterStates: {},
+    recentSiegeLosses: {},
     log: [`${getSeasonLabel(1)}，江湖初开，六派鼎立。`],
   };
 }

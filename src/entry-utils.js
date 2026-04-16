@@ -1,5 +1,6 @@
 import { buildBloodlineMap, decorateDisplayName, getBloodlineById, getBloodlinePersistentStatusIds } from "./bloodlines.js";
 import { normalizeCapAssetPath } from "./cap-asset-store.js";
+import { computeBuildCombatScore } from "./game-data.js";
 
 export function getBaseBrand(base) {
   return base?.brand ?? base?.sourceName ?? "";
@@ -65,6 +66,8 @@ export function buildEntries({
   progressList = [],
   bloodlines = [],
   statuses = [],
+  skills = [],
+  equipment = [],
   winSummary = { byFaction: {} },
   tournamentMeta = { byFaction: {} },
   rankingMeta = { byFaction: {} },
@@ -79,6 +82,14 @@ export function buildEntries({
     const progress = build ? progressByBuildId.get(build.buildId) || null : null;
     const bloodline = getBloodlineById(bloodlineMap, progress?.bloodlineId || "");
     const { persistentStatusIds, persistentStatuses } = getPersistentStatuses(progress, bloodlineMap, statuses);
+    const honorContext = build
+      ? buildHonorBonusContext(build, progress, {
+          winSummary,
+          tournamentMeta,
+          rankingMeta,
+          persistentStatuses
+        })
+      : null;
     return {
       base,
       build,
@@ -86,14 +97,10 @@ export function buildEntries({
       bloodline,
       persistentStatusIds,
       displayName: getDisplayName(base, progress, bloodlineMap),
-      honorContext: build
-        ? buildHonorBonusContext(build, progress, {
-            winSummary,
-            tournamentMeta,
-            rankingMeta,
-            persistentStatuses
-          })
-        : null
+      honorContext,
+      combatScore: build && progress
+        ? computeBuildCombatScore(build, progress.level, skills, equipment, honorContext || {})
+        : (build?.combatScore || 0)
     };
   });
 
