@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ':*)",
+      "Bash(node -e ':*)",
+      "Bash(node --input-type=module)",
+      "Read(//usr/local/bin/**)",
+      "Read(//Users/jichao/.nvm/versions/**)",
+      "Bash(export PATH=\"$PATH:/opt/homebrew/bin:/usr/local/bin\")",
+      "Bash(npx --version)",
+      "Bash(rm:*)",
+      "Bash(grep -l \"test\\\\|spec\" src/*.js)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git commit:*)",
+      "Bash(grep:*)",
+      "Read(//tmp/**)",
+      "Bash(awk NR>=3035,NR<=3050:*)",
+      "Bash(awk NR>=3045,NR<=3060:*)",
+      "Bash(awk NR>=3319,NR<=3335:*)",
+      "Bash(node:*)",
+      "Bash(/usr/local/bin/node --check src/app.js)",
+      "Bash(/usr/bin/env node:*)",
+      "Bash(npx --yes acorn --ecma2020 --module src/app.js)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(xxd)",
+      "Bash(python3:*)",
+      "Bash(git:*)",
+      "Bash(ls /usr/local/bin/node*)",
+      "Bash(awk 'NR>=2481 && NR<=2544' \"E:/科研工作/博士工作/game/src/app.js\")",
+      "Bash(echo \"EXIT: $?\")"
+    ]
+  }
+}

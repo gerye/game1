@@ -503,6 +503,7 @@ export function buildCharacterProfile(base, skills, allEquipment = []) {
     archVersion: CHARACTER_ARCH_VERSION,
     gameVersion: GAME_VERSION,
     faction,
+    originalFaction: faction,  // 固有门派：灭门战等只改 faction，此字段不变
     role,
     roleLabel: ROLE_LABELS[role],
     potential,

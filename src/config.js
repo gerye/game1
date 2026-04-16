@@ -20,7 +20,8 @@ export const META_KEYS = Object.freeze({
   RANKING_HISTORY:      "rankingHistory",
   FAST_SIM_META:        "fastSimMeta",
   BLOODLINE_TASK_STATE: "bloodlineTaskState",
-  WORLD_STATE:          "worldState"
+  WORLD_STATE:          "worldState",
+  CAP_ASSET_DIR_HANDLE: "capAssetDirHandle"
 });
 
 export const CRIT_CHANCE = 0.05;

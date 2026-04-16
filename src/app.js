@@ -546,7 +546,7 @@ async function runFastSimulationStep() {
         startSeasonDuel(next);
       } else {
         state.seasonSiegePending = false;
-        runSeasonSiege();
+        await runSeasonSiege();
       }
       return;
     }
@@ -2593,17 +2593,24 @@ async function startNextSiegeBattle() {
   setWorldBattleOverlay(true);
 
   const competitionType = siege.type === "extinction" ? "extinction" : "siege";
-  state.battle = createBattleRuntime({
-    entries,
-    skills: state.skills,
-    equipment: state.equipment,
-    statuses: state.statuses,
-    factionWins: state.winSummary?.byFaction || {},
-    speed: Number(dom.speedSelect.value),
-    cameraMode: dom.cameraSelect.value,
-    competitionType,
-    defenderFactionKey: siege.type === "extinction" ? siege.targetFaction : null,
-  });
+  try {
+    state.battle = createBattleRuntime({
+      entries,
+      skills: state.skills,
+      equipment: state.equipment,
+      statuses: state.statuses,
+      factionWins: state.winSummary?.byFaction || {},
+      speed: Number(dom.speedSelect.value),
+      cameraMode: dom.cameraSelect.value,
+      competitionType,
+      defenderFactionKey: siege.type === "extinction" ? siege.targetFaction : null,
+    });
+  } catch (err) {
+    console.error("[攻城] createBattleRuntime 失败，跳过本场攻城:", err);
+    state.currentSiege = null;
+    startNextSiegeBattle();
+    return;
+  }
 
   state.activeBattleMode = "chaos";
   state.pendingBattle = null;

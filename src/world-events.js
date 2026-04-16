@@ -9,6 +9,7 @@ import {
 } from "./faction-state.js";
 import { isHQSurrounded, ALL_CITIES, hexDistance } from "./world-map.js";
 import { addWorldLog } from "./world-tick.js";
+import { ensurePrecomputed } from "./world-connectivity.js";
 
 // ── 声望分配 ─────────────────────────────────────
 
@@ -133,76 +134,94 @@ export function checkAndTriggerLastStand(worldState, faction) {
 }
 
 /**
- * 为单个门派选择最优攻城目标
+ * 为单个门派选择最优攻城目标（基于 Voronoi 邻接图）
+ * 规则：
+ *   A. 有接壤空白城市：优先大城→小城，声望不够等待
+ *   B. 只有接壤有主城市：按距离从近到远，声望够就攻
  * @returns {string|null} cityId or null
  */
 function chooseSiegeTarget(factionId, worldState) {
+  const { cityAdjacency, cities, factionStats } = worldState;
+  if (!cityAdjacency) return null;
+
   const ownCityIds = new Set(
-    worldState.cities.filter((c) => c.faction === factionId).map((c) => c.id)
+    cities.filter((c) => c.faction === factionId).map((c) => c.id)
   );
+  if (ownCityIds.size === 0) return null;
 
-  // HQ 坐标 map（用于计算防御价值）
-  const hqPositions = {};
-  for (const city of ALL_CITIES) {
-    if (city.tier === WORLD_CITY_TIERS.HQ) {
-      hqPositions[city.id.replace(/-hq$/, "")] = { q: city.q, r: city.r };
-    }
-  }
+  const prestige = factionStats[factionId]?.prestige || 0;
 
-  // 候选：未被本门派控制，且与本门派任意已控制城市距离 <= 14
-  const candidates = ALL_CITIES.filter((template) => {
-    const currentState = worldState.cities.find((c) => c.id === template.id);
-    if (!currentState) return false;
-    if (currentState.faction === factionId) return false;
-    for (const ownedId of ownCityIds) {
-      const ownedTemplate = ALL_CITIES.find((c) => c.id === ownedId);
-      if (!ownedTemplate) continue;
-      if (hexDistance(template.q, template.r, ownedTemplate.q, ownedTemplate.r) <= 14) {
-        return true;
+  // 收集所有接壤的非己方城市
+  const neutral = [];
+  const enemy = [];
+
+  for (const ownId of ownCityIds) {
+    for (const neighborId of (cityAdjacency[ownId] || [])) {
+      if (ownCityIds.has(neighborId)) continue;
+      const state = cities.find((c) => c.id === neighborId);
+      if (!state) continue;
+      if (!state.faction) {
+        if (!neutral.includes(neighborId)) neutral.push(neighborId);
+      } else {
+        if (!enemy.includes(neighborId)) enemy.push(neighborId);
       }
     }
-    return false;
-  });
+  }
 
-  if (!candidates.length) return null;
-
-  let bestCity = null;
-  let bestScore = -Infinity;
-
-  for (const candidate of candidates) {
-    const currentState = worldState.cities.find((c) => c.id === candidate.id);
-    const isNeutral = !currentState?.faction;
-
-    // 只在声望充足时攻打有主城市（声望 >= 200）
-    if (!isNeutral) {
-      const prestige = worldState.factionStats[factionId]?.prestige || 0;
-      if (prestige < 200) continue;
+  // 计算候选城市到己方最近城市的距离
+  function minDistToOwn(cityId) {
+    const tpl = ALL_CITIES.find((c) => c.id === cityId);
+    if (!tpl) return Infinity;
+    let minD = Infinity;
+    for (const ownId of ownCityIds) {
+      const ownTpl = ALL_CITIES.find((c) => c.id === ownId);
+      if (!ownTpl) continue;
+      const d = hexDistance(tpl.q, tpl.r, ownTpl.q, ownTpl.r);
+      if (d < minD) minD = d;
     }
+    return minD;
+  }
 
-    // 防御价值 = 到最近敌方 HQ 的距离（越大越好）
-    let minEnemyHQDist = Infinity;
-    for (const [hqFaction, pos] of Object.entries(hqPositions)) {
-      if (hqFaction === factionId) continue;
-      const d = hexDistance(candidate.q, candidate.r, pos.q, pos.r);
-      if (d < minEnemyHQDist) minEnemyHQDist = d;
-    }
+  // 情况 A：有接壤空白城市
+  if (neutral.length > 0) {
+    if (prestige < WORLD_PRESTIGE_COSTS.captureNeutral) return null; // 积蓄声望
 
-    const score = (isNeutral ? 50 : 0) + minEnemyHQDist;
-    if (score > bestScore) {
-      bestScore = score;
-      bestCity = candidate.id;
+    // 优先大城
+    const largeNeutral = neutral.filter((id) => {
+      const tpl = ALL_CITIES.find((c) => c.id === id);
+      return tpl?.tier === WORLD_CITY_TIERS.LARGE;
+    });
+    const candidates = largeNeutral.length > 0 ? largeNeutral : neutral;
+
+    // 按距离排序，选最近
+    candidates.sort((a, b) => minDistToOwn(a) - minDistToOwn(b));
+    return candidates[0] || null;
+  }
+
+  // 情况 B：只剩有主城市，按距离从近到远，声望够就攻
+  if (enemy.length > 0) {
+    enemy.sort((a, b) => minDistToOwn(a) - minDistToOwn(b));
+    for (const cityId of enemy) {
+      const tpl = ALL_CITIES.find((c) => c.id === cityId);
+      const cost = (tpl?.tier === WORLD_CITY_TIERS.LARGE || tpl?.tier === WORLD_CITY_TIERS.HQ)
+        ? WORLD_PRESTIGE_COSTS.attackLargeCity
+        : WORLD_PRESTIGE_COSTS.attackSmallCity;
+      if (prestige >= cost) return cityId;
     }
   }
 
-  return bestCity;
+  return null;
 }
 
 /**
- * 运行所有门派的攻城 AI，返回 { worldState, siegeEvents }
+ * 运行所有门派的攻城 AI
+ * 返回 { worldState, siegeEvents }
  * siegeEvents: [ { factionId, cityId, cityName } ]
+ *
+ * builds 可选传入，用于战斗结算（传 null 时用随机占位结算）
  */
-export function runSiegeAI(worldState) {
-  let ws = worldState;
+export function runSiegeAI(worldState, builds) {
+  let ws = ensurePrecomputed(worldState);
   const siegeEvents = [];
 
   for (const factionId of FACTION_IDS) {
