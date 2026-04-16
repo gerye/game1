@@ -2285,10 +2285,8 @@ async function applyPreBattleEvents(entries) {
 
 function startRenderLoop() {
   resetBattle();
-  const step = (timestamp) => {
-    if (!state.lastFrameTime) state.lastFrameTime = timestamp;
-    const dt = Math.min(0.05, (timestamp - state.lastFrameTime) / 1000);
-    state.lastFrameTime = timestamp;
+
+  function simulationTick(dt) {
     if (state.battle && !state.battle.paused && !state.battle.winner) {
       updateBattle(dt * state.battle.speed);
     }
@@ -2298,10 +2296,43 @@ function startRenderLoop() {
     if (state.rankingBattle && !state.rankingBattle.paused && !state.rankingBattle.winner) {
       updateRankingBattle(dt * state.rankingBattle.speed);
     }
-    renderBattle();
     if (state.fastSim.enabled) {
       runFastSimulationStep().catch(console.error);
     }
+  }
+
+  // 后台心跳：tab 不在前台时 rAF 被 Chrome 节流到 1fps，用 Worker setInterval 维持模拟速度
+  const bgWorker = new Worker('./src/background-timer-worker.js');
+  let lastWorkerTime = null;
+
+  bgWorker.onmessage = () => {
+    if (!document.hidden) return;
+    const now = performance.now();
+    if (lastWorkerTime === null) lastWorkerTime = now;
+    const dt = Math.min(0.05, (now - lastWorkerTime) / 1000);
+    lastWorkerTime = now;
+    state.lastFrameTime = now;
+    simulationTick(dt);
+  };
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      lastWorkerTime = null;
+      bgWorker.postMessage('start');
+    } else {
+      bgWorker.postMessage('stop');
+      lastWorkerTime = null;
+    }
+  });
+
+  const step = (timestamp) => {
+    if (!state.lastFrameTime) state.lastFrameTime = timestamp;
+    const dt = Math.min(0.05, (timestamp - state.lastFrameTime) / 1000);
+    state.lastFrameTime = timestamp;
+    if (!document.hidden) {
+      simulationTick(dt);
+    }
+    renderBattle();
     requestAnimationFrame(step);
   };
   requestAnimationFrame(step);

@@ -453,7 +453,7 @@ export function renderArbiterPanel(container, worldState, chronicle) {
   const stats = worldState.factionStats || {};
   const cities = worldState.cities || [];
   const escHtml = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const entries = chronicle?.entries ? chronicle.entries.slice(-8).reverse() : [];
+  const entries = chronicle?.entries ? chronicle.entries.slice(0, 8) : [];
 
   container.innerHTML = `
     <div class="world-panel">
