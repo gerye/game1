@@ -3,7 +3,7 @@ import { BATTLE_LOG_LIMIT, FACTIONS, GAME_VERSION, GRADE_SCALE, META_KEYS, ROLE_
 import { createBattleState as createBattleRuntime, renderBattleScene, updateBattleState } from "./battle-system.js";
 import { compareFactionEntries, getFactionSections, renderBuildGrid as renderBuildGridView, renderCapDetail as renderCapDetailView, renderHeroStats as renderHeroStatsView } from "./character-ui.js";
 import { renderBloodlineDatabase as renderBloodlineDatabaseView, renderCharacterDatabase as renderCharacterDatabaseView, renderEquipmentDatabase as renderEquipmentDatabaseView, renderEventDatabase as renderEventDatabaseView, renderSkillDatabase as renderSkillDatabaseView, renderStatusDatabase as renderStatusDatabaseView } from "./database-ui.js";
-import { appendChronicleEntry as appendChronicleStateEntry, buildBloodlineBiographyEntry, buildBloodlineChronicleEntry, buildExplorationBiographyEntry, buildExplorationChronicleEntry, buildFactionVictoryMilestoneEntry, buildFateChangeChronicleEntry, buildLegendaryEquipmentRecord, buildLegendarySkillRecord, buildRankingBiographyEntry, buildRankingChronicleEntry, buildTournamentBiographyEntry, buildTournamentChronicleEntry, buildTournamentPlacementMap, createChronicleState, normalizeChronicleState, recordKillMilestones, recordLevelMilestones, renderChroniclePanel as renderChronicleHtml } from "./chronicle.js";
+import { appendChronicleEntry as appendChronicleStateEntry, buildAuctionChronicleEntry, buildBloodlineBiographyEntry, buildBloodlineChronicleEntry, buildExplorationBiographyEntry, buildExplorationChronicleEntry, buildFactionVictoryMilestoneEntry, buildFateChangeChronicleEntry, buildLegendaryEquipmentRecord, buildLegendarySkillRecord, buildRankingBiographyEntry, buildRankingChronicleEntry, buildTournamentBiographyEntry, buildTournamentChronicleEntry, buildTournamentPlacementMap, createChronicleState, normalizeChronicleState, recordKillMilestones, recordLevelMilestones, renderChroniclePanel as renderChronicleHtml } from "./chronicle.js";
 import { getSelectedRankingHistorySnapshot, renderChronicleStageHtml } from "./chronicle-ui.js";
 import { persistBaseImageAssets } from "./cap-asset-store.js";
 import { buildAuctionGoldRanking, buildAuctionState, resolveAuctionLots } from "./auction-utils.js";
@@ -501,14 +501,12 @@ async function saveFastSimMeta(nextMeta) {
 }
 
 function getPendingEndlessFastSimActionType() {
-  return state.fastSim.mode === "endless"
-    ? String(state.fastSimMeta?.endlessPendingActionType || "")
-    : "";
+  return String(state.fastSimMeta?.endlessPendingActionType || "");
 }
 
 async function markEndlessFastSimActionPending(actionType) {
-  if (state.fastSim.mode !== "endless") return;
   const nextType = String(actionType || "");
+  if (!nextType) return;
   if ((state.fastSimMeta?.endlessPendingActionType || "") === nextType) return;
   await saveFastSimMeta({
     ...state.fastSimMeta,
@@ -517,7 +515,8 @@ async function markEndlessFastSimActionPending(actionType) {
 }
 
 async function resolveCompletedEndlessFastSimAction(options = {}) {
-  if (!(state.fastSim.enabled && state.fastSim.mode === "endless")) return;
+  const pendingActionType = getPendingEndlessFastSimActionType();
+  if (!pendingActionType) return;
   const { advanceBracket = false } = options;
   let nextMeta = {
     ...state.fastSimMeta,
@@ -529,11 +528,61 @@ async function resolveCompletedEndlessFastSimAction(options = {}) {
   await saveFastSimMeta(advanceEndlessFastSimMeta(nextMeta));
 }
 
+function isEndlessActionStillActive(actionType) {
+  switch (actionType) {
+    case "season":
+      return Boolean(
+        state.seasonDuelQueue?.length ||
+        state.seasonSiegePending ||
+        state.siegeBattleQueue?.length ||
+        state.currentSiege ||
+        state.pendingBattle ||
+        state.battle
+      );
+    case "chaos":
+      return Boolean(state.pendingBattle || state.battle);
+    case "exploration":
+      return Boolean(state.exploration);
+    case "auction":
+      return Boolean(state.auction);
+    case "tournament":
+      return Boolean(state.tournament || state.tournamentBattle);
+    case "ranking":
+      return Boolean(state.ranking || state.rankingBattle);
+    default:
+      return false;
+  }
+}
+
+function canAutoReconcileEndlessAction(actionType) {
+  return actionType === "season"
+    || actionType === "exploration"
+    || actionType === "auction"
+    || actionType === "tournament"
+    || actionType === "ranking";
+}
+
+async function reconcileCompletedEndlessAction() {
+  if (!(state.fastSim.enabled && state.fastSim.mode === "endless")) return false;
+  const pendingActionType = getPendingEndlessFastSimActionType();
+  if (!pendingActionType) return false;
+  if (!canAutoReconcileEndlessAction(pendingActionType)) return false;
+  if (isEndlessActionStillActive(pendingActionType)) return false;
+  await resolveCompletedEndlessFastSimAction({
+    advanceBracket: pendingActionType === "tournament" || pendingActionType === "ranking"
+  });
+  return true;
+}
+
 async function runFastSimulationStep() {
   if (!state.fastSim.enabled || state.fastSim.processing || state.rewardProcessing) return;
 
   state.fastSim.processing = true;
   try {
+    if (await reconcileCompletedEndlessAction()) {
+      return;
+    }
+
     if (state.activeBattleMode === "ranking") {
       await runFastSimulationRankingStep();
       return;
@@ -873,9 +922,7 @@ async function runFastSimulationExplorationStep() {
 
 function toggleChronicle() {
   state.chronicleOpen = !state.chronicleOpen;
-  if (dom.toggleChronicleBtn) {
-    dom.toggleChronicleBtn.textContent = state.chronicleOpen ? "关闭大事记" : "江湖大事记";
-  }
+  syncChronicleToggleLabel();
   if (state.activeBattleMode === "tournament") {
     state.tournamentViewDirty = true;
     renderTournamentShell();
@@ -901,6 +948,12 @@ function toggleChronicle() {
       clearBattleCanvas();
     }
     renderBattleModeInfoPanel();
+  }
+}
+
+function syncChronicleToggleLabel() {
+  if (dom.toggleChronicleBtn) {
+    dom.toggleChronicleBtn.textContent = state.chronicleOpen ? "关闭大事记" : "江湖大事记";
   }
 }
 
@@ -1893,13 +1946,37 @@ function rebuildBuildFromBase(base, previousBuild = null) {
   }, state.skills);
 }
 
-function resetChronicleViewState() {
-  state.chronicleOpen = false;
-  state.chronicleTab = "entries";
-  state.lastChronicleRenderKey = "";
-  if (dom.toggleChronicleBtn) {
-    dom.toggleChronicleBtn.textContent = "江湖大事记";
+function resetChronicleViewState(options = {}) {
+  const { preserveOpen = false, preserveTab = preserveOpen } = options;
+  if (!preserveOpen) {
+    state.chronicleOpen = false;
   }
+  if (!preserveTab) {
+    state.chronicleTab = "entries";
+  }
+  state.lastChronicleRenderKey = "";
+  syncChronicleToggleLabel();
+}
+
+function captureChronicleViewState() {
+  return {
+    wasOpen: state.chronicleOpen,
+    tab: state.chronicleTab,
+    selectedRankingHistoryIndex: state.selectedRankingHistoryIndex,
+    selectedRankingHistoryBoardTab: state.selectedRankingHistoryBoardTab
+  };
+}
+
+function restoreChronicleViewState(snapshot) {
+  if (!snapshot?.wasOpen) return;
+  state.chronicleOpen = true;
+  state.chronicleTab = snapshot.tab || "entries";
+  state.selectedRankingHistoryIndex = Number.isFinite(snapshot.selectedRankingHistoryIndex)
+    ? snapshot.selectedRankingHistoryIndex
+    : state.selectedRankingHistoryIndex;
+  state.selectedRankingHistoryBoardTab = snapshot.selectedRankingHistoryBoardTab || state.selectedRankingHistoryBoardTab;
+  state.lastChronicleRenderKey = "";
+  syncChronicleToggleLabel();
 }
 
 async function startChaosBattle(forcedEntries = null) {
@@ -2012,20 +2089,25 @@ function togglePauseBattle() {
 
 function resetBattle() {
   setWorldBattleOverlay(false);
+  const chronicleSnapshot = captureChronicleViewState();
   if (state.activeBattleMode === "tournament") {
     resetTournament();
+    restoreChronicleViewState(chronicleSnapshot);
     return;
   }
   if (state.activeBattleMode === "ranking") {
     resetRanking();
+    restoreChronicleViewState(chronicleSnapshot);
     return;
   }
   if (state.activeBattleMode === "auction") {
     resetAuction();
+    restoreChronicleViewState(chronicleSnapshot);
     return;
   }
   if (state.activeBattleMode === "exploration") {
     resetExploration();
+    restoreChronicleViewState(chronicleSnapshot);
     return;
   }
   state.battle = null;
@@ -2042,6 +2124,7 @@ function resetBattle() {
   resetBattlePanels();
   renderBattleModeInfoPanel();
   clearBattleCanvas();
+  restoreChronicleViewState(chronicleSnapshot);
 }
 
 function updateBattle(dt) {
@@ -2808,9 +2891,9 @@ function renderBattlePanels() {
     ["进度", `${progress}%`],
     ["存活单位", `${living.length}`],
     ["剩余派系", `${Object.keys(factionStats).length}`],
-    ["最高输出", topDamage ? `${topDamage.name} (${Math.round(topDamage.damageDone)})` : "-"]
+    ["最高输出", topDamage ? `${topDamage.name} (${Math.round(topDamage.damageDone)})` : "-"],
+    ["派系存活", Object.entries(factionStats).map(([name, count]) => `${name} ${count}`).join(" / ") || "-"]
   ];
-  Object.entries(factionStats).forEach(([name, count]) => rows.push([name, `${count}`]));
   dom.battleSummary.innerHTML = rows.map(([label, value]) => `<div class="summary-row"><span>${label}</span><strong>${value}</strong></div>`).join("");
   dom.battleLog.innerHTML = state.battle.logs.slice(-BATTLE_LOG_LIMIT).reverse().map((entry) => `<div class="battle-log-entry">${escapeHtml(entry)}</div>`).join("");
 }
@@ -3534,6 +3617,7 @@ function toggleRankingBattle() {
 
 function resetRanking() {
   setWorldBattleOverlay(false);
+  const chronicleSnapshot = captureChronicleViewState();
   state.ranking = null;
   state.rankingBattle = null;
   state.rankingAutoCompleteRound = null;
@@ -3547,6 +3631,7 @@ function resetRanking() {
   renderRankingBoardOverlay();
   clearBattleCanvas();
   state.rankingViewDirty = true;
+  restoreChronicleViewState(chronicleSnapshot);
 }
 
 function updateRankingBattle(dt) {
@@ -3826,6 +3911,7 @@ function togglePauseTournament() {
 
 function resetTournament() {
   setWorldBattleOverlay(false);
+  const chronicleSnapshot = captureChronicleViewState();
   state.tournament = null;
   state.tournamentBattle = null;
   state.tournamentSetupOpen = false;
@@ -3840,6 +3926,7 @@ function resetTournament() {
   clearBattleCanvas();
   state.tournamentViewDirty = true;
   renderTournamentTreeOverlay();
+  restoreChronicleViewState(chronicleSnapshot);
 }
 
 function updateTournamentBattle(dt) {
@@ -4150,7 +4237,7 @@ async function startAuctionFlow(options = {}) {
   state.exploration = null;
   state.tournamentSetupOpen = false;
   state.tournamentTreeOpen = false;
-  resetChronicleViewState();
+  resetChronicleViewState({ preserveOpen: true });
   const entries = getReadyEntries();
   if (entries.length < 1) {
     window.alert("至少需要 1 个有生成属性的角色才能进入拍卖会。");
@@ -4257,6 +4344,34 @@ async function finalizeAuction() {
       logs: result.logs,
       postGoldRanking: result.goldRanking
     };
+    const auctionIndex = (state.chronicle?.auctionCount || 0) + 1;
+    const chronicleAssignments = result.assignments.map((assignment) => ({
+      applied: assignment.applied,
+      spentGold: assignment.spentGold,
+      faction: {
+        key: assignment.factionKey,
+        name: assignment.factionName
+      },
+      reward: {
+        name: assignment.lot?.name || "",
+        grade: assignment.lot?.grade || ""
+      },
+      subject: assignment.recipientCode
+        ? {
+            name: assignment.recipientName,
+            faction: {
+              key: assignment.factionKey,
+              name: assignment.factionName
+            },
+            grade: getEntryByCode(assignment.recipientCode)?.build?.potential || ""
+          }
+        : null
+    }));
+    await appendChronicleEntry(buildAuctionChronicleEntry(auctionIndex, chronicleAssignments));
+    await saveChronicleState({
+      ...state.chronicle,
+      auctionCount: auctionIndex
+    });
     state.auctionViewDirty = true;
     if (state.fastSim.enabled && state.fastSim.mode === "endless") {
       await resolveCompletedEndlessFastSimAction();
@@ -4286,7 +4401,7 @@ async function startExplorationFlow(options = {}) {
   state.rankingBattle = null;
   state.tournamentSetupOpen = false;
   state.tournamentTreeOpen = false;
-  resetChronicleViewState();
+  resetChronicleViewState({ preserveOpen: true });
   const entries = getReadyEntries();
   if (entries.length < 1) {
     window.alert("至少需要 1 个有生成属性的角色才能进入秘境探索。");

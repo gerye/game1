@@ -1388,6 +1388,13 @@ button:disabled {
   font-size: 13.5px;
 }
 
+#battleSummary {
+  min-height: 280px;
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
 .battle-log-entry {
   padding: 9px 0;
   border-bottom: 1px solid var(--line);

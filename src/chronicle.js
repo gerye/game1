@@ -119,6 +119,24 @@ function normalizeSubjectArray(values = []) {
     : [];
 }
 
+function normalizeAuctionAssignments(values = []) {
+  return Array.isArray(values)
+    ? values.map((assignment) => {
+      if (!assignment || typeof assignment !== "object") return null;
+      const subject = normalizeSubject(assignment.subject);
+      const reward = normalizeReward(assignment.reward);
+      const faction = normalizeFactionRef(assignment.faction);
+      if (!subject || !reward || !faction?.name) return null;
+      return {
+        subject,
+        reward,
+        faction,
+        spentGold: Math.max(0, Math.floor(Number(assignment.spentGold || 0)))
+      };
+    }).filter(Boolean)
+    : [];
+}
+
 function normalizeChronicleEntry(entry) {
   if (!entry || typeof entry !== "object") return null;
   const normalized = {
@@ -128,20 +146,28 @@ function normalizeChronicleEntry(entry) {
     text: String(entry.text || "")
   };
   if (!normalized.title || !normalized.text) return null;
+
   const subject = normalizeSubject(entry.subject);
   if (subject) normalized.subject = subject;
+
   const faction = normalizeFactionRef(entry.faction);
   if (faction) normalized.faction = faction;
+
   const championSubject = normalizeSubject(entry.championSubject);
   if (championSubject) normalized.championSubject = championSubject;
+
   const runnerUpSubject = normalizeSubject(entry.runnerUpSubject);
   if (runnerUpSubject) normalized.runnerUpSubject = runnerUpSubject;
+
   const reward = normalizeReward(entry.reward);
   if (reward) normalized.reward = reward;
+
   const runnerUpReward = normalizeReward(entry.runnerUpReward);
   if (runnerUpReward) normalized.runnerUpReward = runnerUpReward;
+
   const bloodline = normalizeBloodline(entry.bloodline);
   if (bloodline) normalized.bloodline = bloodline;
+
   if (entry.tierSubjects && typeof entry.tierSubjects === "object") {
     normalized.tierSubjects = Object.fromEntries(
       Object.entries(entry.tierSubjects)
@@ -149,7 +175,9 @@ function normalizeChronicleEntry(entry) {
         .filter(([, value]) => value.length > 0)
     );
   }
+
   if (Array.isArray(entry.subjects)) normalized.subjects = normalizeSubjectArray(entry.subjects);
+  if (Array.isArray(entry.auctionAssignments)) normalized.auctionAssignments = normalizeAuctionAssignments(entry.auctionAssignments);
   if (typeof entry.level === "number") normalized.level = entry.level;
   if (typeof entry.wins === "number") normalized.wins = entry.wins;
   if (typeof entry.kills === "number") normalized.kills = entry.kills;
@@ -172,10 +200,10 @@ function renderSubject(subject, escapeHtml) {
   if (!normalized) return `<span class="chronicle-subject-name">无名侠客</span>`;
   const factionPart = normalized.factionName
     ? `${renderFactionBadge({
-        key: normalized.factionKey,
-        name: normalized.factionName,
-        color: normalized.factionColor
-      }, escapeHtml)}的`
+      key: normalized.factionKey,
+      name: normalized.factionName,
+      color: normalized.factionColor
+    }, escapeHtml)}的`
     : "";
   const nameColor = GRADE_COLORS[normalized.grade] || "inherit";
   return `${factionPart}<span class="chronicle-subject-name" style="color:${nameColor}">${escapeHtml(normalized.name)}</span>`;
@@ -204,7 +232,7 @@ function renderBloodline(bloodline, escapeHtml) {
 function renderChronicleBody(entry, escapeHtml) {
   switch (entry.type) {
     case "faction-victory-milestone":
-      return `${renderFactionBadge(entry.faction, escapeHtml)}已经取得第 ${entry.wins || entry.index} 场江湖争霸胜利，门派威望再度震动江湖。`;
+      return `${renderFactionBadge(entry.faction, escapeHtml)}已经取得第 ${entry.wins || entry.index} 场江湖争霸胜利，门派威望再次震动江湖。`;
     case "fate-change":
       return `${renderSubject(entry.subject, escapeHtml)}逆天改命成功${entry.count > 1 ? `，这是他的第 ${entry.count} 次逆天改命` : ""}。`;
     case "kill-milestone":
@@ -217,6 +245,16 @@ function renderChronicleBody(entry, escapeHtml) {
       return `${renderSubject(entry.subject, escapeHtml)}获得了${renderBloodline(entry.bloodline, escapeHtml)}。`;
     case "ranking":
       return `第 ${entry.index} 次江湖排位的前八名依次为：${renderSubjectList(entry.subjects, escapeHtml)}。`;
+    case "auction": {
+      const assignments = Array.isArray(entry.auctionAssignments) ? entry.auctionAssignments : [];
+      if (assignments.length === 0) {
+        return `第 ${entry.index} 次拍卖会已经结束，本次没有门派成功拍得拍品。`;
+      }
+      const parts = assignments.map((assignment) =>
+        `${renderFactionBadge(assignment.faction, escapeHtml)}以 ${assignment.spentGold} 金币由 ${renderSubject(assignment.subject, escapeHtml)} 拍得${renderReward(assignment.reward, escapeHtml)}`
+      );
+      return `第 ${entry.index} 次拍卖会中，${parts.join("；")}。`;
+    }
     case "milestone":
       return `${renderSubject(entry.subject, escapeHtml)}成为第一个达到 ${entry.level || entry.index} 级的角色。`;
     case "legendary-skill":
@@ -234,6 +272,7 @@ export function createChronicleState() {
     tournamentCount: 0,
     explorationCount: 0,
     rankingCount: 0,
+    auctionCount: 0,
     entries: [],
     levelMilestones: {},
     killMilestones: {}
@@ -246,22 +285,23 @@ export function normalizeChronicleState(raw = {}) {
     tournamentCount: Math.max(0, Math.floor(Number(raw.tournamentCount || 0))),
     explorationCount: Math.max(0, Math.floor(Number(raw.explorationCount || 0))),
     rankingCount: Math.max(0, Math.floor(Number(raw.rankingCount || 0))),
+    auctionCount: Math.max(0, Math.floor(Number(raw.auctionCount || 0))),
     entries: Array.isArray(raw.entries)
       ? raw.entries.map((entry) => normalizeChronicleEntry(entry)).filter(Boolean).slice(0, ENTRY_LIMIT)
       : [],
     levelMilestones: raw.levelMilestones && typeof raw.levelMilestones === "object"
       ? Object.fromEntries(
-          Object.entries(raw.levelMilestones)
-            .filter(([key, value]) => Number(key) > 0 && typeof value === "string" && value)
-            .map(([key, value]) => [String(Math.floor(Number(key))), value])
-        )
+        Object.entries(raw.levelMilestones)
+          .filter(([key, value]) => Number(key) > 0 && typeof value === "string" && value)
+          .map(([key, value]) => [String(Math.floor(Number(key))), value])
+      )
       : {},
     killMilestones: raw.killMilestones && typeof raw.killMilestones === "object"
       ? Object.fromEntries(
-          Object.entries(raw.killMilestones)
-            .filter(([key, value]) => Number(key) > 0 && typeof value === "string" && value)
-            .map(([key, value]) => [String(Math.floor(Number(key))), value])
-        )
+        Object.entries(raw.killMilestones)
+          .filter(([key, value]) => Number(key) > 0 && typeof value === "string" && value)
+          .map(([key, value]) => [String(Math.floor(Number(key))), value])
+      )
       : {}
   };
 }
@@ -275,7 +315,7 @@ export function appendChronicleEntry(chronicle, entry) {
 
 export function renderChroniclePanel(entries, escapeHtml) {
   if (!entries || entries.length === 0) {
-    return `<p class="muted">江湖仍在酝酿故事，完成一场江湖争霸、武道会、排位赛或秘境探索后，这里会留下记录。</p>`;
+    return `<p class="muted">江湖仍在酝酿故事，完成一场江湖争霸、武道会、排位赛、拍卖会或秘境探索后，这里会留下记录。</p>`;
   }
   return `
     <div class="chronicle-list">
@@ -292,7 +332,7 @@ export function buildFactionVictoryMilestoneEntry(faction, wins) {
     wins,
     faction: factionRef,
     title: `门派霸业 · ${wins} 胜`,
-    text: `${factionRef?.name || "无门无派"}已经取得第 ${wins} 场江湖争霸胜利，门派威望再度震动江湖。`
+    text: `${factionRef?.name || "无门无派"}已经取得第 ${wins} 场江湖争霸胜利，门派威望再次震动江湖。`
   };
 }
 
@@ -424,6 +464,16 @@ export function buildRankingChronicleEntry(index, topEntries = []) {
     subjects: normalizeSubjectArray(topEntries),
     title: `第 ${index} 次江湖排位`,
     text: `第 ${index} 次江湖排位的前八名已经决出。`
+  };
+}
+
+export function buildAuctionChronicleEntry(index, assignments = []) {
+  return {
+    type: "auction",
+    index,
+    auctionAssignments: normalizeAuctionAssignments(assignments),
+    title: `第 ${index} 次拍卖会`,
+    text: `第 ${index} 次拍卖会已经完成竞价分配。`
   };
 }
 
