@@ -11,7 +11,7 @@ function renderAuctionLotCard(lot, gradeColor, escapeHtml) {
         <div class="equipment-art-wrap">
           <img class="equipment-art" src="${lot.iconDataUrl}" alt="${escapeHtml(lot.name)}">
         </div>
-        <p>拍品 ${lot.lotIndex + 1}<br><span class="mini-text">会按竞价后的门派金币排名依次分配。</span></p>
+        <p>拍品 ${lot.lotIndex + 1}<br><span class="mini-text">会逐件拍卖，先过滤掉完全用不上这件装备的门派，再由当前金币第一的门派按“第二名金额 + 1”成交。</span></p>
       </div>
     </div>
   `;
@@ -51,7 +51,7 @@ export function renderAuctionPrelude({ auction, factionLookup = new Map(), grade
     `
     : `
       <div class="prelude-card">
-        <div class="prelude-event">当前金币最高的门派优先获得最高品级拍品，获拍门派金币清零。</div>
+        <div class="prelude-event">每件拍品单独竞拍。会先排除掉对这件装备完全无用的门派，再由当前金币最高的门派买走该拍品，只需支付比第二名多 1 金币的价格；若前两名金额相同，则按同额成交。</div>
         <div class="card-actions">
           <button id="auctionBidBtnPrimary" class="primary-btn" type="button">竞价</button>
         </div>
@@ -69,6 +69,7 @@ export function renderAuctionPrelude({ auction, factionLookup = new Map(), grade
             </div>
             <p>
               <span style="color:${factionLookup.get(assignment.factionKey)?.color || "#8f5d32"}">${escapeHtml(assignment.factionName)}</span>
+              以 ${assignment.spentGold} 金币成交，
               ${assignment.applied
                 ? ` 由 ${escapeHtml(assignment.recipientName)} 获得`
                 : ` 获得拍品，但门派内无人可继续提升该部位装备`}
@@ -84,7 +85,7 @@ export function renderAuctionPrelude({ auction, factionLookup = new Map(), grade
       <div class="prelude-head">
         <div>
           <h3>拍卖会</h3>
-          <p class="muted">本次随机上架三件武器 / 防具，品级互不相同，并按门派当前金币从高到低分配。</p>
+          <p class="muted">本次随机上架三件武器 / 防具，品级互不相同。每件拍品都会先过滤掉无资格提升的门派，再按“当前金币第一、成交价只比第二名高 1”的规则逐件拍卖。</p>
         </div>
       </div>
       ${controlCard}

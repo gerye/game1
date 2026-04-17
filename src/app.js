@@ -547,6 +547,11 @@ async function runFastSimulationStep() {
     }
 
     if (state.activeBattleMode === "auction") {
+      if (state.auction && !state.auction.resolved) {
+        await finalizeAuction();
+      } else if (state.auction?.resolved) {
+        resetAuction();
+      }
       return;
     }
 
@@ -618,6 +623,11 @@ async function runFastSimulationStep() {
     if (action?.type === "exploration") {
       await markEndlessFastSimActionPending("exploration");
       await startFastSimulationExploration(0);
+      return;
+    }
+    if (action?.type === "auction") {
+      await markEndlessFastSimActionPending("auction");
+      await startAuctionFlow({ preserveFastSim: true });
       return;
     }
     // chaos
@@ -4121,9 +4131,12 @@ function bindAuctionActionButtons() {
   }
 }
 
-async function startAuctionFlow() {
-  state.fastSim.enabled = false;
-  syncFastSimButton();
+async function startAuctionFlow(options = {}) {
+  const { preserveFastSim = false } = options;
+  if (!preserveFastSim) {
+    state.fastSim.enabled = false;
+    syncFastSimButton();
+  }
   state.activeBattleMode = "auction";
   state.rankingBoardOpen = false;
   renderRankingBoardOverlay();
@@ -4173,8 +4186,9 @@ function renderAuctionShell() {
   dom.battleModeInfoTitle.textContent = "拍卖规则";
   dom.battleModeInfo.innerHTML = `
     <div class="terrain-item">每次展示三件随机武器 / 防具，三件拍品的品级互不相同，范围为 D 至 SS。</div>
-    <div class="terrain-item">点击“竞价”后，金币最高的门派优先获得最高品级拍品，以此类推。</div>
-    <div class="terrain-item">获得拍品的门派金币会被清零，门派内部再按当前角色排序依次尝试装备。</div>
+    <div class="terrain-item">点击“竞价”后，三件拍品会逐件拍卖，每次都会先过滤掉对该件装备完全无用的门派，再重新比较剩余门派的当前金币。</div>
+    <div class="terrain-item">当前金币第一的门派买走该件拍品，成交价为“第二名金币 + 1”；若前两名金币相同，则按同额成交。</div>
+    <div class="terrain-item">扣除成交价后再进入下一件拍品，门派内部仍按当前角色排序依次尝试装备。</div>
     ${state.auction && !state.auction.resolved ? '<div class="card-actions" style="margin-top:12px"><button id="auctionBidBtnSecondary" class="primary-btn" type="button">竞价</button></div>' : ""}
   `;
   const factionLookup = new Map(FACTIONS.map((faction) => [faction.key, faction]));
@@ -4244,6 +4258,9 @@ async function finalizeAuction() {
       postGoldRanking: result.goldRanking
     };
     state.auctionViewDirty = true;
+    if (state.fastSim.enabled && state.fastSim.mode === "endless") {
+      await resolveCompletedEndlessFastSimAction();
+    }
     await refreshAll();
   } catch (error) {
     console.error("[拍卖会] 竞价失败：", error);
@@ -4784,9 +4801,6 @@ function getAvatarImage(src) {
   }
   return state.imageCache.get(src);
 }
-
-
-
 
 
 

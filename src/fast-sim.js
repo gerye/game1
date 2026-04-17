@@ -21,11 +21,11 @@ const _half = [
   { type: "season" }, { type: "season" }, { type: "chaos" },
 ];
 // 大循环（3年，114步）：
-//   前半年×6 → 秘境探索 → 后半年×6 → 武道会（年1、年2）/ 排位赛（年3）
+//   前半年×6 → 秘境探索 → 拍卖会 → 后半年×6 → 武道会（年1、年2）/ 排位赛（年3）
 const ENDLESS_FAST_SIM_CYCLE = [
-  ..._half, { type: "exploration" }, ..._half, { type: "tournament" }, // 年1
-  ..._half, { type: "exploration" }, ..._half, { type: "tournament" }, // 年2
-  ..._half, { type: "exploration" }, ..._half, { type: "ranking" },    // 年3
+  ..._half, { type: "exploration" }, { type: "auction" }, ..._half, { type: "tournament" }, // 年1
+  ..._half, { type: "exploration" }, { type: "auction" }, ..._half, { type: "tournament" }, // 年2
+  ..._half, { type: "exploration" }, { type: "auction" }, ..._half, { type: "ranking" },    // 年3
 ];
 
 export function normalizeFastSimMeta(meta = {}) {
@@ -33,6 +33,7 @@ export function normalizeFastSimMeta(meta = {}) {
     "season",
     "chaos",
     "exploration",
+    "auction",
     "tournament",
     "ranking"
   ]);

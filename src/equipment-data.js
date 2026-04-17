@@ -305,16 +305,10 @@ export function applyEquipmentDrop(build, equipmentId, allEquipment = []) {
     if (nextGradeIdx === previousGradeIdx) {
       const maxStars = getMaxStarsForGrade(previous.grade);
       const currentStars = equipmentStars[item.slot] || 0;
-      const newStars = currentStars + 1;
-
-      if (newStars >= maxStars) {
+      if (currentStars >= maxStars) {
         const nextGradeStr = GRADE_SCALE[gradeIndex(previous.grade) + 1];
         if (!nextGradeStr || previous.grade === "SSS") {
-          return {
-            ...build,
-            equipmentBySlot,
-            equipmentStars: { ...equipmentStars, [item.slot]: maxStars }
-          };
+          return build;
         }
         const upgradePool = allEquipment.filter((eq) =>
           !eq.deleted &&
@@ -323,11 +317,31 @@ export function applyEquipmentDrop(build, equipmentId, allEquipment = []) {
           canRoleEquip(eq, build.role)
         );
         if (upgradePool.length === 0) {
-          return {
-            ...build,
-            equipmentBySlot,
-            equipmentStars: { ...equipmentStars, [item.slot]: maxStars }
-          };
+          return build;
+        }
+        const rng = createSeededRandom(`${build.buildId}:star-upgrade:${item.slot}:${Date.now()}`);
+        const picked = upgradePool[Math.floor(rng() * upgradePool.length)];
+        return {
+          ...build,
+          equipmentBySlot: { ...equipmentBySlot, [item.slot]: picked.id },
+          equipmentStars: { ...equipmentStars, [item.slot]: 0 }
+        };
+      }
+      const newStars = currentStars + 1;
+
+      if (newStars >= maxStars) {
+        const nextGradeStr = GRADE_SCALE[gradeIndex(previous.grade) + 1];
+        if (!nextGradeStr || previous.grade === "SSS") {
+          return build;
+        }
+        const upgradePool = allEquipment.filter((eq) =>
+          !eq.deleted &&
+          eq.grade === nextGradeStr &&
+          eq.slot === item.slot &&
+          canRoleEquip(eq, build.role)
+        );
+        if (upgradePool.length === 0) {
+          return build;
         }
         const rng = createSeededRandom(`${build.buildId}:star-upgrade:${item.slot}:${Date.now()}`);
         const picked = upgradePool[Math.floor(rng() * upgradePool.length)];
